@@ -160,6 +160,11 @@ fn padding(length: usize) -> Vec<u8> {
 }
 
 fn matasano4_29() -> Result<()> {
+    /* Unfortunately the code below only works with a patched version of the sha1
+     * crate which has been enhanced with a Sha1::new_with_state_and_length method. */
+    bail!(ErrorKind::NotImplemented);
+
+    /*
     let input = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
     let suffix = b";admin=true";
 
@@ -189,6 +194,7 @@ fn matasano4_29() -> Result<()> {
         }
     }
     bail!("No matching message found.");
+    */
 }
 
 fn matasano4_30() -> Result<()> {

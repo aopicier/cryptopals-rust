@@ -4,9 +4,7 @@ version = "0.1.0"
 authors = ["ph"]
 
 [dependencies]
-
-[dependencies.sha1]
-path = "../../rust-sha1"
+sha1 = "0.1"
 
 [dependencies.xor]
 path = "../xor"

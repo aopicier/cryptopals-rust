@@ -9,9 +9,7 @@ byteorder = "0.5"
 error-chain = "0.10"
 num = "0.1"
 rand = "0.3" 
-
-[dependencies.sha1]
-path = "../../rust-sha1"
+sha1 = "0.1"
 
 [dependencies.aes]
 path = "../aes"
