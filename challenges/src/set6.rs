@@ -2,7 +2,7 @@ use dsa;
 use dsa::{DsaParams,DsaPrivate,DsaPublic,Signature,rand_range_safe};
 use rsa::Rsa;
 
-use bignum::BigUint as BigNum;
+use bignum::BigNum as BigNum;
 use bignum::BigNumTrait;
 use serialize::{Serialize,from_base64};
 

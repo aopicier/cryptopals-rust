@@ -7,7 +7,7 @@ use diffie_hellman::mitm::MITM;
 use diffie_hellman::mitm::Mode;
 use diffie_hellman::server::Server;
 
-use bignum::BigUint as BigNum;
+use bignum::BigNum as BigNum;
 use bignum::BigNumTrait;
 
 use rsa::Rsa;
