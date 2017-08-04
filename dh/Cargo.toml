@@ -1,0 +1,26 @@
+[package]
+
+name = "diffie_hellman"
+version = "0.0.1"
+authors = ["ph"]
+
+[dependencies]
+byteorder = "0.5"
+error-chain = "0.10"
+num = "0.1"
+rand = "0.3" 
+
+[dependencies.sha1]
+path = "../../rust-sha1"
+
+[dependencies.aes]
+path = "../aes"
+
+[dependencies.bignum]
+path = "../bignum"
+
+[dependencies.serialize]
+path = "../serialize"
+
+[dependencies.unstable_features]
+path = "../unstable_features"

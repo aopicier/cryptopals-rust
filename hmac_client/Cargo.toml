@@ -1,0 +1,13 @@
+[package]
+name = "hmac_client"
+version = "0.1.0"
+authors = ["Philipp Hartwig <ph@phhart.de>"]
+
+[dependencies]
+hyper = "0.10"
+
+[dependencies.serialize]
+path = "../serialize"
+
+[dependencies.unstable_features]
+path = "../unstable_features"

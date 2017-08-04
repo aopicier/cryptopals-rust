@@ -1,0 +1,51 @@
+[package]
+
+name = "matasano"
+version = "0.0.1"
+authors = ["ph"]
+
+[lib]
+name = "challenges"
+path = "src/lib.rs"
+
+[dependencies]
+byteorder = "0.5"
+error-chain = "0.10"
+num = "0.1"
+rand = "0.3"
+
+[dependencies.sha1]
+path = "../../rust-sha1"
+
+[dependencies.aes]
+path = "../aes"
+
+[dependencies.bignum]
+path = "../bignum"
+
+[dependencies.diffie_hellman]
+path = "../dh"
+
+[dependencies.hmac_client]
+path = "../hmac_client"
+
+[dependencies.hmac_server]
+path = "../hmac_server"
+
+[dependencies.mac]
+path = "../mac"
+
+[dependencies.rsa]
+path = "../rsa"
+
+[dependencies.dsa]
+path = "../dsa"
+
+[dependencies.serialize]
+path = "../serialize"
+
+[dependencies.unstable_features]
+path = "../unstable_features"
+
+[dependencies.xor]
+path = "../xor"

@@ -1,0 +1,7 @@
+[package]
+name = "serialize"
+version = "0.1.0"
+authors = ["ph"]
+
+[dependencies]
+error-chain = "0.10"

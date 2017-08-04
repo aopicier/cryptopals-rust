@@ -1,0 +1,11 @@
+[package]
+name = "bignum"
+version = "0.1.0"
+authors = ["Philipp Hartwig <ph@phhart.de>"]
+
+[dependencies]
+error-chain = "0.10"
+num = "0.1"
+num-traits = "0.1"
+openssl = "0.9"
+rand = "0.3" 

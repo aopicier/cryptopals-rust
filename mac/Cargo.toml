@@ -1,0 +1,12 @@
+[package]
+name = "mac"
+version = "0.1.0"
+authors = ["ph"]
+
+[dependencies]
+
+[dependencies.sha1]
+path = "../../rust-sha1"
+
+[dependencies.xor]
+path = "../xor"

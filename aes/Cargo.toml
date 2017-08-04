@@ -1,0 +1,14 @@
+[package]
+name = "aes"
+version = "0.0.1"
+authors = ["Philipp Hartwig <ph@phhart.de>"]
+
+[dependencies]
+error-chain = "0.10"
+openssl = "0.9"
+
+[dependencies.unstable_features]
+path = "../unstable_features"
+
+[dependencies.xor]
+path = "../xor"

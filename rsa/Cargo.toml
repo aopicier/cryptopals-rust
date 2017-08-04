@@ -1,0 +1,15 @@
+[package]
+name = "rsa"
+version = "0.1.0"
+authors = ["ph"]
+
+[lib]
+name = "rsa"
+path = "src/lib.rs"
+
+[dependencies]
+num-traits = "0.1"
+openssl = "0.9"
+
+[dependencies.bignum]
+path = "../bignum"
