@@ -63,7 +63,7 @@ fn verify_signature(req: &mut Request, key: &[u8]) -> IronResult<Response> {
         _ => return Ok(Response::with(status::InternalServerError))
     };
 
-    let computed_hmac = match file_hmac_sha1(&key, &file) {
+    let computed_hmac = match file_hmac_sha1(key, &file) {
        Some(hmac) => hmac,
        None => return Ok(Response::with(status::InternalServerError)),
     };
