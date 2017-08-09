@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["ph"]
 
 [dependencies]
-sha1 = "0.1"
+sha1 = "0.2"
 
 [dependencies.xor]
 path = "../xor"

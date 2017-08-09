@@ -1,8 +1,5 @@
 use std::path::Path;
 use std::ascii::AsciiExt;
-use std::mem;
-
-use byteorder::{ByteOrder, BigEndian};
 
 use aes::Aes128;
 use aes::BLOCK_SIZE;
@@ -22,8 +19,6 @@ use hmac_server;
 use rand;
 use rand::Rng;
 
-use sha1::Sha1;
-
 use unstable_features::MoveFrom;
 
 use set2::decode_profile;
@@ -32,6 +27,13 @@ use set2::prefix_length;
 use set2::random_block;
 
 use errors::*;
+
+// The following imports are only required for challenge 29
+//
+// use std::mem;
+// use byteorder::{ByteOrder, BigEndian};
+// use sha1::Sha1;
+
 
 fn edit4_25(ciphertext: &[u8], key: &[u8], offset: usize, newtext: Vec<u8>) -> Result<Vec<u8>> {
     let mut cleartext = ciphertext.decrypt(key, None, MODE::CTR)?;
@@ -134,6 +136,39 @@ fn matasano4_28() -> Result<()> {
     compare(from_hex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")?, mac_sha1(b"The quick brown fox ", b"jumps over the lazy dog"))
 }
 
+/* The solution to challenge 29 requires a patched version of the sha1 crate. Too be precise,
+ * you have to clone the rust-sha1 repository and the apply the following patch
+ * (tested for version 0.2.0 of rust-sha1):
+
+------------------------------------
+diff --git a/src/lib.rs b/src/lib.rs
+index 352888b..325b94f 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -74,6 +74,18 @@ impl Sha1 {
+         }
+     }
+
++    /// Creates a sha1 hash object with a predefined state.
++    pub fn new_with_state_and_length(state: [u32; 5], len: u64) -> Sha1 {
++        Sha1 {
++            state: Sha1State { state: state },
++            len: len,
++            blocks: Blocks {
++                len: 0,
++                block: [0; 64],
++            },
++        }
++    }
++
+     /// Resets the hash object to it's initial state.
+     pub fn reset(&mut self) {
+         self.state = DEFAULT_STATE;
+------------------------------------
+
+Finally point Cargo.toml to your patched version of rust-sha1. */
+
+/*
 fn setup4_29() ->  (Box<Fn(&[u8]) -> Vec<u8>>,
                    Box<Fn(&[u8], &[u8]) -> bool>) {
     let mut rng = rand::thread_rng();
@@ -160,11 +195,6 @@ fn padding(length: usize) -> Vec<u8> {
 }
 
 fn matasano4_29() -> Result<()> {
-    /* Unfortunately the code below only works with a patched version of the sha1
-     * crate which has been enhanced with a Sha1::new_with_state_and_length method. */
-    bail!(ErrorKind::NotImplemented);
-
-    /*
     let input = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
     let suffix = b";admin=true";
 
@@ -183,7 +213,7 @@ fn matasano4_29() -> Result<()> {
         let padding = padding(secret_len);
         let mut m2 = Sha1::new_with_state_and_length(state, (secret_len + padding.len()) as u64);
         m2.update(suffix);
-        let mac = m2.digest();
+        let mac = m2.digest().bytes();
 
         let mut message = Vec::new();
         message.extend_from_slice(input);
@@ -194,7 +224,11 @@ fn matasano4_29() -> Result<()> {
         }
     }
     bail!("No matching message found.");
-    */
+}
+*/
+
+fn matasano4_29() -> Result<()> {
+    bail!("Requires a patched version of the sha1 crate. See the source code for detailed instructions.");
 }
 
 fn matasano4_30() -> Result<()> {

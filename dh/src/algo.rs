@@ -14,7 +14,7 @@ pub struct DH<T: bignum::BigNumTrait> {
 pub fn secret_to_key(s: &[u8]) -> Vec<u8> {
     let mut m = Sha1::new();
     m.update(s);
-    m.digest()[0..16].to_vec()
+    m.digest().bytes()[0..16].to_vec()
 }
 
 impl<T: bignum::BigNumTrait> DH<T> {
