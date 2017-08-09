@@ -81,9 +81,9 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>> {
     let mut n = s.len();
     if s.as_bytes()[n - 1] == b'=' {
         if s.as_bytes()[n - 2] == b'=' {
-            n = n - 1; 
+            n -= 1;
         }
-        n = n - 1;
+        n -= 1;
     }
 
     let mut digits = Vec::with_capacity(n);
@@ -133,7 +133,7 @@ fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>>) -> Result<Vec
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
     for line in reader.lines() {
-        content.push(converter(&line.unwrap().trim())?);
+        content.push(converter(line.unwrap().trim())?);
     }
     Ok(content)
 }

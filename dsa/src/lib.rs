@@ -76,19 +76,19 @@ for<'a1,'a2> &'a1 T: Sized + NumOps<&'a2 T, T> {
         loop
         {
             k = T::gen_below(q);
-            if &k == &zero || &k == &one
+            if k == zero || k == one
             {
                 continue;
             }
             r = g.mod_exp(&k, p);
             r = r.mod_math(q);
-            if &r == &zero
+            if r == zero
             {
                 continue;
             }
             s = &k.invmod(q).unwrap() * &(m + &(&r * &self.x));
             s = s.mod_math(q);
-            if &s == &zero
+            if s == zero
             {
                 continue;
             }
@@ -102,7 +102,7 @@ pub fn rand_range_safe<T: bignum::BigNumTrait>(q: &T) -> T {
     let zero = T::zero();
     let one = T::one();
     let mut x = T::clone(&zero);
-    while &x == &zero || &x == &one
+    while x == zero || x == one
     {
         x = T::gen_below(q);
     }

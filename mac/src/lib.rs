@@ -33,7 +33,7 @@ pub fn hmac_sha1(key: &[u8], message: &[u8]) -> Vec<u8> {
 
 fn prepare_key(key: &[u8], block_size: usize) -> Vec<u8> {
     let mut key = if key.len() > block_size {
-        sha1(&key)
+        sha1(key)
     } else {
         key.to_vec()
     };

@@ -222,7 +222,7 @@ impl BigNumTrait for BigUint {
         let bits = self.bits();
         let mut result = bits/8;
         if bits % 8 != 0 {
-            result = result + 1;
+            result += 1;
         }
         result
     }
@@ -359,7 +359,7 @@ impl BigNumTrait for BigInt {
         let bits = self.bits();
         let mut result = bits/8;
         if bits % 8 != 0 {
-            result = result + 1;
+            result += 1;
         }
         result
     }

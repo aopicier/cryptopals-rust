@@ -6,7 +6,7 @@ pub trait XOR {
 impl XOR for [u8] {
     fn xor(&self, t: &[u8]) -> Vec<u8> {
         let mut result = self.to_vec();
-        &mut result[..].xor_inplace(t);
+        result[..].xor_inplace(t);
         result
     }
 

@@ -13,7 +13,7 @@ pub struct DH<T: bignum::BigNumTrait> {
 
 pub fn secret_to_key(s: &[u8]) -> Vec<u8> {
     let mut m = Sha1::new();
-    m.update(&s);
+    m.update(s);
     m.digest()[0..16].to_vec()
 }
 
@@ -60,9 +60,15 @@ impl<T: bignum::BigNumTrait> DH<T> {
     }
 
     #[allow(non_snake_case)]
-    pub fn shared_key(&mut self, B: &Vec<u8>) -> Vec<u8> {
-        let B = T::from_bytes_be(&B);
+    pub fn shared_key(&mut self, B: &[u8]) -> Vec<u8> {
+        let B = T::from_bytes_be(B);
         let s = B.mod_exp(&self.a, &self.p);
         secret_to_key(&T::to_bytes_be(&s))
+    }
+}
+
+impl<T: bignum::BigNumTrait> Default for DH<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }

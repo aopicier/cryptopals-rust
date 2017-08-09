@@ -200,7 +200,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "mac"
 version = "0.1.0"
 dependencies = [
- "sha1 0.1.1",
+ "sha1 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "xor 0.0.1",
 ]
 
@@ -458,6 +458,7 @@ dependencies = [
 [[package]]
 name = "sha1"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -620,6 +621,7 @@ version = "0.0.1"
 "checksum semver 0.1.20 (registry+https://github.com/rust-lang/crates.io-index)" = "d4f410fedcf71af0345d7607d246e7ad15faaadd49d240ee3b24e5dc21a820ac"
 "checksum serde 0.8.23 (registry+https://github.com/rust-lang/crates.io-index)" = "9dad3f759919b92c3068c696c15c3d17238234498bbdcc80f2c469606f948ac8"
 "checksum serde_json 0.8.6 (registry+https://github.com/rust-lang/crates.io-index)" = "67f7d2e9edc3523a9c8ec8cd6ec481b3a27810aafee3e625d311febd3e656b4c"
+"checksum sha1 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a307a40d5834140e4213a6952483b84e9ad53bdcab918b7335a6e305e505a53c"
 "checksum siphasher 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0df90a788073e8d0235a67e50441d47db7c8ad9debd91cbf43736a2a92d36537"
 "checksum tempdir 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "87974a6f5c1dfb344d733055601650059a3363de2a6104819293baff662132d6"
 "checksum time 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)" = "ffd7ccbf969a892bf83f1e441126968a07a3941c24ff522a26af9f9f4585d1a3"
