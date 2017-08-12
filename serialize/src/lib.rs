@@ -15,30 +15,6 @@ error_chain! {
     }
 }
 
-static TO_BASE64: [char; 64] =
-[
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-    'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-    'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-    'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', '+', '/'
-];
-
-//Ordered by second entry
-static FROM_BASE64: [(u8, char); 64] =
-[
-    (62, '+'), (63, '/'),
-    (52, '0'), (53, '1'), (54, '2'), (55, '3'), (56, '4'), (57, '5'), (58, '6'), (59, '7'), (60, '8'), (61, '9'), 
-    (0, 'A'),  (1, 'B'),  (2, 'C'),  (3, 'D'),  (4, 'E'),  (5, 'F'),  (6, 'G'),  (7, 'H'),  (8, 'I'),  (9, 'J'), 
-    (10, 'K'), (11, 'L'), (12, 'M'), (13, 'N'), (14, 'O'), (15, 'P'), (16, 'Q'), (17, 'R'), (18, 'S'), (19, 'T'), 
-    (20, 'U'), (21, 'V'), (22, 'W'), (23, 'X'), (24, 'Y'), (25, 'Z'), (26, 'a'), (27, 'b'), (28, 'c'), (29, 'd'), 
-    (30, 'e'), (31, 'f'), (32, 'g'), (33, 'h'), (34, 'i'), (35, 'j'), (36, 'k'), (37, 'l'), (38, 'm'), (39, 'n'), 
-    (40, 'o'), (41, 'p'), (42, 'q'), (43, 'r'), (44, 's'), (45, 't'), (46, 'u'), (47, 'v'), (48, 'w'), (49, 'x'), 
-    (50, 'y'), (51, 'z'), 
-];
-
 pub trait Serialize {
     fn to_base64(&self) -> String;
     fn to_hex(&self) -> String;
@@ -157,11 +133,6 @@ fn u8_from_hex(c: char) -> Result<u8> {
     }
 }
 
-fn u8_to_base64(u: u8) -> char {
-    assert!(u <= 63);
-    TO_BASE64[u as usize]
-}
-
 fn block_to_base64(block: &[u8], base64: &mut String) {
     let (a, b, c) = match block.len() {
         3 => (block[0], block[1], block[2]),
@@ -175,9 +146,24 @@ fn block_to_base64(block: &[u8], base64: &mut String) {
     base64.push(u8_to_base64(c & 0x3f));                // Lower 6 bits of c
 }
 
+fn u8_to_base64(u: u8) -> char {
+    match u {
+        0...25 => ('A' as u8 + u) as char,
+        26...51 => ('a' as u8 + (u - 26)) as char,
+        52...61 => ('0' as u8 + (u - 52)) as char,
+        62 => '+',
+        63 => '/',
+        _ => panic!("input exceeded range"),
+    }
+}
+
 fn u8_from_base64(c: char) -> Result<u8> {
-    match FROM_BASE64.binary_search_by(|&(_, d)| d.cmp(&c)) {
-        Ok(i) => Ok(FROM_BASE64[i].0),
+    match c {
+        'A'...'Z' => Ok(c as u8 - 'A' as u8),
+        'a'...'z' => Ok(26 + (c as u8 - 'a' as u8)),
+        '0'...'9' => Ok(52 + (c as u8 - '0' as u8)),
+        '+' => Ok(62),
+        '/' => Ok(63),
         _ => bail!(format!("invalid character {}", c)),
     }
 }
