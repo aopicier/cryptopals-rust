@@ -7,6 +7,7 @@ extern crate rand;
 
 use std::cmp::Ordering;
 use num_traits::Num;
+use num_traits::NumOps;
 use num::{Zero, One, Signed};
 pub use num::bigint::{BigInt, ToBigInt, BigUint, ToBigUint, RandBigInt,Sign};
 use num::pow;
@@ -14,9 +15,9 @@ use num::pow;
 pub use openssl::error;
 pub use openssl::bn::{BigNum, BigNumRef,BigNumContext};
 
-
 error_chain! { }
 
+//#[derive(Eq, PartialEq, PartialOrd, Ord, Debug)]
 //pub struct BigNum<T> {
 //    num: T
 //}
@@ -26,9 +27,10 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn one() -> Self;
     fn from_u32(u: u32) -> Self;
     fn from_bytes_be(bytes: &[u8]) -> Self;
+    fn to_bytes_be(&self) -> Vec<u8>;
     fn from_hex_str(bytes: &str) -> Result<Self>;
     fn from_dec_str(bytes: &str) -> Result<Self>;
-    fn to_bytes_be(&self) -> Vec<u8>;
+    fn to_dec_str(&self) -> String;
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self;
     fn gen_below(bound: &Self) -> Self;
     fn gen_prime(bits: usize) -> Self;
@@ -44,8 +46,64 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn bytes(&self) -> usize;
 }
 
-//impl<T> BigNumTrait for BigNum<T>
-//where T: BigNumTrait {
+//impl Clone for BigNum<BigNum> {
+//    fn clone(&self) -> Self {
+//        BigNum { num: self.num.as_ref().to_owned().unwrap() }
+//    }
+//}
+//
+//impl Clone for BigNum<BigInt> {
+//    fn clone(&self) -> Self {
+//        BigNum { num: self.num.clone() }
+//    }
+//}
+//
+//impl<'a1, 'a2, T> std::ops::Add<&'a2 BigNum<T>> for &'a1 BigNum<T>
+//where &'a1 T: std::ops::Add<&'a2 T, Output=T> {
+//    type Output = BigNum<T>;
+//
+//    fn add(self, other: &'a2 BigNum<T>) -> Self::Output {
+//        BigNum { num: &self.num + &other.num }
+//    }
+//}
+//
+//impl<'a1, 'a2, T> std::ops::Sub<&'a2 BigNum<T>> for &'a1 BigNum<T>
+//where &'a1 T: std::ops::Sub<&'a2 T, Output=T> {
+//    type Output = BigNum<T>;
+//
+//    fn sub(self, other: &'a2 BigNum<T>) -> Self::Output {
+//        BigNum { num: &self.num - &other.num }
+//    }
+//}
+//
+//impl<'a1, 'a2, T> std::ops::Mul<&'a2 BigNum<T>> for &'a1 BigNum<T>
+//where &'a1 T: std::ops::Mul<&'a2 T, Output=T> {
+//    type Output = BigNum<T>;
+//
+//    fn mul(self, other: &'a2 BigNum<T>) -> Self::Output {
+//        BigNum { num: &self.num * &other.num }
+//    }
+//}
+//
+//impl<'a1, 'a2, T> std::ops::Div<&'a2 BigNum<T>> for &'a1 BigNum<T>
+//where &'a1 T: std::ops::Div<&'a2 T, Output=T> {
+//    type Output = BigNum<T>;
+//
+//    fn div(self, other: &'a2 BigNum<T>) -> Self::Output {
+//        BigNum { num: &self.num / &other.num }
+//    }
+//}
+//
+//impl<'a1, 'a2, T> std::ops::Rem<&'a2 BigNum<T>> for &'a1 BigNum<T>
+//where &'a1 T: std::ops::Rem<&'a2 T, Output=T> {
+//    type Output = BigNum<T>;
+//
+//    fn rem(self, other: &'a2 BigNum<T>) -> Self::Output {
+//        BigNum { num: &self.num % &other.num }
+//    }
+//}
+//
+//impl<T: BigNumTrait> BigNumTrait for BigNum<T> {
 //    fn zero() -> Self {
 //        BigNum { num: T::zero() }
 //    }
@@ -66,12 +124,32 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
 //        self.num.to_bytes_be()
 //    }
 //
+//    fn from_hex_str(bytes: &str) -> Result<Self> {
+//        BigNumTrait::from_hex_str(bytes).map(|x| BigNum { num: x })
+//    }
+//
+//    fn from_dec_str(bytes: &str) -> Result<Self> {
+//        BigNumTrait::from_dec_str(bytes).map(|x| BigNum { num: x })
+//    }
+//
+//    fn to_dec_str(&self) -> String {
+//        self.num.to_dec_str()
+//    }
+//
 //    fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
 //        BigNum { num: self.num.mod_exp(&exponent.num, &modulus.num) }
 //    }
 //
 //    fn gen_below(bound: &Self) -> Self {
 //        BigNum { num: T::gen_below(&bound.num) }
+//    }
+//
+//    fn gen_prime(bits: usize) -> Self {
+//        BigNum { num: T::gen_prime(bits) }
+//    }
+//
+//    fn gen_random(bits: usize) -> Self {
+//        BigNum { num: T::gen_random(bits) }
 //    }
 //
 //    fn mod_math(&self, n: &Self) -> Self {
@@ -82,9 +160,33 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
 //        self.num.invmod(&n.num).map(|x| BigNum { num: x })
 //    }
 //
+//    fn power(&self, k: usize) -> Self {
+//        BigNum { num: self.num.power(k) }
+//    }
+//
 //    fn root(&self, k: usize) -> (Self, bool) {
 //        let (root, flag) = self.num.root(k);
 //        (BigNum { num: root }, flag)
+//    }
+//
+//    fn clone(x: &Self) -> Self {
+//        BigNum { num: BigNumTrait::clone(&x.num) }
+//    }
+//
+//    fn rsh(&self, k: usize) -> Self {
+//        BigNum { num: self.num.rsh(k) }
+//    }
+//
+//    fn lsh(&self, k: usize) -> Self {
+//        BigNum { num: self.num.lsh(k) }
+//    }
+//
+//    fn bits(&self) -> usize {
+//        self.num.bits()
+//    }
+//
+//    fn bytes(&self) -> usize {
+//        self.num.bytes()
 //    }
 //}
 
@@ -113,6 +215,10 @@ impl BigNumTrait for BigUint {
         BigUint::from_str_radix(bytes, 10).chain_err(|| "invalid dec string")
     }
 
+    fn to_dec_str(&self) -> String {
+        self.to_str_radix(10)
+    }
+
     fn to_bytes_be(&self) -> Vec<u8> {
         self.to_bytes_be()
     }
@@ -120,7 +226,7 @@ impl BigNumTrait for BigUint {
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
         let (zero, one): (BigUint, BigUint) = (Zero::zero(), One::one());
         let mut result = one.clone();
-        let mut base = self.clone();
+        let mut base = self % modulus;
         let mut exponent = exponent.clone();
 
         while exponent > zero {
@@ -184,7 +290,7 @@ impl BigNumTrait for BigUint {
         pow(self.clone(), k)
     }
 
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates 
+    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
     //whether we have equality.
     fn root(&self, k: usize) -> (Self, bool) {
         let one: BigUint = One::one();
@@ -253,6 +359,10 @@ impl BigNumTrait for BigInt {
         BigInt::from_str_radix(bytes, 10).chain_err(|| "invalid dec string")
     }
 
+    fn to_dec_str(&self) -> String {
+        self.to_str_radix(10)
+    }
+
     fn to_bytes_be(&self) -> Vec<u8> {
         assert!(self.is_positive());
         self.to_bytes_be().1
@@ -262,7 +372,7 @@ impl BigNumTrait for BigInt {
         let (zero, one): (BigInt, BigInt) = (Zero::zero(), One::one());
         let two = &one + &one;
         let mut result = one.clone();
-        let mut base = self.clone();
+        let mut base = self % modulus;
         let mut exponent = exponent.clone();
 
         while exponent > zero {
@@ -321,7 +431,7 @@ impl BigNumTrait for BigInt {
         pow(self.clone(), k)
     }
 
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates 
+    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
     //whether we have equality.
     fn root(&self, k: usize) -> (Self, bool) {
         let one: BigInt = One::one();
@@ -390,6 +500,10 @@ impl BigNumTrait for BigNum {
         BigNum::from_dec_str(bytes).chain_err(|| "invalid dec string")
     }
 
+    fn to_dec_str(&self) -> String {
+        BigNumRef::to_dec_str(&self).unwrap().to_string()
+    }
+
     fn to_bytes_be(&self) -> Vec<u8> {
         self.to_vec()
     }
@@ -450,7 +564,7 @@ impl BigNumTrait for BigNum {
         result
     }
 
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates 
+    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
     //whether we have equality.
     fn root(&self, k: usize) -> (Self, bool) {
         let one = Self::one();
@@ -493,5 +607,23 @@ impl BigNumTrait for BigNum {
 
     fn bytes(&self) -> usize {
         self.num_bytes() as usize
+    }
+}
+
+pub trait BigNumExt: Sized {
+    fn ceil_div(&self, k: &Self) -> (Self, Self);
+    fn floor_div(&self, k: &Self) -> (Self, Self);
+}
+
+impl<T: BigNumTrait> BigNumExt for T
+where for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T> {
+    fn ceil_div(&self, k: &T) -> (T, T) {
+        let q = &(&(self + &k) - &T::one())/&k;
+        let r = &(&q * k) - self;
+        (q, r)
+    }
+
+    fn floor_div(&self, k: &T) -> (T, T) {
+        (self / k, self % k)
     }
 }
