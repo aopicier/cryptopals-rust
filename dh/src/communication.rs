@@ -54,7 +54,7 @@ fn encode_length(length: usize) -> Vec<u8> {
 
 fn read_n_bytes<T: Read>(stream: &mut T, n: usize) -> Result<Option<Vec<u8>>> {
     let mut reader: Vec<u8> = Vec::with_capacity(n);
-    let mut buf = &mut vec![0; n];
+    let buf = &mut vec![0; n];
     let mut l = buf.len();
     while l != 0 {
         let k = stream.read(buf).chain_err(|| "failed to read from stream")?;

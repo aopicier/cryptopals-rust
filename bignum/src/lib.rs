@@ -501,7 +501,7 @@ impl BigNumTrait for BigNum {
     }
 
     fn to_dec_str(&self) -> String {
-        BigNumRef::to_dec_str(&self).unwrap().to_string()
+        BigNumRef::to_dec_str(self).unwrap().to_string()
     }
 
     fn to_bytes_be(&self) -> Vec<u8> {
@@ -638,7 +638,7 @@ where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     fn ceil_div(&self, k: &T) -> (T, T) {
-        let q = &(&(self + &k) - &T::one()) / &k;
+        let q = &(&(self + k) - &T::one()) / k;
         let r = &(&q * k) - self;
         (q, r)
     }
