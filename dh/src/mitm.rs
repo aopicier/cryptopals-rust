@@ -75,12 +75,12 @@ fn handshake_generator<T: Communicate>(client_stream: &mut T, server_stream: &mu
     let p = client_stream.receive()?.unwrap();
     client_stream.receive()?; //Discard g
     server_stream.send(&p)?;
-    server_stream.send(&g.to_bytes_le())?;
+    server_stream.send(&g.to_bytes_be())?;
     //Discard actual public keys
     let A = client_stream.receive()?.unwrap();
     let B = server_stream.receive()?.unwrap();
     //Send fake public keys
     client_stream.send(&B)?;
     server_stream.send(&A)?;
-    Ok((Some(secret_to_key(&g.to_bytes_le())), None))
+    Ok((Some(secret_to_key(&g.to_bytes_be())), None))
 }
