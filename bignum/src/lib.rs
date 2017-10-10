@@ -8,14 +8,14 @@ extern crate rand;
 use std::cmp::Ordering;
 use num_traits::Num;
 use num_traits::NumOps;
-use num::{Zero, One, Signed};
-pub use num::bigint::{BigInt, ToBigInt, BigUint, ToBigUint, RandBigInt,Sign};
+use num::{One, Signed, Zero};
+pub use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
 use num::pow;
 
 pub use openssl::error;
-pub use openssl::bn::{BigNum, BigNumRef,BigNumContext};
+pub use openssl::bn::{BigNum, BigNumContext, BigNumRef};
 
-error_chain! { }
+error_chain!{}
 
 //#[derive(Eq, PartialEq, PartialOrd, Ord, Debug)]
 //pub struct BigNum<T> {
@@ -273,9 +273,9 @@ impl BigNumTrait for BigUint {
         let mut l: (BigInt, BigInt) = (Zero::zero(), One::one());
         let mut r = (n.clone(), self.clone());
         while r.1 != zero {
-            let q = BigInt::from_biguint(Sign::Plus, &r.0/&r.1);
+            let q = BigInt::from_biguint(Sign::Plus, &r.0 / &r.1);
             //k = (k.1, k.0 - q*k.1);
-            l = (l.1.clone(), &l.0 - &(&q*&l.1));
+            l = (l.1.clone(), &l.0 - &(&q * &l.1));
             r = (r.1.clone(), &r.0 % &r.1);
             //assert_eq!(k.0 * n + l.0 * x, r.0);
         }
@@ -297,12 +297,12 @@ impl BigNumTrait for BigUint {
         let mut a = one.clone();
         let mut b = self.clone();
         while a <= b {
-            let mid = (&a + &b)>>1;
+            let mid = (&a + &b) >> 1;
             let power = pow(mid.clone(), k); // TODO Do we need to clone here?
             match self.cmp(&power) {
-                Ordering::Greater => a = &mid.clone()+&one,
-                Ordering::Less => b = &mid.clone()-&one,
-                Ordering::Equal => return (mid, true)
+                Ordering::Greater => a = &mid.clone() + &one,
+                Ordering::Less => b = &mid.clone() - &one,
+                Ordering::Equal => return (mid, true),
             }
         }
         (b, false)
@@ -326,7 +326,7 @@ impl BigNumTrait for BigUint {
 
     fn bytes(&self) -> usize {
         let bits = self.bits();
-        let mut result = bits/8;
+        let mut result = bits / 8;
         if bits % 8 != 0 {
             result += 1;
         }
@@ -410,13 +410,13 @@ impl BigNumTrait for BigInt {
     }
 
     fn invmod(&self, n: &Self) -> Option<Self> {
-        let (zero, one): (BigInt, BigInt)  = (Zero::zero(), One::one());
-        let mut l: (BigInt, BigInt)  = (Zero::zero(), One::one());
+        let (zero, one): (BigInt, BigInt) = (Zero::zero(), One::one());
+        let mut l: (BigInt, BigInt) = (Zero::zero(), One::one());
         let mut r = (n.clone(), self.clone());
         while r.1 != zero {
-            let q = &r.0/&r.1;
+            let q = &r.0 / &r.1;
             //k = (k.1, k.0 - q*k.1);
-            l = (l.1.clone(), &l.0 - &(&q*&l.1));
+            l = (l.1.clone(), &l.0 - &(&q * &l.1));
             r = (r.1.clone(), &r.0 % &r.1);
             //assert_eq!(k.0 * n + l.0 * x, r.0);
         }
@@ -438,12 +438,12 @@ impl BigNumTrait for BigInt {
         let mut a = one.clone();
         let mut b = self.clone();
         while a <= b {
-            let mid = (&a + &b)>>1;
+            let mid = (&a + &b) >> 1;
             let power = pow(mid.clone(), k); // TODO Do we need to clone here?
             match self.cmp(&power) {
-                Ordering::Greater => a = &mid.clone()+&one,
-                Ordering::Less => b = &mid.clone()-&one,
-                Ordering::Equal => return (mid, true)
+                Ordering::Greater => a = &mid.clone() + &one,
+                Ordering::Less => b = &mid.clone() - &one,
+                Ordering::Equal => return (mid, true),
             }
         }
         (b, false)
@@ -467,7 +467,7 @@ impl BigNumTrait for BigInt {
 
     fn bytes(&self) -> usize {
         let bits = self.bits();
-        let mut result = bits/8;
+        let mut result = bits / 8;
         if bits % 8 != 0 {
             result += 1;
         }
@@ -510,7 +510,13 @@ impl BigNumTrait for BigNum {
 
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
         let mut result = BigNum::new().unwrap();
-        BigNumRef::mod_exp(&mut result, self, exponent, modulus, &mut BigNumContext::new().unwrap()).unwrap();
+        BigNumRef::mod_exp(
+            &mut result,
+            self,
+            exponent,
+            modulus,
+            &mut BigNumContext::new().unwrap(),
+        ).unwrap();
         result
     }
 
@@ -522,13 +528,17 @@ impl BigNumTrait for BigNum {
 
     fn gen_prime(bits: usize) -> Self {
         let mut result = BigNum::new().unwrap();
-        result.generate_prime(bits as i32, true, None, None).unwrap();
+        result
+            .generate_prime(bits as i32, true, None, None)
+            .unwrap();
         result
     }
 
     fn gen_random(bits: usize) -> BigNum {
         let mut result = BigNum::new().unwrap();
-        result.pseudo_rand(bits as i32, openssl::bn::MSB_MAYBE_ZERO, false).unwrap();
+        result
+            .pseudo_rand(bits as i32, openssl::bn::MSB_MAYBE_ZERO, false)
+            .unwrap();
         result
     }
 
@@ -545,9 +555,9 @@ impl BigNumTrait for BigNum {
         let mut l = (Self::zero(), Self::one());
         let mut r = (Self::clone(n), Self::clone(self));
         while r.1 != Self::zero() {
-            let q = &r.0/&r.1;
+            let q = &r.0 / &r.1;
             //k = (k.1, k.0 - q*k.1);
-            l = (Self::clone(&l.1), &l.0 - &(&q*&l.1));
+            l = (Self::clone(&l.1), &l.0 - &(&q * &l.1));
             r = (Self::clone(&r.1), &r.0 % &r.1);
             //assert_eq!(k.0 * n + l.0 * self, r.0);
         }
@@ -560,7 +570,13 @@ impl BigNumTrait for BigNum {
 
     fn power(&self, k: usize) -> Self {
         let mut result = BigNum::new().unwrap();
-        result.exp(self, &<Self as BigNumTrait>::from_u32(k as u32), &mut BigNumContext::new().unwrap()).unwrap();
+        result
+            .exp(
+                self,
+                &<Self as BigNumTrait>::from_u32(k as u32),
+                &mut BigNumContext::new().unwrap(),
+            )
+            .unwrap();
         result
     }
 
@@ -575,11 +591,13 @@ impl BigNumTrait for BigNum {
         let mut ctx = BigNumContext::new().unwrap();
         while a <= b {
             mid.rshift1(&(&a + &b)).unwrap();
-            power.exp(&mid, &<Self as BigNumTrait>::from_u32(k as u32), &mut ctx).unwrap();
+            power
+                .exp(&mid, &<Self as BigNumTrait>::from_u32(k as u32), &mut ctx)
+                .unwrap();
             match self.cmp(&power) {
-                Ordering::Greater => a = &Self::clone(&mid)+&one,
-                Ordering::Less => b = &Self::clone(&mid)-&one,
-                Ordering::Equal => return (mid, true)
+                Ordering::Greater => a = &Self::clone(&mid) + &one,
+                Ordering::Less => b = &Self::clone(&mid) - &one,
+                Ordering::Equal => return (mid, true),
             }
         }
         (b, false)
@@ -616,9 +634,11 @@ pub trait BigNumExt: Sized {
 }
 
 impl<T: BigNumTrait> BigNumExt for T
-where for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T> {
+where
+    for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
+{
     fn ceil_div(&self, k: &T) -> (T, T) {
-        let q = &(&(self + &k) - &T::one())/&k;
+        let q = &(&(self + &k) - &T::one()) / &k;
         let r = &(&q * k) - self;
         (q, r)
     }

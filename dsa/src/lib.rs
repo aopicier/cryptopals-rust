@@ -9,35 +9,45 @@ pub struct DsaPublic<'a, T: 'a> {
     pub y: T,
 }
 
-impl<'a, T> DsaPublic<'a, T> 
-where T:bignum::BigNumTrait,
-for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T> {
+impl<'a, T> DsaPublic<'a, T>
+where
+    T: bignum::BigNumTrait,
+    for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T>,
+{
     pub fn generate(private: &'a DsaPrivate<T>) -> Self {
         let params = private.params;
         let y = params.g.mod_exp(&private.x, &params.p);
-        DsaPublic { params: params, y: y }
+        DsaPublic {
+            params: params,
+            y: y,
+        }
     }
 
-    pub fn secret_key_from_k(&self, m: &T, &Signature {ref r, ref s}: &Signature<T>, k: &T) -> T {
+    pub fn secret_key_from_k(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>, k: &T) -> T {
         let q = &self.params.q;
         let x = &(&(s * k) - m) * &r.invmod(q).unwrap();
         x.mod_math(q)
     }
 
-    pub fn secret_key_from_two_signatures_with_same_k(&self, m1: &T, s1: &Signature<T>, m2: &T, s2: &Signature<T>) -> T {
+    pub fn secret_key_from_two_signatures_with_same_k(
+        &self,
+        m1: &T,
+        s1: &Signature<T>,
+        m2: &T,
+        s2: &Signature<T>,
+    ) -> T {
         assert_eq!(s1.r, s2.r);
         let q = &self.params.q;
         let k = &(m1 - m2).mod_math(q) * &T::invmod(&T::mod_math(&(&s1.s - &s2.s), q), q).unwrap();
         self.secret_key_from_k(m1, s1, &k)
     }
 
-    pub fn verify_signature(&self, m: &T, &Signature {ref r, ref s}: &Signature<T>) -> bool {
+    pub fn verify_signature(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>) -> bool {
         let zero = T::zero();
         let p = &self.params.p;
         let q = &self.params.q;
         let g = &self.params.g;
-        if r <= &zero || r >= q || s <= &zero || s >= q
-        {
+        if r <= &zero || r >= q || s <= &zero || s >= q {
             return false;
         }
         let w = T::invmod(s, q).unwrap();
@@ -55,12 +65,17 @@ pub struct DsaPrivate<'a, T: 'a> {
     pub x: T,
 }
 
-impl<'a, T> DsaPrivate<'a, T> 
-where T: bignum::BigNumTrait,
-for<'a1,'a2> &'a1 T: Sized + NumOps<&'a2 T, T> {
+impl<'a, T> DsaPrivate<'a, T>
+where
+    T: bignum::BigNumTrait,
+    for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T>,
+{
     pub fn generate(params: &'a DsaParams<T>) -> Self {
         let x = rand_range_safe(&params.q);
-        DsaPrivate { params: params, x: x }
+        DsaPrivate {
+            params: params,
+            x: x,
+        }
     }
 
     pub fn sign(&self, m: &T) -> (Signature<T>, T) {
@@ -73,28 +88,24 @@ for<'a1,'a2> &'a1 T: Sized + NumOps<&'a2 T, T> {
         let mut k: T;
         let mut r: T;
         let mut s: T;
-        loop
-        {
+        loop {
             k = T::gen_below(q);
-            if k == zero || k == one
-            {
+            if k == zero || k == one {
                 continue;
             }
             r = g.mod_exp(&k, p);
             r = r.mod_math(q);
-            if r == zero
-            {
+            if r == zero {
                 continue;
             }
             s = &k.invmod(q).unwrap() * &(m + &(&r * &self.x));
             s = s.mod_math(q);
-            if s == zero
-            {
+            if s == zero {
                 continue;
             }
             break;
         }
-        (Signature { r: r,  s: s }, k)
+        (Signature { r: r, s: s }, k)
     }
 }
 
@@ -102,16 +113,17 @@ pub fn rand_range_safe<T: bignum::BigNumTrait>(q: &T) -> T {
     let zero = T::zero();
     let one = T::one();
     let mut x = T::clone(&zero);
-    while x == zero || x == one
-    {
+    while x == zero || x == one {
         x = T::gen_below(q);
     }
     x
 }
 
-pub fn fake_signature<T>(public: &DsaPublic<T>) -> Signature<T> 
-where T: bignum::BigNumTrait,
-for<'b> &'b T: Sized + NumOps<&'b T, T> {
+pub fn fake_signature<T>(public: &DsaPublic<T>) -> Signature<T>
+where
+    T: bignum::BigNumTrait,
+    for<'b> &'b T: Sized + NumOps<&'b T, T>,
+{
     let p = &public.params.p;
     let q = &public.params.q;
     let z = rand_range_safe(q);
@@ -122,14 +134,13 @@ for<'b> &'b T: Sized + NumOps<&'b T, T> {
     Signature { r: r, s: s }
 }
 
-pub struct DsaParams<T> 
-{
+pub struct DsaParams<T> {
     pub p: T,
     pub q: T,
     pub g: T,
 }
 
-impl<T: bignum::BigNumTrait>  DsaParams<T> {
+impl<T: bignum::BigNumTrait> DsaParams<T> {
     pub fn generate() -> Self {
         let p = T::from_hex_str(
             "800000000000000089e1855218a0e7dac38136ffafa72eda7859f2171e25e65eac698c1702578b07dc2a1076da241c76c62d374d8389ea5aeffd3226a0530cc565f3bf6b50929139ebeac04f48c3c84afb796d61e5a4f9a8fda812ab59494232c7d2b4deb50aa18ee9e132bfa85ac4374d7f9091abc3d015efc871a584471bb1"

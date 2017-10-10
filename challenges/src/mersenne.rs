@@ -31,7 +31,9 @@ impl MersenneTwister {
         let mut mt = [0; STATE_SIZE];
         mt[0] = seed;
         for i in 1..STATE_SIZE {
-            mt[i] = (mt[i-1]^(mt[i-1] >> 30)).wrapping_mul(0x6c07_8965).wrapping_add(i as u32);
+            mt[i] = (mt[i - 1] ^ (mt[i - 1] >> 30))
+                .wrapping_mul(0x6c07_8965)
+                .wrapping_add(i as u32);
         }
         MersenneTwister { mt: mt, index: 0 }
     }
@@ -53,8 +55,8 @@ impl MersenneTwister {
     fn generate(&mut self) {
         for i in 0..STATE_SIZE {
             let mt = &mut self.mt;
-            let y = (mt[i] & 0x8000_0000) | (mt[(i+1) % STATE_SIZE] & 0x7fff_ffff);
-            mt[i] = mt[(i+397) % STATE_SIZE]^(y >> 1);
+            let y = (mt[i] & 0x8000_0000) | (mt[(i + 1) % STATE_SIZE] & 0x7fff_ffff);
+            mt[i] = mt[(i + 397) % STATE_SIZE] ^ (y >> 1);
             if y % 2 != 0 {
                 mt[i] ^= 0x9908_b0df;
             }
@@ -100,7 +102,7 @@ impl Iterator for MersenneTwister {
 
 fn temper(mut y: u32) -> u32 {
     y ^= y >> 11;
-    y ^= (y <<  7) & 0x9d2c_5680;
+    y ^= (y << 7) & 0x9d2c_5680;
     y ^= (y << 15) & 0xefc6_0000;
     y ^= y >> 18;
     y
@@ -110,7 +112,7 @@ fn inv_rs(mut u: u32, k: u32) -> u32 {
     assert!(k >= 1);
     let mut v = u;
     //Would profit from range_inclusive and std::u32::BITS
-    for _ in 0..32/k+1 {
+    for _ in 0..32 / k + 1 {
         u >>= k;
         v ^= u;
     }
@@ -121,14 +123,17 @@ fn inv_lsa(u: u32, k: u32, c: u32) -> u32 {
     assert!(k >= 1);
     let mut v = u;
     //Would profit from std::u32::BITS
-    for _ in 0..32/k {
-        v = u^(v<<k & c);
+    for _ in 0..32 / k {
+        v = u ^ (v << k & c);
     }
     v
 }
 
 pub fn untemper(u: u32) -> u32 {
-    inv_rs(inv_lsa(inv_lsa(inv_rs(u, 18), 15, 0xefc6_0000), 7, 0x9d2c_5680), 11)
+    inv_rs(
+        inv_lsa(inv_lsa(inv_rs(u, 18), 15, 0xefc6_0000), 7, 0x9d2c_5680),
+        11,
+    )
 }
 
 pub fn crack_seed_from_nth(u: u32, n: usize, range: Range<u32>) -> Option<u32> {
@@ -140,4 +145,3 @@ pub fn crack_seed_from_nth(u: u32, n: usize, range: Range<u32>) -> Option<u32> {
     }
     None
 }
-

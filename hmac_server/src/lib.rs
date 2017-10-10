@@ -1,8 +1,8 @@
 extern crate mac;
 extern crate serialize;
 
-extern crate iron;
 extern crate hyper;
+extern crate iron;
 extern crate params;
 
 use std::path::Path;
@@ -37,10 +37,10 @@ fn file_hmac_sha1(key: &[u8], file: &str) -> Option<Vec<u8>> {
 
     let file = match File::open(&path) {
         Ok(file) => file,
-        Err(_) =>  {
+        Err(_) => {
             println!("Failed to load file from {:?}", path);
             return None;
-        },
+        }
     };
     let mut reader = BufReader::new(file);
     let mut content = Vec::new();
@@ -54,18 +54,18 @@ fn verify_signature(req: &mut Request, key: &[u8]) -> IronResult<Response> {
         //None => return Err(CustomError::new("missing file parameter")),
         Some(&params::Value::String(ref file)) => file.clone(), // clone() is critical
         //_ => return Err(CustomError::new("file parameter was not a single string"))
-        _ => return Ok(Response::with(status::InternalServerError))
+        _ => return Ok(Response::with(status::InternalServerError)),
     };
     let signature = match params.find(&["signature"]) {
         //None => return Err(CustomError::new("missing signature parameter")),
         Some(&params::Value::String(ref signature)) => signature.clone(), // clone() is critical
         //_ => return Err(CustomError::new("signature parameter was not a single string"))
-        _ => return Ok(Response::with(status::InternalServerError))
+        _ => return Ok(Response::with(status::InternalServerError)),
     };
 
     let computed_hmac = match file_hmac_sha1(key, &file) {
-       Some(hmac) => hmac,
-       None => return Ok(Response::with(status::InternalServerError)),
+        Some(hmac) => hmac,
+        None => return Ok(Response::with(status::InternalServerError)),
     };
 
     if insecure_compare(&computed_hmac, &from_hex(&signature).unwrap()) {
@@ -76,5 +76,7 @@ fn verify_signature(req: &mut Request, key: &[u8]) -> IronResult<Response> {
 }
 
 pub fn start(key: Vec<u8>) -> hyper::server::Listening {
-    Iron::new(move |req: &mut Request| verify_signature(req, &key)).http("localhost:3000").unwrap()
+    Iron::new(move |req: &mut Request| verify_signature(req, &key))
+        .http("localhost:3000")
+        .unwrap()
 }

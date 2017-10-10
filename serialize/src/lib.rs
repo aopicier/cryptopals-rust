@@ -22,7 +22,7 @@ pub trait Serialize {
 
 impl Serialize for [u8] {
     fn to_base64(&self) -> String {
-        let mut base64 = String::with_capacity(4*self.len()/3);
+        let mut base64 = String::with_capacity(4 * self.len() / 3);
         for block in self.chunks(3) {
             block_to_base64(block, &mut base64);
         }
@@ -40,12 +40,14 @@ impl Serialize for [u8] {
     }
 
     fn to_hex(&self) -> String {
-        let mut u4 = Vec::with_capacity(2*self.len());
+        let mut u4 = Vec::with_capacity(2 * self.len());
         for u in self {
             u4.push(u >> 4);
             u4.push(u & 0xf);
         }
-        u4.iter().map(|&u| char::from_digit(u as u32, 16).unwrap()).collect()
+        u4.iter()
+            .map(|&u| char::from_digit(u as u32, 16).unwrap())
+            .collect()
     }
 }
 
@@ -67,18 +69,22 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>> {
         digits.push(u8_from_base64(c).chain_err(|| format!("not a valid base64 string: {}", s))?);
     }
 
-    let mut u = Vec::with_capacity(3*s.len()/4);
+    let mut u = Vec::with_capacity(3 * s.len() / 4);
     for b in digits.chunks(4) {
         u.push((b[0] << 2) + (b[1] >> 4));
         if b.len() == 2 {
-            if b[1] << 4 != 0 { bail!("input not padded with zero"); }
-            break; 
+            if b[1] << 4 != 0 {
+                bail!("input not padded with zero");
+            }
+            break;
         }
 
         u.push((b[1] << 4) + (b[2] >> 2));
         if b.len() == 3 {
-            if b[2] << 6 != 0 { bail!("input not padded with zero"); }
-            break; 
+            if b[2] << 6 != 0 {
+                bail!("input not padded with zero");
+            }
+            break;
         }
 
         u.push((b[2] << 6) + b[3]);
@@ -121,9 +127,15 @@ pub fn from_hex(s: &str) -> Result<Vec<u8>> {
 
     let mut digits = Vec::with_capacity(s.len());
     for c in s.chars() {
-        digits.push(u8_from_hex(c).chain_err(|| format!("not a valid hex string: {}", s))?);
+        digits.push(u8_from_hex(c)
+            .chain_err(|| format!("not a valid hex string: {}", s))?);
     }
-    Ok(digits.chunks(2).map(|c| (c[0]<<4) + c[1]).collect::<Vec<u8>>())
+    Ok(
+        digits
+            .chunks(2)
+            .map(|c| (c[0] << 4) + c[1])
+            .collect::<Vec<u8>>(),
+    )
 }
 
 fn u8_from_hex(c: char) -> Result<u8> {
@@ -137,13 +149,13 @@ fn block_to_base64(block: &[u8], base64: &mut String) {
     let (a, b, c) = match block.len() {
         3 => (block[0], block[1], block[2]),
         2 => (block[0], block[1], 0),
-        1 => (block[0], 0,        0),
+        1 => (block[0], 0, 0),
         _ => return,
     };
-    base64.push(u8_to_base64(a >> 2));                  // Upper 6 bits of a
-    base64.push(u8_to_base64(a % 4 * 16 + (b >> 4)));   // Lower 2 bits of a, upper 4 bits of b
-    base64.push(u8_to_base64(b % 16 * 4 + (c >> 6)));   // Lower 4 bits of b, upper 2 bits of c
-    base64.push(u8_to_base64(c & 0x3f));                // Lower 6 bits of c
+    base64.push(u8_to_base64(a >> 2)); // Upper 6 bits of a
+    base64.push(u8_to_base64(a % 4 * 16 + (b >> 4))); // Lower 2 bits of a, upper 4 bits of b
+    base64.push(u8_to_base64(b % 16 * 4 + (c >> 6))); // Lower 4 bits of b, upper 2 bits of c
+    base64.push(u8_to_base64(c & 0x3f)); // Lower 6 bits of c
 }
 
 fn u8_to_base64(u: u8) -> char {

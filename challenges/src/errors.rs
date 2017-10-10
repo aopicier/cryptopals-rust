@@ -6,10 +6,10 @@ use std;
 
 error_chain! {
     links {
-       Aes(aes::Error, aes::ErrorKind); 
+       Aes(aes::Error, aes::ErrorKind);
        BigNum(bignum::Error, bignum::ErrorKind);
-       DH(diffie_hellman::errors::Error, diffie_hellman::errors::ErrorKind); 
-       Serialize(serialize::Error, serialize::ErrorKind); 
+       DH(diffie_hellman::errors::Error, diffie_hellman::errors::ErrorKind);
+       Serialize(serialize::Error, serialize::ErrorKind);
     }
 
     foreign_links {
@@ -42,27 +42,33 @@ error_chain! {
 }
 
 pub fn compare<T>(x: T, y: T) -> Result<()>
-where T: Eq+std::fmt::Debug
+where
+    T: Eq + std::fmt::Debug,
 {
-    if x == y
-    {
+    if x == y {
         Ok(())
-    }
-    else
-    {
-        bail!(ErrorKind::ComparisonFailed(format!("Expected: {:?}, found: {:?}", x, y)))
+    } else {
+        bail!(ErrorKind::ComparisonFailed(
+            format!("Expected: {:?}, found: {:?}", x, y)
+        ))
     }
 }
 
 pub fn run_exercise<F>(exercise: F, challenge_number: u8)
-where F: Fn() -> Result<()>
+where
+    F: Fn() -> Result<()>,
 {
-    match exercise()
-    {
+    match exercise() {
         Ok(_) => println!("Challenge {:02}: Success", challenge_number),
         Err(ref e) => match *e.kind() {
-            ErrorKind::ComparisonFailed(_) => println!("Challenge {:02}: Wrong result: {}", challenge_number, e),
-            ErrorKind::ItemNotFound(_) => println!("Challenge {:02}: Expected item not found: {}", challenge_number, e),
+            ErrorKind::ComparisonFailed(_) => {
+                println!("Challenge {:02}: Wrong result: {}", challenge_number, e)
+            }
+            ErrorKind::ItemNotFound(_) => println!(
+                "Challenge {:02}: Expected item not found: {}",
+                challenge_number,
+                e
+            ),
             ErrorKind::NotImplemented => println!("Challenge {:02}: {}", challenge_number, e),
 
             _ => {
@@ -73,7 +79,7 @@ where F: Fn() -> Result<()>
                 if let Some(backtrace) = e.backtrace() {
                     println!("{: <4}: {:?}", "", backtrace);
                 }
-            },
-        }
+            }
+        },
     };
 }

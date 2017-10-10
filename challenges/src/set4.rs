@@ -39,7 +39,9 @@ fn edit4_25(ciphertext: &[u8], key: &[u8], offset: usize, newtext: Vec<u8>) -> R
     let mut cleartext = ciphertext.decrypt(key, None, MODE::CTR)?;
     let n = newtext.len();
     cleartext[offset..].move_from2(newtext, 0, n);
-    cleartext.encrypt(key, None, MODE::CTR).map_err(|x| x.into())
+    cleartext
+        .encrypt(key, None, MODE::CTR)
+        .map_err(|x| x.into())
 }
 
 fn matasano4_25() -> Result<()> {
@@ -54,7 +56,10 @@ fn matasano4_26() -> Result<()> {
     let key = random_block();
     let oracle = |input: &[u8]| {
         // Exclude ';' and '='
-        if input.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
+        if input
+            .iter()
+            .any(|&c| !c.is_ascii() || c == b';' || c == b'=')
+        {
             panic!("Invalid input.");
         }
 
@@ -63,8 +68,8 @@ fn matasano4_26() -> Result<()> {
         oracle_generator(&key, prefix, input, suffix, MODE::CTR)
     };
 
-    // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location, 
-    // we can inject any plaintext at the same location by xor'ing the ciphertext with 
+    // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
+    // we can inject any plaintext at the same location by xor'ing the ciphertext with
     // known_plaintext ^ target_plaintext.
 
     let prefix_len = prefix_length(&oracle)?;
@@ -72,18 +77,26 @@ fn matasano4_26() -> Result<()> {
     let mut ciphertext = oracle(&vec![0; target_cleartext.len()])?;
     ciphertext.truncate(prefix_len + target_cleartext.len());
     ciphertext[prefix_len..].xor_inplace(target_cleartext);
-    compare(Some(b"true".as_ref()), decode_profile(&ciphertext.decrypt(&key, None, MODE::CTR)?, b';').remove(b"admin".as_ref()))
+    compare(
+        Some(b"true".as_ref()),
+        decode_profile(&ciphertext.decrypt(&key, None, MODE::CTR)?, b';').remove(b"admin".as_ref()),
+    )
 }
 
-fn setup4_27() -> (Box<Fn(&[u8]) -> Result<Vec<u8>>>,
-                   Box<Fn(&[u8]) -> Result<()>>,
-                   Box<Fn(&[u8]) -> bool>) {
+fn setup4_27() -> (
+    Box<Fn(&[u8]) -> Result<Vec<u8>>>,
+    Box<Fn(&[u8]) -> Result<()>>,
+    Box<Fn(&[u8]) -> bool>,
+) {
     let secret_key = random_block();
 
     let key = secret_key.clone();
     let encrypter = move |input: &[u8]| {
         // Exclude ';' and '='
-        if input.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
+        if input
+            .iter()
+            .any(|&c| !c.is_ascii() || c == b';' || c == b'=')
+        {
             bail!("invalid character in input");
         }
 
@@ -93,7 +106,9 @@ fn setup4_27() -> (Box<Fn(&[u8]) -> Result<Vec<u8>>>,
         cleartext.extend_from_slice(prefix);
         cleartext.extend_from_slice(input);
         cleartext.extend_from_slice(suffix);
-        cleartext.encrypt(&key, Some(&key), MODE::CBC).map_err(|err| err.into())
+        cleartext
+            .encrypt(&key, Some(&key), MODE::CBC)
+            .map_err(|err| err.into())
     };
 
     let key = secret_key.clone();
@@ -106,9 +121,7 @@ fn setup4_27() -> (Box<Fn(&[u8]) -> Result<Vec<u8>>>,
     };
 
     let key = secret_key.clone();
-    let validator = move |candidate_key: &[u8]| {
-        key == candidate_key
-    };
+    let validator = move |candidate_key: &[u8]| key == candidate_key;
 
     (Box::new(encrypter), Box::new(receiver), Box::new(validator))
 }
@@ -118,22 +131,29 @@ fn matasano4_27() -> Result<()> {
 
     let ciphertext = encrypter(&[])?;
 
-    let mut attack_ciphertext = Vec::with_capacity(3*BLOCK_SIZE);
+    let mut attack_ciphertext = Vec::with_capacity(3 * BLOCK_SIZE);
     attack_ciphertext.extend_from_slice(&ciphertext[0..BLOCK_SIZE]);
     attack_ciphertext.extend_from_slice(&[0; BLOCK_SIZE]);
     attack_ciphertext.extend_from_slice(&ciphertext[0..BLOCK_SIZE]);
     //Push last two blocks to preserve valid padding at the end
-    attack_ciphertext.extend_from_slice(&ciphertext[ciphertext.len()-2*BLOCK_SIZE..]);
+    attack_ciphertext.extend_from_slice(&ciphertext[ciphertext.len() - 2 * BLOCK_SIZE..]);
 
     if let Err(Error(ErrorKind::NonAscii(attack_cleartext), _)) = receiver(&attack_ciphertext) {
-        compare(true, validator(&attack_cleartext[0..BLOCK_SIZE].xor(&attack_cleartext[2*BLOCK_SIZE..3*BLOCK_SIZE])))
+        compare(
+            true,
+            validator(&attack_cleartext[0..BLOCK_SIZE]
+                .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE])),
+        )
     } else {
         bail!("attack ciphertext did not deceive the receiver");
     }
 }
 
 fn matasano4_28() -> Result<()> {
-    compare(from_hex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")?, mac_sha1(b"The quick brown fox ", b"jumps over the lazy dog"))
+    compare(
+        from_hex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")?,
+        mac_sha1(b"The quick brown fox ", b"jumps over the lazy dog"),
+    )
 }
 
 /* The solution to challenge 29 requires a patched version of the sha1 crate. Too be precise,
@@ -228,19 +248,24 @@ fn matasano4_29() -> Result<()> {
 */
 
 fn matasano4_29() -> Result<()> {
-    bail!("Requires a patched version of the sha1 crate. See the source code for detailed instructions.");
+    bail!(
+        "Requires a patched version of the sha1 crate. See the source code for detailed instructions."
+    );
 }
 
 fn matasano4_30() -> Result<()> {
-    /* Skipping/postponing Challenge 30 because 
-     * 1) SHA1 was much more interesting anyway, 
+    /* Skipping/postponing Challenge 30 because
+     * 1) SHA1 was much more interesting anyway,
      * 2) no MD4 implementation seems to be available.  */
 
     bail!(ErrorKind::NotImplemented);
 }
 
 fn matasano4_31() -> Result<()> {
-    compare(from_hex("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")?, hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"))
+    compare(
+        from_hex("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")?,
+        hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"),
+    )
 }
 
 

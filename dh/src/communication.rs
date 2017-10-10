@@ -17,7 +17,10 @@ pub trait Communicate {
 
 pub trait CommunicateEncr: Communicate {
     fn receive_encr(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>> {
-        Ok(self.receive()?.map(|message| decrypt(message, key).unwrap()))
+        Ok(
+            self.receive()?
+                .map(|message| decrypt(message, key).unwrap()),
+        )
     }
 
     fn send_encr(&mut self, message: &[u8], key: &[u8]) -> Result<()> {
@@ -32,11 +35,15 @@ pub trait CommunicateEncr: Communicate {
 pub fn decrypt(mut message: Vec<u8>, key: &[u8]) -> Result<Vec<u8>> {
     let len = message.len();
     let iv = message.split_off(len - aes::BLOCK_SIZE);
-    message.decrypt(key, Some(&iv), MODE::CBC).map_err(|err| err.into())
+    message
+        .decrypt(key, Some(&iv), MODE::CBC)
+        .map_err(|err| err.into())
 }
 
 fn message_length<T: Read>(stream: &mut T) -> Result<Option<usize>> {
-    Ok(read_n_bytes(stream, 4)?.as_ref().map(|message| <LittleEndian as ByteOrder>::read_u32(message) as usize))
+    Ok(read_n_bytes(stream, 4)?.as_ref().map(|message| {
+        <LittleEndian as ByteOrder>::read_u32(message) as usize
+    }))
 }
 
 fn encode_length(length: usize) -> Vec<u8> {
@@ -68,8 +75,10 @@ impl<T: Read + Write> Communicate for T {
 
     fn send(&mut self, message: &[u8]) -> Result<()> {
         let length = encode_length(message.len());
-        self.write(&length).chain_err(|| "failed to write to stream")?;
-        self.write(message).chain_err(|| "failed to write to stream")?;
+        self.write(&length)
+            .chain_err(|| "failed to write to stream")?;
+        self.write(message)
+            .chain_err(|| "failed to write to stream")?;
         Ok(())
     }
 }

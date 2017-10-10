@@ -14,8 +14,12 @@ pub struct Server<T: Communicate> {
 
 impl<T: Communicate> Server<T> {
     pub fn new(mut stream: T) -> Result<Server<T>> {
-        handshake(&mut stream)
-            .map(|key| Server { stream: stream, key: key })
+        handshake(&mut stream).map(|key| {
+            Server {
+                stream: stream,
+                key: key,
+            }
+        })
     }
 }
 

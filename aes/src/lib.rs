@@ -4,7 +4,7 @@ extern crate openssl;
 extern crate unstable_features;
 extern crate xor;
 
-use openssl::symm::{encrypt, decrypt};
+use openssl::symm::{decrypt, encrypt};
 use xor::XOR;
 
 pub const BLOCK_SIZE: usize = 16;
@@ -12,7 +12,7 @@ pub const BLOCK_SIZE: usize = 16;
 pub enum MODE {
     ECB,
     CBC,
-    CTR
+    CTR,
 }
 
 error_chain! {
@@ -58,7 +58,11 @@ pub fn padding_valid(u: &[u8], k: u8) -> Result<bool> {
     if !(1 <= padding && padding <= k) {
         return Ok(false);
     }
-    Ok(u[u.len() - padding as usize..].iter().all(|&b| b == padding))
+    Ok(
+        u[u.len() - padding as usize..]
+            .iter()
+            .all(|&b| b == padding),
+    )
 }
 
 trait Crypto {
@@ -94,17 +98,22 @@ impl Aes128 for [u8] {
     }
 
     fn encrypt_block(&self, key: &[u8]) -> Result<Vec<u8>> {
-        ensure!(self.len() == BLOCK_SIZE, format!("input does not consist of {} bytes", BLOCK_SIZE));
+        ensure!(
+            self.len() == BLOCK_SIZE,
+            format!("input does not consist of {} bytes", BLOCK_SIZE)
+        );
 
-        let mut ciphertext = 
-            encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
+        let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
             .chain_err(|| format!("failed to encrypt block: {:?}", self))?;
         ciphertext.truncate(BLOCK_SIZE);
         Ok(ciphertext)
     }
 
     fn decrypt_block(&self, key: &[u8]) -> Result<Vec<u8>> {
-        ensure!(self.len() == BLOCK_SIZE, format!("input does not consist of {} bytes", BLOCK_SIZE));
+        ensure!(
+            self.len() == BLOCK_SIZE,
+            format!("input does not consist of {} bytes", BLOCK_SIZE)
+        );
 
         let dummy_padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
         let mut u = self.to_vec();
@@ -121,7 +130,7 @@ impl Aes128 for [u8] {
             }
 
             MODE::CBC => {
-                ensure!(iv.is_some(),"iv required for CBC mode");
+                ensure!(iv.is_some(), "iv required for CBC mode");
                 self.encrypt_aes128_cbc(key, iv.unwrap())
             }
 
@@ -129,7 +138,6 @@ impl Aes128 for [u8] {
                 ensure!(iv.is_none(), "iv not supported for CTR mode");
                 self.aes128_ctr(key)
             }
-
         }
     }
 
@@ -141,7 +149,7 @@ impl Aes128 for [u8] {
             }
 
             MODE::CBC => {
-                ensure!(iv.is_some(),"iv required for CBC mode");
+                ensure!(iv.is_some(), "iv required for CBC mode");
                 self.decrypt_aes128_cbc(key, iv.unwrap())
             }
 
@@ -153,7 +161,10 @@ impl Aes128 for [u8] {
     }
 
     fn decrypt_cbc_blocks(&self, key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
-        ensure!(self.len() % BLOCK_SIZE == 0, format!("input length not a multiple of {}", BLOCK_SIZE));
+        ensure!(
+            self.len() % BLOCK_SIZE == 0,
+            format!("input length not a multiple of {}", BLOCK_SIZE)
+        );
 
         let mut cleartext = Vec::new();
         let mut prev = iv;
@@ -202,8 +213,7 @@ impl Crypto for [u8] {
             bail!(format!("input does not consist of {} bytes", BLOCK_SIZE));
         }
 
-        let mut ciphertext = 
-            encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
+        let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
             .chain_err(|| format!("failed to encrypt block: {:?}", self))?;
         ciphertext.truncate(BLOCK_SIZE);
         Ok(ciphertext)
@@ -280,15 +290,17 @@ impl Crypto for [u8] {
         let mut keystream = vec![0; BLOCK_SIZE];
         for b in self.chunks(BLOCK_SIZE) {
             ciphertext.extend_from_slice(&b.xor(&keystream.encrypt_aes128_ecb(key)?));
-            increment_counter(&mut keystream[BLOCK_SIZE/2..]);
+            increment_counter(&mut keystream[BLOCK_SIZE / 2..]);
         }
         Ok(ciphertext)
     }
 }
 
-pub fn increment_counter(v: &mut[u8]) {
+pub fn increment_counter(v: &mut [u8]) {
     for b in v.iter_mut() {
         *b += 1;
-        if *b != 0 { break; }
+        if *b != 0 {
+            break;
+        }
     }
 }

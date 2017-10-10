@@ -11,9 +11,9 @@ pub trait MoveFrom<T> {
 
 impl<T> MoveFrom<T> for [T] {
     fn move_from2(&mut self, mut src: Vec<T>, start: usize, end: usize) -> usize {
-        for (a, b) in self.iter_mut().zip(src[start .. end].iter_mut()) {
+        for (a, b) in self.iter_mut().zip(src[start..end].iter_mut()) {
             mem::swap(a, b);
         }
-        cmp::min(self.len(), end-start)
+        cmp::min(self.len(), end - start)
     }
 }

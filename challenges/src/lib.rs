@@ -38,4 +38,3 @@ pub mod set6;
 
 pub mod helper;
 pub mod mersenne;
-

@@ -14,8 +14,12 @@ pub struct Client<T: Communicate> {
 
 impl<T: Communicate> Client<T> {
     pub fn new(mut stream: T) -> Result<Client<T>> {
-        handshake(&mut stream)
-            .map(|key| Client { stream: stream, key: key })
+        handshake(&mut stream).map(|key| {
+            Client {
+                stream: stream,
+                key: key,
+            }
+        })
     }
 
     pub fn stream(&self) -> &T {
@@ -45,4 +49,3 @@ fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>> {
     let B = stream.receive()?.unwrap();
     Ok(dh.shared_key(&B))
 }
-
