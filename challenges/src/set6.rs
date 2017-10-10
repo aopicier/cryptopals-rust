@@ -283,6 +283,11 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
     let m: BigNum = BigNumTrait::from_bytes_be(&padded_cleartext);
     let c = rsa.encrypt(&m);
 
+    // We are only ever going to use `oracle` in the following way
+    let wrapped_oracle = |s: &BigNum| -> bool {
+        oracle(&(&c * &rsa.encrypt(s)))
+    };
+
     let mut M_prev = vec![(BigNumTrait::clone(&_2B), &_3B - &_1)];
     let mut s_prev = BigNumTrait::clone(&_1);
     let mut i = 1;
@@ -293,14 +298,14 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
         if i == 1 {
             // Step 2.a
             si = n.ceil_div(&_3B).0;
-            while !oracle(&(&c * &rsa.encrypt(&si)))
+            while !wrapped_oracle(&si)
             {
                 si = &si + &_1;
             }
         } else if M_prev.len() >= 2 {
             // Step 2.b
             si = &s_prev + &_1;
-            while !oracle(&(&c * &rsa.encrypt(&si)))
+            while !wrapped_oracle(&si)
             {
                 si = &si + &_1;
             }
@@ -312,7 +317,7 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
                 si = (&_2B + &(&ri * n)).ceil_div(b).0;
                 let U = (&_3B + &(&ri * n)).ceil_div(a).0;
                 while si < U {
-                    if oracle(&(&c * &rsa.encrypt(&si))) {
+                    if wrapped_oracle(&si) {
                         break 'outer;
                     }
                     si = &si + &_1;
