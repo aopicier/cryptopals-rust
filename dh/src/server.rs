@@ -1,10 +1,11 @@
 use algo::DH;
-use num;
 
 use communication::Communicate;
 use communication::CommunicateEncr;
 
 use errors::*;
+
+use bignum::BigUint as BigNum;
 
 pub struct Server<T: Communicate> {
     stream: T,
@@ -30,7 +31,7 @@ impl<T: Communicate> Communicate for Server<T> {
 
 #[allow(non_snake_case)]
 fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>> {
-    let mut dh = DH::<num::bigint::BigUint>::new();
+    let mut dh = DH::<BigNum>::new();
     let p = stream.receive()?.unwrap();
     let g = stream.receive()?.unwrap();
     dh.init_with_parameters(p, g);

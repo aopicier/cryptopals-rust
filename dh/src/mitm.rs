@@ -3,8 +3,8 @@ use algo::secret_to_key;
 use communication::Communicate;
 use communication::decrypt;
 
-use num::One;
-use num::bigint::BigUint;
+use bignum::BigUint as BigNum;
+use bignum::BigNumTrait;
 
 use errors::*;
 
@@ -24,7 +24,7 @@ impl<T: Communicate> MITM<T> {
     pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MITM<T>> {
         let (client_key, server_key) = match mode {
             Mode::PublicKey => handshake_publickey(&mut client_stream, &mut server_stream)?,
-            Mode::Generator => handshake_generator(&mut client_stream, &mut server_stream, &BigUint::one())?,
+            Mode::Generator => handshake_generator(&mut client_stream, &mut server_stream, &BigNum::one())?,
         };
         Ok(MITM { client_stream: client_stream, server_stream: server_stream, 
             client_key: client_key, server_key: server_key })
@@ -71,7 +71,7 @@ fn handshake_publickey<T: Communicate>(client_stream: &mut T, server_stream: &mu
 }
 
 #[allow(non_snake_case)]
-fn handshake_generator<T: Communicate>(client_stream: &mut T, server_stream: &mut T, g: &BigUint) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>)> {
+fn handshake_generator<T: Communicate>(client_stream: &mut T, server_stream: &mut T, g: &BigNum) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>)> {
     let p = client_stream.receive()?.unwrap();
     client_stream.receive()?; //Discard g
     server_stream.send(&p)?;
