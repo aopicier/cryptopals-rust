@@ -2,7 +2,7 @@ use std::mem;
 use std::cmp;
 
 pub fn all_bytes() -> Vec<u8> {
-    (0..std::u8::MAX as u32 + 1).map(|u| u as u8).collect()
+    (0..u32::from(std::u8::MAX) + 1).map(|u| u as u8).collect()
 }
 
 pub trait MoveFrom<T> {

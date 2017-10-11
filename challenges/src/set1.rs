@@ -90,7 +90,7 @@ fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32> {
     Ok(
         u.xor(v)
             .iter()
-            .fold(0u32, |a, &b| a + nonzero_bits(b) as u32),
+            .fold(0u32, |a, &b| a + u32::from(nonzero_bits(b))),
     )
 }
 

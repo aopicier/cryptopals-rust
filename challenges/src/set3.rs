@@ -157,10 +157,10 @@ fn matasano3_21() -> Result<()> {
 fn matasano3_22() -> Result<()> {
     let mut rng = rand::thread_rng();
     let seed: u16 = rng.gen();
-    let mut mt = MersenneTwister::initialize(seed as u32);
+    let mut mt = MersenneTwister::initialize(u32::from(seed));
     compare(
-        Some(seed as u32),
-        mersenne::crack_seed_from_nth(mt.nth(0).unwrap(), 0, 0..(std::u16::MAX as u32)),
+        Some(u32::from(seed)),
+        mersenne::crack_seed_from_nth(mt.nth(0).unwrap(), 0, 0..(u32::from(std::u16::MAX))),
     )
 }
 
@@ -188,7 +188,7 @@ fn matasano3_24() -> Result<()> {
         v
     };
     let seed: u16 = rng.gen();
-    let mt = MersenneTwister::initialize(seed as u32);
+    let mt = MersenneTwister::initialize(u32::from(seed));
 
     let mut ciphertext: Vec<u8> = Vec::new();
     let buffer = &mut [0u8; 4];
@@ -208,8 +208,8 @@ fn matasano3_24() -> Result<()> {
         &ciphertext[4 * index..4 * (index + 1)].xor(&[b'A'; 4]),
     );
     compare(
-        Some(seed as u32),
-        mersenne::crack_seed_from_nth(random_number, index, 0..(std::u16::MAX as u32)),
+        Some(u32::from(seed)),
+        mersenne::crack_seed_from_nth(random_number, index, 0..(u32::from(std::u16::MAX))),
     )
 }
 

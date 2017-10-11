@@ -46,7 +46,7 @@ impl Serialize for [u8] {
             u4.push(u & 0xf);
         }
         u4.iter()
-            .map(|&u| char::from_digit(u as u32, 16).unwrap())
+            .map(|&u| char::from_digit(u32::from(u), 16).unwrap())
             .collect()
     }
 }
@@ -160,9 +160,9 @@ fn block_to_base64(block: &[u8], base64: &mut String) {
 
 fn u8_to_base64(u: u8) -> char {
     match u {
-        0...25 => ('A' as u8 + u) as char,
-        26...51 => ('a' as u8 + (u - 26)) as char,
-        52...61 => ('0' as u8 + (u - 52)) as char,
+        0...25 => (b'A' + u) as char,
+        26...51 => (b'a' + (u - 26)) as char,
+        52...61 => (b'0' + (u - 52)) as char,
         62 => '+',
         63 => '/',
         _ => panic!("input exceeded range"),
@@ -171,9 +171,9 @@ fn u8_to_base64(u: u8) -> char {
 
 fn u8_from_base64(c: char) -> Result<u8> {
     match c {
-        'A'...'Z' => Ok(c as u8 - 'A' as u8),
-        'a'...'z' => Ok(26 + (c as u8 - 'a' as u8)),
-        '0'...'9' => Ok(52 + (c as u8 - '0' as u8)),
+        'A'...'Z' => Ok(c as u8 - b'A'),
+        'a'...'z' => Ok(26 + (c as u8 - b'a')),
+        '0'...'9' => Ok(52 + (c as u8 - b'0')),
         '+' => Ok(62),
         '/' => Ok(63),
         _ => bail!(format!("invalid character {}", c)),
