@@ -3,7 +3,7 @@ use algo::secret_to_key;
 use communication::Communicate;
 use communication::decrypt;
 
-use bignum::BigUint as BigNum;
+use bignum::NumBigUint as BigNum;
 use bignum::BigNumTrait;
 
 use errors::*;

@@ -9,18 +9,22 @@ use std::cmp::Ordering;
 use num_traits::Num;
 use num_traits::NumOps;
 use num::{One, Signed, Zero};
-pub use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
+use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
 use num::pow;
 
 pub use openssl::error;
-pub use openssl::bn::{BigNum, BigNumContext, BigNumRef};
+use openssl::bn::{BigNum, BigNumContext, BigNumRef};
 
 error_chain!{}
 
-//#[derive(Eq, PartialEq, PartialOrd, Ord, Debug)]
-//pub struct BigNum<T> {
-//    num: T
-//}
+pub type OpensslBigNum = BigNumWrapper<BigNum>;
+pub type NumBigInt = BigNumWrapper<BigInt>;
+pub type NumBigUint = BigNumWrapper<BigUint>;
+
+#[derive(Eq, PartialEq, PartialOrd, Ord, Debug)]
+pub struct BigNumWrapper<T> {
+    num: T,
+}
 
 pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn zero() -> Self;
@@ -46,149 +50,241 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn bytes(&self) -> usize;
 }
 
-//impl Clone for BigNum<BigNum> {
-//    fn clone(&self) -> Self {
-//        BigNum { num: self.num.as_ref().to_owned().unwrap() }
-//    }
-//}
-//
-//impl Clone for BigNum<BigInt> {
-//    fn clone(&self) -> Self {
-//        BigNum { num: self.num.clone() }
-//    }
-//}
-//
-//impl<'a1, 'a2, T> std::ops::Add<&'a2 BigNum<T>> for &'a1 BigNum<T>
-//where &'a1 T: std::ops::Add<&'a2 T, Output=T> {
-//    type Output = BigNum<T>;
-//
-//    fn add(self, other: &'a2 BigNum<T>) -> Self::Output {
-//        BigNum { num: &self.num + &other.num }
-//    }
-//}
-//
-//impl<'a1, 'a2, T> std::ops::Sub<&'a2 BigNum<T>> for &'a1 BigNum<T>
-//where &'a1 T: std::ops::Sub<&'a2 T, Output=T> {
-//    type Output = BigNum<T>;
-//
-//    fn sub(self, other: &'a2 BigNum<T>) -> Self::Output {
-//        BigNum { num: &self.num - &other.num }
-//    }
-//}
-//
-//impl<'a1, 'a2, T> std::ops::Mul<&'a2 BigNum<T>> for &'a1 BigNum<T>
-//where &'a1 T: std::ops::Mul<&'a2 T, Output=T> {
-//    type Output = BigNum<T>;
-//
-//    fn mul(self, other: &'a2 BigNum<T>) -> Self::Output {
-//        BigNum { num: &self.num * &other.num }
-//    }
-//}
-//
-//impl<'a1, 'a2, T> std::ops::Div<&'a2 BigNum<T>> for &'a1 BigNum<T>
-//where &'a1 T: std::ops::Div<&'a2 T, Output=T> {
-//    type Output = BigNum<T>;
-//
-//    fn div(self, other: &'a2 BigNum<T>) -> Self::Output {
-//        BigNum { num: &self.num / &other.num }
-//    }
-//}
-//
-//impl<'a1, 'a2, T> std::ops::Rem<&'a2 BigNum<T>> for &'a1 BigNum<T>
-//where &'a1 T: std::ops::Rem<&'a2 T, Output=T> {
-//    type Output = BigNum<T>;
-//
-//    fn rem(self, other: &'a2 BigNum<T>) -> Self::Output {
-//        BigNum { num: &self.num % &other.num }
-//    }
-//}
-//
-//impl<T: BigNumTrait> BigNumTrait for BigNum<T> {
-//    fn zero() -> Self {
-//        BigNum { num: T::zero() }
-//    }
-//
-//    fn one() -> Self {
-//        BigNum { num: T::one() }
-//    }
-//
-//    fn from_u32(u: u32) -> Self {
-//        BigNum { num: T::from_u32(u) }
-//    }
-//
-//    fn from_bytes_be(bytes: &[u8]) -> Self {
-//        BigNum { num: T::from_bytes_be(bytes) }
-//    }
-//
-//    fn to_bytes_be(&self) -> Vec<u8> {
-//        self.num.to_bytes_be()
-//    }
-//
-//    fn from_hex_str(bytes: &str) -> Result<Self> {
-//        BigNumTrait::from_hex_str(bytes).map(|x| BigNum { num: x })
-//    }
-//
-//    fn from_dec_str(bytes: &str) -> Result<Self> {
-//        BigNumTrait::from_dec_str(bytes).map(|x| BigNum { num: x })
-//    }
-//
-//    fn to_dec_str(&self) -> String {
-//        self.num.to_dec_str()
-//    }
-//
-//    fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
-//        BigNum { num: self.num.mod_exp(&exponent.num, &modulus.num) }
-//    }
-//
-//    fn gen_below(bound: &Self) -> Self {
-//        BigNum { num: T::gen_below(&bound.num) }
-//    }
-//
-//    fn gen_prime(bits: usize) -> Self {
-//        BigNum { num: T::gen_prime(bits) }
-//    }
-//
-//    fn gen_random(bits: usize) -> Self {
-//        BigNum { num: T::gen_random(bits) }
-//    }
-//
-//    fn mod_math(&self, n: &Self) -> Self {
-//        BigNum { num: self.num.mod_math(&n.num) }
-//    }
-//
-//    fn invmod(&self, n: &Self) -> Option<Self> {
-//        self.num.invmod(&n.num).map(|x| BigNum { num: x })
-//    }
-//
-//    fn power(&self, k: usize) -> Self {
-//        BigNum { num: self.num.power(k) }
-//    }
-//
-//    fn root(&self, k: usize) -> (Self, bool) {
-//        let (root, flag) = self.num.root(k);
-//        (BigNum { num: root }, flag)
-//    }
-//
-//    fn clone(x: &Self) -> Self {
-//        BigNum { num: BigNumTrait::clone(&x.num) }
-//    }
-//
-//    fn rsh(&self, k: usize) -> Self {
-//        BigNum { num: self.num.rsh(k) }
-//    }
-//
-//    fn lsh(&self, k: usize) -> Self {
-//        BigNum { num: self.num.lsh(k) }
-//    }
-//
-//    fn bits(&self) -> usize {
-//        self.num.bits()
-//    }
-//
-//    fn bytes(&self) -> usize {
-//        self.num.bytes()
-//    }
-//}
+impl Clone for BigNumWrapper<BigNum> {
+    fn clone(&self) -> Self {
+        BigNumWrapper {
+            num: self.num.as_ref().to_owned().unwrap(),
+        }
+    }
+}
+
+impl Clone for BigNumWrapper<BigInt> {
+    fn clone(&self) -> Self {
+        BigNumWrapper {
+            num: self.num.clone(),
+        }
+    }
+}
+
+impl Clone for BigNumWrapper<BigUint> {
+    fn clone(&self) -> Self {
+        BigNumWrapper {
+            num: self.num.clone(),
+        }
+    }
+}
+
+/* Unfortunately the following generic impls tend to lead to
+ * infinite recursions in the type system. We therefore use a
+ * macro to spell out the impls for all the types we are
+ * interested in.
+
+ * See also
+ * https://users.rust-lang.org/t/arithmetic-operators-on-references-and-trait-constraints/13158 */
+
+/*
+impl<'a1, 'a2, T> std::ops::Add<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
+where &'a1 T: std::ops::Add<&'a2 T, Output=T> {
+    type Output = BigNumWrapper<T>;
+
+    fn add(self, other: &'a2 BigNumWrapper<T>) -> Self::Output {
+        BigNumWrapper { num: &self.num + &other.num }
+    }
+}
+
+impl<'a1, 'a2, T> std::ops::Sub<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
+where &'a1 T: std::ops::Sub<&'a2 T, Output=T> {
+    type Output = BigNumWrapper<T>;
+
+    fn sub(self, other: &'a2 BigNumWrapper<T>) -> Self::Output {
+        BigNumWrapper { num: &self.num - &other.num }
+    }
+}
+
+impl<'a1, 'a2, T> std::ops::Mul<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
+where &'a1 T: std::ops::Mul<&'a2 T, Output=T> {
+    type Output = BigNumWrapper<T>;
+
+    fn mul(self, other: &'a2 BigNumWrapper<T>) -> Self::Output {
+        BigNumWrapper { num: &self.num * &other.num }
+    }
+}
+
+impl<'a1, 'a2, T> std::ops::Div<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
+where &'a1 T: std::ops::Div<&'a2 T, Output=T> {
+    type Output = BigNumWrapper<T>;
+
+    fn div(self, other: &'a2 BigNumWrapper<T>) -> Self::Output {
+        BigNumWrapper { num: &self.num / &other.num }
+    }
+}
+
+impl<'a1, 'a2, T> std::ops::Rem<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
+where &'a1 T: std::ops::Rem<&'a2 T, Output=T> {
+    type Output = BigNumWrapper<T>;
+
+    fn rem(self, other: &'a2 BigNumWrapper<T>) -> Self::Output {
+        BigNumWrapper { num: &self.num % &other.num }
+    }
+}
+*/
+
+macro_rules! impl_numops {
+    ( $T:ty ) => {
+        impl<'a1, 'a2> std::ops::Add<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
+            type Output = BigNumWrapper<$T>;
+
+            fn add(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
+                BigNumWrapper { num: &self.num + &other.num }
+            }
+        }
+
+        impl<'a1, 'a2> std::ops::Sub<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
+            type Output = BigNumWrapper<$T>;
+
+            fn sub(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
+                BigNumWrapper { num: &self.num - &other.num }
+            }
+        }
+
+        impl<'a1, 'a2> std::ops::Mul<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
+            type Output = BigNumWrapper<$T>;
+
+            fn mul(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
+                BigNumWrapper { num: &self.num * &other.num }
+            }
+        }
+
+        impl<'a1, 'a2> std::ops::Div<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
+            type Output = BigNumWrapper<$T>;
+
+            fn div(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
+                BigNumWrapper { num: &self.num / &other.num }
+            }
+        }
+
+        impl<'a1, 'a2> std::ops::Rem<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
+            type Output = BigNumWrapper<$T>;
+
+            fn rem(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
+                BigNumWrapper { num: &self.num % &other.num }
+            }
+        }
+    }
+}
+
+impl_numops!(BigInt);
+impl_numops!(BigUint);
+impl_numops!(BigNum);
+
+impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
+    fn zero() -> Self {
+        BigNumWrapper { num: T::zero() }
+    }
+
+    fn one() -> Self {
+        BigNumWrapper { num: T::one() }
+    }
+
+    fn from_u32(u: u32) -> Self {
+        BigNumWrapper {
+            num: T::from_u32(u),
+        }
+    }
+
+    fn from_bytes_be(bytes: &[u8]) -> Self {
+        BigNumWrapper {
+            num: T::from_bytes_be(bytes),
+        }
+    }
+
+    fn to_bytes_be(&self) -> Vec<u8> {
+        self.num.to_bytes_be()
+    }
+
+    fn from_hex_str(bytes: &str) -> Result<Self> {
+        BigNumTrait::from_hex_str(bytes).map(|x| BigNumWrapper { num: x })
+    }
+
+    fn from_dec_str(bytes: &str) -> Result<Self> {
+        BigNumTrait::from_dec_str(bytes).map(|x| BigNumWrapper { num: x })
+    }
+
+    fn to_dec_str(&self) -> String {
+        self.num.to_dec_str()
+    }
+
+    fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
+        BigNumWrapper {
+            num: self.num.mod_exp(&exponent.num, &modulus.num),
+        }
+    }
+
+    fn gen_below(bound: &Self) -> Self {
+        BigNumWrapper {
+            num: T::gen_below(&bound.num),
+        }
+    }
+
+    fn gen_prime(bits: usize) -> Self {
+        BigNumWrapper {
+            num: T::gen_prime(bits),
+        }
+    }
+
+    fn gen_random(bits: usize) -> Self {
+        BigNumWrapper {
+            num: T::gen_random(bits),
+        }
+    }
+
+    fn mod_math(&self, n: &Self) -> Self {
+        BigNumWrapper {
+            num: self.num.mod_math(&n.num),
+        }
+    }
+
+    fn invmod(&self, n: &Self) -> Option<Self> {
+        self.num.invmod(&n.num).map(|x| BigNumWrapper { num: x })
+    }
+
+    fn power(&self, k: usize) -> Self {
+        BigNumWrapper {
+            num: self.num.power(k),
+        }
+    }
+
+    fn root(&self, k: usize) -> (Self, bool) {
+        let (root, flag) = self.num.root(k);
+        (BigNumWrapper { num: root }, flag)
+    }
+
+    fn clone(x: &Self) -> Self {
+        BigNumWrapper {
+            num: BigNumTrait::clone(&x.num),
+        }
+    }
+
+    fn rsh(&self, k: usize) -> Self {
+        BigNumWrapper {
+            num: self.num.rsh(k),
+        }
+    }
+
+    fn lsh(&self, k: usize) -> Self {
+        BigNumWrapper {
+            num: self.num.lsh(k),
+        }
+    }
+
+    fn bits(&self) -> usize {
+        self.num.bits()
+    }
+
+    fn bytes(&self) -> usize {
+        self.num.bytes()
+    }
+}
 
 impl BigNumTrait for BigUint {
     fn zero() -> Self {

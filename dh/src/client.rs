@@ -3,7 +3,7 @@ use algo::DH;
 use communication::Communicate;
 use communication::CommunicateEncr;
 
-use bignum::BigUint as BigNum;
+use bignum::NumBigUint as BigNum;
 
 use errors::*;
 

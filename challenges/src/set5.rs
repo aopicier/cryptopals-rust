@@ -7,7 +7,7 @@ use diffie_hellman::mitm::MITM;
 use diffie_hellman::mitm::Mode;
 use diffie_hellman::server::Server;
 
-use bignum::BigNum;
+use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
 
 use rsa::Rsa;
@@ -141,7 +141,7 @@ fn matasano5_39() -> Result<()> {
 
 fn matasano5_40() -> Result<()> {
     let bits = 512;
-    let m = <BigNum as BigNumTrait>::gen_random(bits - 1);
+    let m = BigNum::gen_random(bits - 1);
     let rsa1 = Rsa::generate(bits);
     let rsa2 = Rsa::generate(bits);
     let rsa3 = Rsa::generate(bits);

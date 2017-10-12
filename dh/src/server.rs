@@ -5,7 +5,7 @@ use communication::CommunicateEncr;
 
 use errors::*;
 
-use bignum::BigUint as BigNum;
+use bignum::NumBigUint as BigNum;
 
 pub struct Server<T: Communicate> {
     stream: T,

@@ -12,7 +12,7 @@ pub struct DsaPublic<'a, T: 'a> {
 impl<'a, T> DsaPublic<'a, T>
 where
     T: bignum::BigNumTrait,
-    for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T>,
+    for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     pub fn generate(private: &'a DsaPrivate<T>) -> Self {
         let params = private.params;
@@ -68,7 +68,7 @@ pub struct DsaPrivate<'a, T: 'a> {
 impl<'a, T> DsaPrivate<'a, T>
 where
     T: bignum::BigNumTrait,
-    for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T>,
+    for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     pub fn generate(params: &'a DsaParams<T>) -> Self {
         let x = rand_range_safe(&params.q);

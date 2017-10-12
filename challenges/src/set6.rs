@@ -2,7 +2,7 @@ use dsa;
 use dsa::{rand_range_safe, DsaParams, DsaPrivate, DsaPublic, Signature};
 use rsa::Rsa;
 
-use bignum::BigNum;
+use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 use serialize::{Serialize, from_base64};
 
@@ -34,7 +34,7 @@ fn matasano6_41() -> Result<()> {
         Some(rsa.decrypt(x))
     };
 
-    let s = <BigNum as BigNumTrait>::gen_random(bits - 1);
+    let s = BigNum::gen_random(bits - 1);
     //TODO We should check that s > 1 and that s and rsa.n() have no common divisors
     let t = s.invmod(rsa.n()).ok_or("s and n are not coprime")?;
 
@@ -46,7 +46,7 @@ fn matasano6_41() -> Result<()> {
 fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
     let mut prefix = vec![1u8];
     //prefix.extend_from_slice(&vec![255; 14]);
-    let one = <BigNum as BigNumTrait>::from_u32(1);
+    let one = BigNum::from_u32(1);
     let k = 3;
     //The loop does not seem to be necessary. Can I prove why?
     loop {
@@ -55,7 +55,7 @@ fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
         if unused_space < 0 {
             return None;
         }
-        let fake_block = <BigNum as BigNumTrait>::from_bytes_be(&{
+        let fake_block = BigNum::from_bytes_be(&{
             let mut v = prefix.clone();
             v.extend_from_slice(suffix);
             v
@@ -226,14 +226,14 @@ fn matasano6_45() -> Result<()> {
     // It is not possible to fake a signature for g = 0 with our verification routine because r
     // would have to be 0. We therefore skip this part of the exercise.
     let params_fake = DsaParams {
-        p: BigNumTrait::clone(&params.p),
-        q: BigNumTrait::clone(&params.q),
-        g: BigNumTrait::one(),
+        p: params.p.clone(),
+        q: params.q.clone(),
+        g: BigNum::one(),
     };
     //let private_fake = DsaPrivate { params: &params_fake, x: clone(&private.x) };
     let public_fake = DsaPublic {
         params: &params_fake,
-        y: BigNumTrait::clone(&public.y),
+        y: public.y.clone(),
     };
 
     let signature = dsa::fake_signature(&public_fake);
@@ -264,7 +264,7 @@ fn matasano6_46() -> Result<()> {
     let rsa = Rsa::generate(1024);
     let _0 = BigNum::zero();
     let _1 = BigNum::one();
-    let _2 = <BigNum as BigNumTrait>::from_u32(2);
+    let _2 = BigNum::from_u32(2);
     let oracle = |ciphertext: &BigNum| -> bool {
         // !rsa.decrypt(ciphertext).is_bit_set(0)
         &rsa.decrypt(ciphertext) % &_2 == _0
@@ -273,7 +273,7 @@ fn matasano6_46() -> Result<()> {
     let m = BigNum::from_hex_str(&cleartext)?;
     let mut c = rsa.encrypt(&m);
     let mut l = BigNum::one();
-    let two = <BigNum as BigNumTrait>::from_u32(2);
+    let two = BigNum::from_u32(2);
     let factor = rsa.encrypt(&two);
     let k = rsa.n().bits() as usize;
     for _ in 0..k {
@@ -294,8 +294,8 @@ fn matasano6_46() -> Result<()> {
 fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();
-    let _2 = <BigNum as BigNumTrait>::from_u32(2);
-    let _3 = <BigNum as BigNumTrait>::from_u32(3);
+    let _2 = BigNum::from_u32(2);
+    let _3 = BigNum::from_u32(3);
 
     let rsa = Rsa::<BigNum>::generate(rsa_bits);
     let n = rsa.n();
@@ -323,8 +323,8 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
     // We are only ever going to use `oracle` in the following way
     let wrapped_oracle = |s: &BigNum| -> bool { oracle(&(&c * &rsa.encrypt(s))) };
 
-    let mut M_prev = vec![(BigNumTrait::clone(&_2B), &_3B - &_1)];
-    let mut s_prev = BigNumTrait::clone(&_1);
+    let mut M_prev = vec![(_2B.clone(), &_3B - &_1)];
+    let mut s_prev = _1.clone();
     let mut i = 1;
 
     loop {
@@ -365,9 +365,9 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
             let U = (&(b * &si) - &_2B).floor_div(n).0;
             while r <= U {
                 Mi.push((
-                    cmp::max(BigNumTrait::clone(a), (&_2B + &(&r * n)).ceil_div(&si).0),
+                    cmp::max(a.clone(), (&_2B + &(&r * n)).ceil_div(&si).0),
                     cmp::min(
-                        BigNumTrait::clone(b),
+                        b.clone(),
                         (&(&_3B - &_1) + &(&r * n)).floor_div(&si).0,
                     ),
                 ));
