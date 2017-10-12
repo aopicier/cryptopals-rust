@@ -1,4 +1,4 @@
-use algo::secret_to_key;
+use algo::{secret_to_key, serialize};
 
 use communication::Communicate;
 use communication::decrypt;
@@ -96,12 +96,12 @@ fn handshake_generator<T: Communicate>(
     let p = client_stream.receive()?.unwrap();
     client_stream.receive()?; //Discard g
     server_stream.send(&p)?;
-    server_stream.send(&g.to_bytes_be())?;
+    server_stream.send(&serialize(g))?;
     //Discard actual public keys
     let A = client_stream.receive()?.unwrap();
     let B = server_stream.receive()?.unwrap();
     //Send fake public keys
     client_stream.send(&B)?;
     server_stream.send(&A)?;
-    Ok((Some(secret_to_key(&g.to_bytes_be())), None))
+    Ok((Some(secret_to_key(&serialize(g))), None))
 }

@@ -17,6 +17,14 @@ pub fn secret_to_key(s: &[u8]) -> Vec<u8> {
     m.digest().bytes()[0..16].to_vec()
 }
 
+pub fn serialize<T: bignum::BigNumTrait>(x: &T) -> Vec<u8> {
+    x.to_bytes_be()
+}
+
+pub fn deserialize<T: bignum::BigNumTrait>(x: &[u8]) -> T {
+    T::from_bytes_be(x)
+}
+
 impl<T: bignum::BigNumTrait> DH<T> {
     pub fn new() -> Self {
         DH {
@@ -43,12 +51,12 @@ impl<T: bignum::BigNumTrait> DH<T> {
     }
 
     pub fn init_with_parameters(&mut self, p: Vec<u8>, g: Vec<u8>) {
-        self.p = T::from_bytes_be(&p);
-        self.g = T::from_bytes_be(&g);
+        self.p = deserialize(&p);
+        self.g = deserialize(&g);
     }
 
     pub fn parameters(&self) -> (Vec<u8>, Vec<u8>) {
-        (self.p.to_bytes_be(), self.g.to_bytes_be())
+        (serialize(&self.p), serialize(&self.g))
     }
 
     fn generate_private_key(&mut self) {
@@ -59,14 +67,14 @@ impl<T: bignum::BigNumTrait> DH<T> {
 
     pub fn public_key(&mut self) -> Vec<u8> {
         self.generate_private_key();
-        self.g.mod_exp(&self.a, &self.p).to_bytes_be()
+        serialize(&self.g.mod_exp(&self.a, &self.p))
     }
 
     #[allow(non_snake_case)]
     pub fn shared_key(&mut self, B: &[u8]) -> Vec<u8> {
         let B = T::from_bytes_be(B);
         let s = B.mod_exp(&self.a, &self.p);
-        secret_to_key(&T::to_bytes_be(&s))
+        secret_to_key(&serialize(&s))
     }
 }
 
