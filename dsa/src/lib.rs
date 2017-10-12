@@ -122,7 +122,7 @@ pub fn rand_range_safe<T: bignum::BigNumTrait>(q: &T) -> T {
 pub fn fake_signature<T>(public: &DsaPublic<T>) -> Signature<T>
 where
     T: bignum::BigNumTrait,
-    for<'b> &'b T: Sized + NumOps<&'b T, T>,
+    for<'b> &'b T: NumOps<&'b T, T>,
 {
     let p = &public.params.p;
     let q = &public.params.q;

@@ -10,7 +10,7 @@ pub struct Rsa<T> {
 
 impl<T: bignum::BigNumTrait> Rsa<T>
 where
-    for<'a1, 'a2> &'a1 T: Sized + NumOps<&'a2 T, T>,
+    for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     pub fn generate(bits: usize) -> Self {
         let p = T::gen_prime(bits);
