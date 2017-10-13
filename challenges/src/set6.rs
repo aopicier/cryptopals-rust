@@ -269,7 +269,10 @@ fn matasano6_46() -> Result<()> {
         // !rsa.decrypt(ciphertext).is_bit_set(0)
         &rsa.decrypt(ciphertext) % &_2 == _0
     };
-    let cleartext = from_base64("VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IGFyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==")?.to_hex();
+    let cleartext = from_base64(
+        "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
+         Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
+    )?.to_hex();
     let m = BigNum::from_hex_str(&cleartext)?;
     let mut c = rsa.encrypt(&m);
     let mut l = BigNum::one();
@@ -366,10 +369,7 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
             while r <= U {
                 Mi.push((
                     cmp::max(a.clone(), (&_2B + &(&r * n)).ceil_div(&si).0),
-                    cmp::min(
-                        b.clone(),
-                        (&(&_3B - &_1) + &(&r * n)).floor_div(&si).0,
-                    ),
+                    cmp::min(b.clone(), (&(&_3B - &_1) + &(&r * n)).floor_div(&si).0),
                 ));
                 r = &r + &_1;
             }

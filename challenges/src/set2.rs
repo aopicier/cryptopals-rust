@@ -225,8 +225,8 @@ pub fn oracle_generator(
     cleartext.extend_from_slice(u);
     cleartext.extend_from_slice(suffix);
 
-    // Only setting iv here depending on the mode seems to be difficult because of type and/or lifetime
-    // issues with Option<&[u8]>.
+    // Only setting iv here depending on the mode seems to be difficult because of type
+    // and/or lifetime issues with Option<&[u8]>.
     match mode {
         MODE::CBC => cleartext.encrypt(key, Some(&[0; BLOCK_SIZE]), mode),
         _ => cleartext.encrypt(key, None, mode),
@@ -300,7 +300,7 @@ pub fn decode_profile(u: &[u8], sep: u8) -> HashMap<&[u8], &[u8]> {
     p
 }
 
-/* The following function works under the single assumption that the target value "user" (to be 
+/* The following function works under the single assumption that the target value "user" (to be
    replaced by "admin") is stored at the very end of the profile. */
 fn matasano2_13() -> Result<()> {
     let key = random_block();

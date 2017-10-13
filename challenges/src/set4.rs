@@ -156,9 +156,9 @@ fn matasano4_28() -> Result<()> {
     )
 }
 
-/* The solution to challenge 29 requires a patched version of the sha1 crate. To be precise,
- * you have to clone the rust-sha1 repository and the apply the following patch
- * (tested for version 0.2.0 of rust-sha1):
+/* The solution to challenge 29 requires a patched version of the sha1 crate.
+ * To be precise, you have to clone the rust-sha1 repository and the apply the
+ * following patch (tested for version 0.2.0 of rust-sha1):
 
 ------------------------------------
 diff --git a/src/lib.rs b/src/lib.rs
@@ -189,8 +189,7 @@ index 352888b..325b94f 100644
 Finally point Cargo.toml to your patched version of rust-sha1. */
 
 /*
-fn setup4_29() ->  (Box<Fn(&[u8]) -> Vec<u8>>,
-                   Box<Fn(&[u8], &[u8]) -> bool>) {
+fn setup4_29() -> (Box<Fn(&[u8]) -> Vec<u8>>, Box<Fn(&[u8], &[u8]) -> bool>) {
     let mut rng = rand::thread_rng();
     let key_len = rng.gen_range(1, 200);
     let secret_key: Vec<u8> = rng.gen_iter().take(key_len).collect();
@@ -210,7 +209,11 @@ fn padding(length: usize) -> Vec<u8> {
     for _ in 0..padding {
         w.push(0u8);
     }
-    w.extend_from_slice(unsafe { &mem::transmute::<_, [u8; 8]>((((length as u64) % 64 + (length as u64)/64*64) * 8).to_be()) });
+    w.extend_from_slice(unsafe {
+        &mem::transmute::<_, [u8; 8]>(
+            (((length as u64) % 64 + (length as u64) / 64 * 64) * 8).to_be(),
+        )
+    });
     w
 }
 
@@ -249,7 +252,8 @@ fn matasano4_29() -> Result<()> {
 
 fn matasano4_29() -> Result<()> {
     bail!(
-        "Requires a patched version of the sha1 crate. See the source code for detailed instructions."
+        "Requires a patched version of the sha1 crate. \
+         See the source code for detailed instructions."
     );
 }
 

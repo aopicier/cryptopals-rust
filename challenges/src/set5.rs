@@ -106,7 +106,8 @@ fn matasano5_34_mitm() -> Result<()> {
         TcpStream::connect(("localhost", client_port)).chain_err(|| "client failed to connect")?;
 
     let mut client = Client::new(stream)?;
-    let message = b"This is a test"; //This needs to match the hardcoded string in mitm_handle_client
+    // The message needs to match the hardcoded string in mitm_handle_client
+    let message = b"This is a test";
     client.send(message)?;
     compare(Some(message.to_vec()), client.receive()?)?;
 

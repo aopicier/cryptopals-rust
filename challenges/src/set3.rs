@@ -56,7 +56,6 @@ fn random_block() -> Vec<u8> {
 fn matasano3_17() -> Result<()> {
     let key = random_block();
     let oracle = |iv: &[u8], ciphertext: &[u8]| -> Result<bool> {
-        //if let Err(Error(ErrorKind::Aes(aes::ErrorKind::InvalidPadding), _)) = ciphertext.decrypt_cbc_blocks(&key, iv).map_err(|err| err.into())
         match ciphertext.decrypt(&key, Some(iv), MODE::CBC) {
             Err(aes::Error(aes::ErrorKind::InvalidPadding, _)) => Ok(false),
             Err(e) => Err(e.into()),

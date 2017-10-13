@@ -30,7 +30,10 @@ fn transposed_blocks(input: &[u8], size: usize) -> Vec<Vec<u8>> {
 }
 
 fn matasano1_1() -> Result<()> {
-    let input_string = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+    let input_string = "49276d206b696c6c696e6720796f757220627261\
+                        696e206c696b65206120706f69736f6e6f7573206\
+                        d757368726f6f6d";
+
     compare(
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
         &from_hex(input_string)?.to_base64(),
@@ -75,9 +78,13 @@ fn matasano1_4() -> Result<()> {
 
 fn matasano1_5() -> Result<()> {
     let input = b"Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+
     let passphrase = b"ICE";
     compare(
-        "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f",
+        "0b3637272a2b2e63622c2e69692a23693a2a3c632\
+         4202d623d63343c2a26226324272765272a282b2f2\
+         0430a652e2c652a3124333a653e2b2027630c692b2\
+         0283165286326302e27282f",
         &input.xor(passphrase).to_hex(),
     )
 }
@@ -167,8 +174,18 @@ fn matasano1_8() -> Result<()> {
     });
 
     compare(
-        Some("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a".to_owned()), 
-        result)
+        Some(
+            "d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5\
+             d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649\
+             af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c\
+             7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6\
+             aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd2\
+             83d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c\
+             58386b06fba186a"
+                .to_owned(),
+        ),
+        result,
+    )
 }
 
 fn has_duplicates<T>(i: T) -> bool
