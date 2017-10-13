@@ -156,7 +156,7 @@ fn matasano4_28() -> Result<()> {
     )
 }
 
-/* The solution to challenge 29 requires a patched version of the sha1 crate. Too be precise,
+/* The solution to challenge 29 requires a patched version of the sha1 crate. To be precise,
  * you have to clone the rust-sha1 repository and the apply the following patch
  * (tested for version 0.2.0 of rust-sha1):
 
@@ -290,7 +290,6 @@ fn matasano4_32() -> Result<()> {
 
 pub fn run() {
     println!("Set 4");
-
     run_exercise(matasano4_25, 25);
     run_exercise(matasano4_26, 26);
     run_exercise(matasano4_27, 27);

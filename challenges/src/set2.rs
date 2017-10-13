@@ -23,7 +23,7 @@ use helper::ceil_div;
 
 use errors::*;
 
-fn challenge_9() -> Result<()> {
+fn matasano2_9() -> Result<()> {
     compare(
         [
             89,
@@ -66,7 +66,7 @@ fn aes_128_cbc() {
     );
 }
 
-fn challenge_10() -> Result<()> {
+fn matasano2_10() -> Result<()> {
     let key = b"YELLOW SUBMARINE";
     let input = from_base64_file(Path::new("data/10.txt"))?;
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;
@@ -207,7 +207,7 @@ fn test_length_functions() {
 }
 
 
-fn challenge_11() -> Result<()> {
+fn matasano2_11() -> Result<()> {
     let mut rng = rand::thread_rng();
     let use_ecb = rng.gen();
     compare(use_ecb, uses_ecb(&|u| oracle_11(u, use_ecb))?)
@@ -277,7 +277,7 @@ where
     Ok(suffix)
 }
 
-fn challenge_12() -> Result<()> {
+fn matasano2_12() -> Result<()> {
     let key = random_block();
 
     let suffix = from_base64(
@@ -302,7 +302,7 @@ pub fn decode_profile(u: &[u8], sep: u8) -> HashMap<&[u8], &[u8]> {
 
 /* The following function works under the single assumption that the target value "user" (to be 
    replaced by "admin") is stored at the very end of the profile. */
-fn challenge_13() -> Result<()> {
+fn matasano2_13() -> Result<()> {
     let key = random_block();
     let oracle = |email: &[u8]| {
         // Exclude '&' and '='
@@ -337,7 +337,7 @@ fn challenge_13() -> Result<()> {
     )
 }
 
-fn challenge_14() -> Result<()> {
+fn matasano2_14() -> Result<()> {
     let mut rng = rand::thread_rng();
     let key: Vec<u8> = rng.gen_iter().take(BLOCK_SIZE).collect();
     let prefix_len = rng.gen_range(1, 200);
@@ -360,7 +360,7 @@ pub fn random_block() -> Vec<u8> {
     rng.gen_iter().take(BLOCK_SIZE).collect()
 }
 
-fn challenge_15() -> Result<()> {
+fn matasano2_15() -> Result<()> {
     compare(true, b"ICE ICE BABY\x04\x04\x04\x04".padding_valid())?;
     compare(false, b"ICE ICE BABY\x05\x05\x05\x05".padding_valid())?;
     compare(false, b"ICE ICE BABY\x01\x02\x03\x04".padding_valid())?;
@@ -375,7 +375,7 @@ fn challenge_15() -> Result<()> {
     Ok(())
 }
 
-fn challenge_16() -> Result<()> {
+fn matasano2_16() -> Result<()> {
     let key = random_block();
     let oracle = |input: &[u8]| {
         // Exclude ';' and '='
@@ -419,12 +419,12 @@ fn challenge_16() -> Result<()> {
 
 pub fn run() {
     println!("Set 2");
-    run_exercise(challenge_9, 9);
-    run_exercise(challenge_10, 10);
-    run_exercise(challenge_11, 11);
-    run_exercise(challenge_12, 12);
-    run_exercise(challenge_13, 13);
-    run_exercise(challenge_14, 14);
-    run_exercise(challenge_15, 15);
-    run_exercise(challenge_16, 16);
+    run_exercise(matasano2_9, 9);
+    run_exercise(matasano2_10, 10);
+    run_exercise(matasano2_11, 11);
+    run_exercise(matasano2_12, 12);
+    run_exercise(matasano2_13, 13);
+    run_exercise(matasano2_14, 14);
+    run_exercise(matasano2_15, 15);
+    run_exercise(matasano2_16, 16);
 }

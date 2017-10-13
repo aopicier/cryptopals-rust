@@ -215,15 +215,6 @@ fn matasano3_24() -> Result<()> {
 
 pub fn run() {
     println!("Set 3");
-    //matasano3_17();
-    //matasano3_18();
-    //matasano3_19_20(Path::new("data/19.txt"));
-    //matasano3_19_20(Path::new("data/20.txt"));
-    //matasano3_21();
-    //matasano3_22();
-    //matasano3_23();
-    //matasano3_24();
-
     run_exercise(matasano3_17, 17);
     run_exercise(matasano3_18, 18);
     run_exercise(|| matasano3_19_20(Path::new("data/19.txt")), 19);
