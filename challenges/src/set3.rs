@@ -66,7 +66,7 @@ impl Server17 {
     }
 
     fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<()> {
-        compare(cleartext, &ciphertext.decrypt(&self.key, Some(&iv), MODE::CBC)?)
+        compare(&ciphertext.decrypt(&self.key, Some(&iv), MODE::CBC)?[..], cleartext)
     }
 }
 
@@ -104,7 +104,7 @@ fn matasano3_17() -> Result<()> {
         prev = block.to_vec();
     }
     unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
-    server.verify_solution(&cleartext, &ciphertext, &iv)
+    server.verify_solution(&cleartext, &iv, &ciphertext)
 }
 
 fn matasano3_18() -> Result<()> {
