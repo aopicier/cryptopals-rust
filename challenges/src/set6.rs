@@ -260,37 +260,64 @@ fn matasano6_45() -> Result<()> {
 // This allows us to pass from k to k+1 in (**) and iteratively we obtain more and more precise
 // bounds for m. For k = `number of bits in n` we obtain equality.
 
+struct Server46 {
+    rsa: Rsa<BigNum>,
+}
+
+impl Server46 {
+    fn new() -> Self {
+        let rsa = Rsa::generate(1024);
+        Server46 { rsa: rsa }
+    }
+
+    fn n(&self) -> &BigNum {
+        self.rsa.n()
+    }
+
+    fn _2_encrypted(&self) -> BigNum {
+        let _2 = BigNum::from_u32(2);
+        self.rsa.encrypt(&_2)
+    }
+
+    fn get_ciphertext(&self) -> Result<BigNum> {
+        let cleartext = from_base64(
+            "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
+         Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
+         )?.to_hex();
+        let m = BigNum::from_hex_str(&cleartext)?;
+        Ok(self.rsa.encrypt(&m))
+    }
+
+    fn oracle(&self, ciphertext: &BigNum) -> bool {
+        let _0 = BigNum::zero();
+        let _2 = BigNum::from_u32(2);
+        &self.rsa.decrypt(ciphertext) % &_2 == _0
+    }
+
+    fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<()> {
+        compare(&self.rsa.decrypt(ciphertext), cleartext)
+    }
+}
+
 fn matasano6_46() -> Result<()> {
-    let rsa = Rsa::generate(1024);
-    let _0 = BigNum::zero();
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
-    let oracle = |ciphertext: &BigNum| -> bool {
-        // !rsa.decrypt(ciphertext).is_bit_set(0)
-        &rsa.decrypt(ciphertext) % &_2 == _0
-    };
-    let cleartext = from_base64(
-        "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
-         Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
-    )?.to_hex();
-    let m = BigNum::from_hex_str(&cleartext)?;
-    let mut c = rsa.encrypt(&m);
+    let server = Server46::new();
+    let _2_enc = server._2_encrypted();
+    let n = server.n();
+    let k = n.bits() as usize;
+    let ciphertext = server.get_ciphertext()?;
+    let mut c = ciphertext.clone();
     let mut l = BigNum::one();
-    let two = BigNum::from_u32(2);
-    let factor = rsa.encrypt(&two);
-    let k = rsa.n().bits() as usize;
     for _ in 0..k {
-        c = &c * &factor;
-        l = &l * &two;
-        if oracle(&c) {
+        c = &c * &_2_enc;
+        l = &l * &_2;
+        if server.oracle(&c) {
             l = &l - &_1;
         }
     }
-    let result = (rsa.n() * &l).rsh(k);
-    compare(
-        b"That's why I found you don't play around with the Funky Cold Medina".as_ref(),
-        &BigNumTrait::to_bytes_be(&result),
-    )
+    let cleartext = (n * &l).rsh(k);
+    server.verify_solution(&cleartext, &ciphertext)
 }
 
 #[allow(non_snake_case)]
