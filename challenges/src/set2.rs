@@ -117,11 +117,11 @@ where
 }
 
 fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
-    let initial = oracle.oracle(&[])?.len();
+    let initial = oracle.encrypt(&[])?.len();
     let input = [0; BLOCK_SIZE];
     //Would profit from range_inclusive
     if let Some(index) = (1..BLOCK_SIZE + 1).find(|&i| {
-        if let Ok(ciphertext) = oracle.oracle(&input[BLOCK_SIZE - i..]) {
+        if let Ok(ciphertext) = oracle.encrypt(&input[BLOCK_SIZE - i..]) {
             initial != ciphertext.len()
         } else {
             false
@@ -139,9 +139,9 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
  * prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix. */
 fn prefix_blocks_count<T: Oracle>(oracle: &T) -> Result<usize> {
     if let Some(result) = oracle
-        .oracle(&[0])?
+        .encrypt(&[0])?
         .chunks(BLOCK_SIZE)
-        .zip(oracle.oracle(&[1])?.chunks(BLOCK_SIZE))
+        .zip(oracle.encrypt(&[1])?.chunks(BLOCK_SIZE))
         .position(|(x, y)| x != y)
     {
         Ok(result)
@@ -155,10 +155,10 @@ pub fn prefix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     let helper = |k: u8| -> Result<usize> {
         let u = vec![k; BLOCK_SIZE];
 
-        let mut prev_u = oracle.oracle(&u)?;
+        let mut prev_u = oracle.encrypt(&u)?;
 
         for i in 0..BLOCK_SIZE {
-            let cur_u = oracle.oracle(&u[i + 1..])?;
+            let cur_u = oracle.encrypt(&u[i + 1..])?;
             if prev_u.chunks(BLOCK_SIZE).nth(n) != cur_u.chunks(BLOCK_SIZE).nth(n) {
                 return Ok(i);
             }
@@ -226,7 +226,7 @@ fn decrypt_suffix<T: Oracle>(oracle: &T) -> Result<Vec<u8>> {
 
     let mut input = vec![0; prefix_padding + BLOCK_SIZE - 1];
     let reference_ciphertexts = (0..BLOCK_SIZE)
-        .map(|left_shift| oracle.oracle(&input[left_shift..]))
+        .map(|left_shift| oracle.encrypt(&input[left_shift..]))
         .collect::<Result<Vec<Vec<u8>>>>()?;
 
     for i in 0..suffix_len {
@@ -236,7 +236,7 @@ fn decrypt_suffix<T: Oracle>(oracle: &T) -> Result<Vec<u8>> {
         for u in all_bytes() {
             input.push(u);
             if reference_ciphertexts[left_shift][block * BLOCK_SIZE..(block + 1) * BLOCK_SIZE]
-                == oracle.oracle(&input[left_shift..])?
+                == oracle.encrypt(&input[left_shift..])?
                     [block * BLOCK_SIZE..(block + 1) * BLOCK_SIZE]
             {
                 suffix.push(u);
@@ -272,10 +272,10 @@ fn matasano2_13() -> Result<()> {
     let target_cleartext = b"admin".pad();
     let mut input = vec![0; prefix_padding];
     input.extend_from_slice(&target_cleartext);
-    let target_last_block = oracle.oracle(&input)?.split_off(prefix_blocks * BLOCK_SIZE);
+    let target_last_block = oracle.encrypt(&input)?.split_off(prefix_blocks * BLOCK_SIZE);
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
-    let mut ciphertext = oracle.oracle(&vec![0; padding + "user".len()])?;
+    let mut ciphertext = oracle.encrypt(&vec![0; padding + "user".len()])?;
     compare((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
     ciphertext[blocks * BLOCK_SIZE..].move_from2(target_last_block, 0, BLOCK_SIZE);
@@ -312,7 +312,7 @@ fn matasano2_16() -> Result<()> {
     let oracle = Oracle16::new()?;
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
-    let mut ciphertext = oracle.oracle(&vec![0; padding])?;
+    let mut ciphertext = oracle.encrypt(&vec![0; padding])?;
     compare((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
     let target_last_block = b";admin=true".pad();

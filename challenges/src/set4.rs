@@ -61,7 +61,7 @@ fn matasano4_26() -> Result<()> {
 
     let prefix_len = prefix_length(&oracle)?;
     let target_cleartext = b";admin=true";
-    let mut ciphertext = oracle.oracle(&vec![0; target_cleartext.len()])?;
+    let mut ciphertext = oracle.encrypt(&vec![0; target_cleartext.len()])?;
     ciphertext.truncate(prefix_len + target_cleartext.len());
     ciphertext[prefix_len..].xor_inplace(target_cleartext);
     oracle.verify_solution(&ciphertext)

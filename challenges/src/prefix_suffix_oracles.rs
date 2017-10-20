@@ -14,7 +14,7 @@ use set2::random_block;
 use set2::decode_profile;
 
 pub trait Oracle {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>>;
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>>;
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()>;
 }
 
@@ -26,7 +26,7 @@ struct Common {
 }
 
 impl Oracle for Common {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
         let key = &self.key;
         let prefix = &self.prefix;
         let suffix = &self.suffix;
@@ -55,8 +55,8 @@ pub struct Oracle12 {
 }
 
 impl Oracle for Oracle12 {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
-        self.common.oracle(u)
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+        self.common.encrypt(u)
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
@@ -91,12 +91,12 @@ pub struct Oracle13 {
 }
 
 impl Oracle for Oracle13 {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
         if u.iter().any(|&c| !c.is_ascii() || c == b'&' || c == b'=') {
             panic!("Invalid input.");
         }
 
-        self.common.oracle(u)
+        self.common.encrypt(u)
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
@@ -137,8 +137,8 @@ pub struct Oracle14 {
 }
 
 impl Oracle for Oracle14 {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
-        self.common.oracle(u)
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+        self.common.encrypt(u)
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
@@ -176,12 +176,12 @@ pub struct Oracle16 {
 }
 
 impl Oracle for Oracle16 {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
         if u.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
             panic!("Invalid input.");
         }
 
-        self.common.oracle(u)
+        self.common.encrypt(u)
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
@@ -227,12 +227,12 @@ pub struct Oracle26 {
 }
 
 impl Oracle for Oracle26 {
-    fn oracle(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
         if u.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
             panic!("Invalid input.");
         }
 
-        self.common.oracle(u)
+        self.common.encrypt(u)
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
