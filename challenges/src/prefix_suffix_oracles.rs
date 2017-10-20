@@ -37,10 +37,12 @@ impl Oracle for Common {
         cleartext.extend_from_slice(u);
         cleartext.extend_from_slice(suffix);
 
-        // Only setting iv here depending on the mode seems to be difficult because of type
-        // and/or lifetime issues with Option<&[u8]>.
         match mode {
-            MODE::CBC => cleartext.encrypt(key, Some(&[0; BLOCK_SIZE]), mode),
+            MODE::CBC => {
+                // We would normally also return iv, but our callers do not need it
+                let iv = random_block();
+                cleartext.encrypt(key, Some(&iv), mode)
+            }
             _ => cleartext.encrypt(key, None, mode),
         }.map_err(|err| err.into())
     }
@@ -65,13 +67,7 @@ impl Oracle11 {
         let suffix: Vec<u8> = rng.gen_iter().take(suffix_len).collect();
 
         let use_ecb = rng.gen();
-        let mode = if use_ecb {
-            MODE::ECB
-        } else {
-            MODE::CBC
-        };
-
-        // TODO let iv = random_block();
+        let mode = if use_ecb { MODE::ECB } else { MODE::CBC };
 
         Ok(Oracle11 {
             common: Common {

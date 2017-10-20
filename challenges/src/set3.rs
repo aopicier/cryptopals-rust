@@ -145,8 +145,9 @@ fn matasano3_19_20(input_file: &Path) -> Result<()> {
         .iter()
         .map(|b| decrypt_single_xor(b))
         .collect::<Vec<u8>>();
-    //TODO: The first entry of the recovered key is wrong because the distribution of first letters
-    //of sentences is very different from the overall distribution of letters in a text.
+
+    // TODO: The first entry of the recovered key is wrong because the distribution of first letters
+    // of sentences is very different from the overall distribution of letters in a text.
     compare(
         &vec![0; size].encrypt(&secret_key, None, MODE::CTR)?[1..],
         &key[1..],

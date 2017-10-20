@@ -80,8 +80,7 @@ fn matasano2_10() -> Result<()> {
     compare(cleartext_ref.as_bytes(), &cleartext)
 }
 
-fn uses_ecb(oracle: &mut Oracle11) -> Result<bool>
-{
+fn uses_ecb(oracle: &mut Oracle11) -> Result<bool> {
     // Assumes that oracle prepends at most one block of jibber
     // TODO: Can we relax this condition?
     let input = vec![0; 3 * BLOCK_SIZE];
@@ -246,7 +245,9 @@ fn matasano2_13() -> Result<()> {
     let target_cleartext = b"admin".pad();
     let mut input = vec![0; prefix_padding];
     input.extend_from_slice(&target_cleartext);
-    let target_last_block = oracle.encrypt(&input)?.split_off(prefix_blocks * BLOCK_SIZE);
+    let target_last_block = oracle
+        .encrypt(&input)?
+        .split_off(prefix_blocks * BLOCK_SIZE);
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
     let mut ciphertext = oracle.encrypt(&vec![0; padding + "user".len()])?;
