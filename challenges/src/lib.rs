@@ -38,3 +38,4 @@ pub mod set6;
 
 pub mod helper;
 pub mod mersenne;
+pub mod prefix_suffix_oracles;

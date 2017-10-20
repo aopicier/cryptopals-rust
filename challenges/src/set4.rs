@@ -21,12 +21,12 @@ use rand::Rng;
 
 use unstable_features::MoveFrom;
 
-use set2::decode_profile;
-use set2::oracle_generator;
 use set2::prefix_length;
 use set2::random_block;
 
 use errors::*;
+
+use prefix_suffix_oracles::{Oracle, Oracle26};
 
 // The following imports are only required for challenge 29
 //
@@ -53,20 +53,7 @@ fn matasano4_25() -> Result<()> {
 }
 
 fn matasano4_26() -> Result<()> {
-    let key = random_block();
-    let oracle = |input: &[u8]| {
-        // Exclude ';' and '='
-        if input
-            .iter()
-            .any(|&c| !c.is_ascii() || c == b';' || c == b'=')
-        {
-            panic!("Invalid input.");
-        }
-
-        let prefix = b"comment1=cooking%20MCs;userdata=";
-        let suffix = b";comment2=%20like%20a%20pound%20of%20bacon";
-        oracle_generator(&key, prefix, input, suffix, MODE::CTR)
-    };
+    let oracle = Oracle26::new()?;
 
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
     // we can inject any plaintext at the same location by xor'ing the ciphertext with
@@ -74,13 +61,10 @@ fn matasano4_26() -> Result<()> {
 
     let prefix_len = prefix_length(&oracle)?;
     let target_cleartext = b";admin=true";
-    let mut ciphertext = oracle(&vec![0; target_cleartext.len()])?;
+    let mut ciphertext = oracle.oracle(&vec![0; target_cleartext.len()])?;
     ciphertext.truncate(prefix_len + target_cleartext.len());
     ciphertext[prefix_len..].xor_inplace(target_cleartext);
-    compare(
-        Some(b"true".as_ref()),
-        decode_profile(&ciphertext.decrypt(&key, None, MODE::CTR)?, b';').remove(b"admin".as_ref()),
-    )
+    oracle.verify_solution(&ciphertext)
 }
 
 fn setup4_27() -> (
