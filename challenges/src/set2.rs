@@ -21,7 +21,7 @@ use helper::ceil_div;
 
 use errors::*;
 
-use prefix_suffix_oracles::{Oracle, Oracle12, Oracle13, Oracle14, Oracle16};
+use prefix_suffix_oracles::{Oracle, Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 
 fn matasano2_9() -> Result<()> {
     compare(
@@ -80,38 +80,12 @@ fn matasano2_10() -> Result<()> {
     compare(cleartext_ref.as_bytes(), &cleartext)
 }
 
-fn oracle_11(u: &[u8], use_ecb: bool) -> Result<Vec<u8>> {
-    let mut rng = rand::thread_rng();
-    let mut cleartext = Vec::with_capacity(u.len() + 20);
-    let key = random_block();
-    let prefix_len = rng.gen_range(5, 11);
-    let prefix: Vec<u8> = rng.gen_iter().take(prefix_len).collect();
-    let suffix_len = rng.gen_range(5, 11);
-    let suffix: Vec<u8> = rng.gen_iter().take(suffix_len).collect();
-
-    cleartext.extend_from_slice(&prefix);
-    cleartext.extend_from_slice(u);
-    cleartext.extend_from_slice(&suffix);
-    if use_ecb {
-        cleartext
-            .encrypt(&key, None, MODE::ECB)
-            .map_err(|err| err.into())
-    } else {
-        let iv = random_block();
-        cleartext
-            .encrypt(&key, Some(&iv), MODE::CBC)
-            .map_err(|err| err.into())
-    }
-}
-
-fn uses_ecb<F>(oracle: &F) -> Result<bool>
-where
-    F: Fn(&[u8]) -> Result<Vec<u8>>,
+fn uses_ecb(oracle: &mut Oracle11) -> Result<bool>
 {
-    //Assumes that oracle prepends at most one block of jibber
-    //TODO: Can we relax this condition?
+    // Assumes that oracle prepends at most one block of jibber
+    // TODO: Can we relax this condition?
     let input = vec![0; 3 * BLOCK_SIZE];
-    let ciphertext = oracle(&input)?;
+    let ciphertext = oracle.encrypt(&input)?;
     let blocks: Vec<&[u8]> = ciphertext.chunks(BLOCK_SIZE).skip(1).take(2).collect();
     Ok(blocks[0] == blocks[1])
 }
@@ -201,9 +175,9 @@ fn test_length_functions() {
 }
 
 fn matasano2_11() -> Result<()> {
-    let mut rng = rand::thread_rng();
-    let use_ecb = rng.gen();
-    compare(use_ecb, uses_ecb(&|u| oracle_11(u, use_ecb))?)
+    let mut oracle = Oracle11::new()?;
+    let uses_ecb = uses_ecb(&mut oracle)?;
+    oracle.verify_solution(uses_ecb)
 }
 
 fn decrypt_suffix<T: Oracle>(oracle: &T) -> Result<Vec<u8>> {

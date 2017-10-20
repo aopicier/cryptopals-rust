@@ -9,7 +9,7 @@ use xor::XOR;
 
 pub const BLOCK_SIZE: usize = 16;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum MODE {
     ECB,
     CBC,

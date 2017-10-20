@@ -50,6 +50,54 @@ impl Oracle for Common {
     }
 }
 
+pub struct Oracle11 {
+    common: Common,
+    already_called: bool,
+}
+
+impl Oracle11 {
+    pub fn new() -> Result<Self> {
+        let mut rng = rand::thread_rng();
+        let key = random_block();
+        let prefix_len = rng.gen_range(5, 11);
+        let prefix: Vec<u8> = rng.gen_iter().take(prefix_len).collect();
+        let suffix_len = rng.gen_range(5, 11);
+        let suffix: Vec<u8> = rng.gen_iter().take(suffix_len).collect();
+
+        let use_ecb = rng.gen();
+        let mode = if use_ecb {
+            MODE::ECB
+        } else {
+            MODE::CBC
+        };
+
+        // TODO let iv = random_block();
+
+        Ok(Oracle11 {
+            common: Common {
+                key: key,
+                prefix: prefix,
+                suffix: suffix,
+                mode: mode,
+            },
+            already_called: false,
+        })
+    }
+
+    pub fn encrypt(&mut self, u: &[u8]) -> Result<Vec<u8>> {
+        if self.already_called {
+            bail!("Method has already been called. Please generate a fresh oracle.");
+        }
+
+        self.already_called = true;
+        self.common.encrypt(u)
+    }
+
+    pub fn verify_solution(&self, uses_ecb: bool) -> Result<()> {
+        compare(self.common.mode == MODE::ECB, uses_ecb)
+    }
+}
+
 pub struct Oracle12 {
     common: Common,
 }

@@ -69,7 +69,7 @@ impl Server17 {
 
     fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<()> {
         compare(
-            &ciphertext.decrypt(&self.key, Some(&iv), MODE::CBC)?[..],
+            &ciphertext.decrypt(&self.key, Some(iv), MODE::CBC)?[..],
             cleartext,
         )
     }
