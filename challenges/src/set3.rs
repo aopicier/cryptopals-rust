@@ -28,12 +28,14 @@ use helper::ceil_div;
 use errors::*;
 
 struct Server17 {
-    key: Vec<u8>
+    key: Vec<u8>,
 }
 
 impl Server17 {
     fn new() -> Self {
-        Self { key: random_block() }
+        Self {
+            key: random_block(),
+        }
     }
 
     fn get_session_token(&self) -> Result<(Vec<u8>, Vec<u8>)> {
@@ -66,7 +68,10 @@ impl Server17 {
     }
 
     fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<()> {
-        compare(&ciphertext.decrypt(&self.key, Some(&iv), MODE::CBC)?[..], cleartext)
+        compare(
+            &ciphertext.decrypt(&self.key, Some(&iv), MODE::CBC)?[..],
+            cleartext,
+        )
     }
 }
 
