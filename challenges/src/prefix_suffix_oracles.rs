@@ -18,6 +18,11 @@ pub trait Oracle {
     fn verify_suffix(&self, candidate: &[u8]) -> Result<()>;
 }
 
+// Marker trait for oracles where repeated calls to
+// `encrypt` for the same `u` produce the same result.
+// This excludes oracles in CBC mode with random iv.
+pub trait DeterministicOracle: Oracle {}
+
 struct Common {
     key: Vec<u8>,
     prefix: Vec<u8>,
@@ -98,6 +103,8 @@ pub struct Oracle12 {
     common: Common,
 }
 
+impl DeterministicOracle for Oracle12 {}
+
 impl Oracle for Oracle12 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
         self.common.encrypt(u)
@@ -133,6 +140,8 @@ impl Oracle12 {
 pub struct Oracle13 {
     common: Common,
 }
+
+impl DeterministicOracle for Oracle13 {}
 
 impl Oracle for Oracle13 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
@@ -179,6 +188,8 @@ impl Oracle13 {
 pub struct Oracle14 {
     common: Common,
 }
+
+impl DeterministicOracle for Oracle14 {}
 
 impl Oracle for Oracle14 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
@@ -269,6 +280,8 @@ impl Oracle16 {
 pub struct Oracle26 {
     common: Common,
 }
+
+impl DeterministicOracle for Oracle26 {}
 
 impl Oracle for Oracle26 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {

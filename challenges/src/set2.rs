@@ -21,7 +21,8 @@ use helper::ceil_div;
 
 use errors::*;
 
-use prefix_suffix_oracles::{Oracle, Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
+use prefix_suffix_oracles::{DeterministicOracle, Oracle};
+use prefix_suffix_oracles::{Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 
 fn matasano2_9() -> Result<()> {
     compare(
@@ -110,7 +111,7 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
 
 /* For an oracle prepending prefix and appending suffix to its input, this function returns
  * prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix. */
-fn prefix_blocks_count<T: Oracle>(oracle: &T) -> Result<usize> {
+fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     if let Some(result) = oracle
         .encrypt(&[0])?
         .chunks(BLOCK_SIZE)
@@ -123,7 +124,7 @@ fn prefix_blocks_count<T: Oracle>(oracle: &T) -> Result<usize> {
     }
 }
 
-pub fn prefix_length<T: Oracle>(oracle: &T) -> Result<usize> {
+pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     let n = prefix_blocks_count(oracle)?;
     let helper = |k: u8| -> Result<usize> {
         let u = vec![k; BLOCK_SIZE];
@@ -143,7 +144,7 @@ pub fn prefix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     Ok(n * BLOCK_SIZE + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-fn suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
+fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     Ok(prefix_plus_suffix_length(oracle)? - prefix_length(oracle)?)
 }
 
@@ -179,7 +180,7 @@ fn matasano2_11() -> Result<()> {
     oracle.verify_solution(uses_ecb)
 }
 
-fn decrypt_suffix<T: Oracle>(oracle: &T) -> Result<Vec<u8>> {
+fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
     // The following input is chosen in such a way that the cleartext in oracle looks as follows:
     //
     //            input start      input end
