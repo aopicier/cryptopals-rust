@@ -110,7 +110,10 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
 }
 
 /* For an oracle prepending prefix and appending suffix to its input, this function returns
- * prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix. */
+ * prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix.
+ *
+ * To determine this number, we pass two different cleartexts to the oracle and count the number
+ * of identical blocks at the start of the corresponding ciphertexts. */
 fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     if let Some(result) = oracle
         .encrypt(&[0])?
@@ -124,19 +127,39 @@ fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     }
 }
 
+// We look at the first block C not fully occupied by the prefix and fill it with a
+// constant block B, say consisting of 0's.
+// This part of the cleartext in oracle looks as follows:
+//
+//                               <------ B ------->
+// prefix[?] prefix[?] prefix[?] 0 0 ... 0 || 0 0 0 suffix[0] suffix[1]
+// <---------- C ------------------------>
+//
+// We then successively reduce the length of B until the ciphertext of C
+// changes. This happens as soon as the cleartext in oracle looks as follows:
+//
+//                               <-- B -->
+// prefix[?] prefix[?] prefix[?] 0 0 ... 0 suffix[0] || suffix[1]
+// <---------- C ---------------------------------->
+//
+// This gives us the length of the prefix in C.
+//
+// We need to do this with two different constants because suffix[0] might accidentally
+// coincide with the constant we have chosen.
+
 pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     let n = prefix_blocks_count(oracle)?;
     let helper = |k: u8| -> Result<usize> {
-        let u = vec![k; BLOCK_SIZE];
+        let constant_block = vec![k; BLOCK_SIZE];
 
-        let mut prev_u = oracle.encrypt(&u)?;
+        let mut prev = oracle.encrypt(&constant_block)?;
 
         for i in 0..BLOCK_SIZE {
-            let cur_u = oracle.encrypt(&u[i + 1..])?;
-            if prev_u.chunks(BLOCK_SIZE).nth(n) != cur_u.chunks(BLOCK_SIZE).nth(n) {
+            let cur = oracle.encrypt(&constant_block[i + 1..])?;
+            if prev.chunks(BLOCK_SIZE).nth(n) != cur.chunks(BLOCK_SIZE).nth(n) {
                 return Ok(i);
             }
-            prev_u = cur_u;
+            prev = cur;
         }
         Ok(BLOCK_SIZE)
     };
