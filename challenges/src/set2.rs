@@ -90,8 +90,16 @@ fn uses_ecb(oracle: &mut Oracle11) -> Result<bool> {
     Ok(blocks[0] == blocks[1])
 }
 
+fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool> {
+    Ok((oracle.encrypt(&[0])?.len()-oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
+}
+
 fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     let initial = oracle.encrypt(&[])?.len();
+    if !uses_padding(oracle)? {
+        return Ok(initial);
+    }
+
     let input = [0; BLOCK_SIZE];
     //Would profit from range_inclusive
     if let Some(index) = (1..BLOCK_SIZE + 1).find(|&i| {
