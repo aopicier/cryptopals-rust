@@ -103,7 +103,7 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     let input = [0; BLOCK_SIZE];
     //Would profit from range_inclusive
     if let Some(index) = (1..BLOCK_SIZE + 1).find(|&i| {
-        if let Ok(ciphertext) = oracle.encrypt(&input[BLOCK_SIZE - i..]) {
+        if let Ok(ciphertext) = oracle.encrypt(&input[..i]) {
             initial != ciphertext.len()
         } else {
             false
