@@ -72,7 +72,7 @@ impl<T: bignum::BigNumTrait> DH<T> {
 
     #[allow(non_snake_case)]
     pub fn shared_key(&mut self, B: &[u8]) -> Vec<u8> {
-        let B = T::from_bytes_be(B);
+        let B: T = deserialize(B);
         let s = B.mod_exp(&self.a, &self.p);
         secret_to_key(&serialize(&s))
     }
