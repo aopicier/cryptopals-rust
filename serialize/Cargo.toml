@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["ph"]
 
 [dependencies]
-error-chain = "0.11"
+failure = "0.1"

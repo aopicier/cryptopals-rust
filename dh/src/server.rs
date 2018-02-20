@@ -3,7 +3,7 @@ use algo::DH;
 use communication::Communicate;
 use communication::CommunicateEncr;
 
-use errors::*;
+use failure::Error;
 
 use bignum::NumBigUint as BigNum;
 
@@ -13,7 +13,7 @@ pub struct Server<T: Communicate> {
 }
 
 impl<T: Communicate> Server<T> {
-    pub fn new(mut stream: T) -> Result<Server<T>> {
+    pub fn new(mut stream: T) -> Result<Server<T>, Error> {
         handshake(&mut stream).map(|key| {
             Server {
                 stream: stream,
@@ -24,17 +24,17 @@ impl<T: Communicate> Server<T> {
 }
 
 impl<T: Communicate> Communicate for Server<T> {
-    fn send(&mut self, message: &[u8]) -> Result<()> {
+    fn send(&mut self, message: &[u8]) -> Result<(), Error> {
         self.stream.send_encr(message, &self.key)
     }
 
-    fn receive(&mut self) -> Result<Option<Vec<u8>>> {
+    fn receive(&mut self) -> Result<Option<Vec<u8>>, Error> {
         self.stream.receive_encr(&self.key)
     }
 }
 
 #[allow(non_snake_case)]
-fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>> {
+fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
     let mut dh = DH::<BigNum>::new();
     let p = stream.receive()?.unwrap();
     let g = stream.receive()?.unwrap();

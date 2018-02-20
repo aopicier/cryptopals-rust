@@ -1,5 +1,3 @@
-use std::ascii::AsciiExt;
-
 use rand;
 use rand::Rng;
 
@@ -9,13 +7,14 @@ use aes::BLOCK_SIZE;
 use serialize::from_base64;
 
 use errors::*;
+use failure::Error;
 
 use set2::random_block;
 use set2::decode_profile;
 
 pub trait Oracle {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>>;
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()>;
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error>;
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error>;
 }
 
 // Marker trait for oracles where repeated calls to
@@ -31,7 +30,7 @@ struct Common {
 }
 
 impl Oracle for Common {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         let key = &self.key;
         let prefix = &self.prefix;
         let suffix = &self.suffix;
@@ -52,7 +51,7 @@ impl Oracle for Common {
         }.map_err(|err| err.into())
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         compare(&self.suffix[..], candidate)
     }
 }
@@ -63,7 +62,7 @@ pub struct Oracle11 {
 }
 
 impl Oracle11 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
         let key = random_block();
         let prefix_len = rng.gen_range(5, 11);
@@ -85,7 +84,7 @@ impl Oracle11 {
         })
     }
 
-    pub fn encrypt(&mut self, u: &[u8]) -> Result<Vec<u8>> {
+    pub fn encrypt(&mut self, u: &[u8]) -> Result<Vec<u8>, Error> {
         if self.already_called {
             bail!("Method has already been called. Please generate a fresh oracle.");
         }
@@ -94,7 +93,7 @@ impl Oracle11 {
         self.common.encrypt(u)
     }
 
-    pub fn verify_solution(&self, uses_ecb: bool) -> Result<()> {
+    pub fn verify_solution(&self, uses_ecb: bool) -> Result<(), Error> {
         compare(self.common.mode == MODE::ECB, uses_ecb)
     }
 }
@@ -106,17 +105,17 @@ pub struct Oracle12 {
 impl DeterministicOracle for Oracle12 {}
 
 impl Oracle for Oracle12 {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         self.common.encrypt(u)
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         self.common.verify_suffix(candidate)
     }
 }
 
 impl Oracle12 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let key = random_block();
 
         let suffix = from_base64(
@@ -144,7 +143,7 @@ pub struct Oracle13 {
 impl DeterministicOracle for Oracle13 {}
 
 impl Oracle for Oracle13 {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         if u.iter().any(|&c| !c.is_ascii() || c == b'&' || c == b'=') {
             panic!("Invalid input.");
         }
@@ -152,13 +151,13 @@ impl Oracle for Oracle13 {
         self.common.encrypt(u)
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         self.common.verify_suffix(candidate)
     }
 }
 
 impl Oracle13 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let key = random_block();
 
         let prefix = b"email=".to_vec();
@@ -174,7 +173,7 @@ impl Oracle13 {
         })
     }
 
-    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<()> {
+    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<(), Error> {
         compare(
             Some(b"admin".as_ref()),
             decode_profile(
@@ -192,17 +191,17 @@ pub struct Oracle14 {
 impl DeterministicOracle for Oracle14 {}
 
 impl Oracle for Oracle14 {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         self.common.encrypt(u)
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         self.common.verify_suffix(candidate)
     }
 }
 
 impl Oracle14 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
         let key: Vec<u8> = rng.gen_iter().take(BLOCK_SIZE).collect();
         let prefix_len = rng.gen_range(1, 200);
@@ -231,7 +230,7 @@ pub struct Oracle16 {
 }
 
 impl Oracle for Oracle16 {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         if u.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
             panic!("Invalid input.");
         }
@@ -239,13 +238,13 @@ impl Oracle for Oracle16 {
         self.common.encrypt(u)
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         self.common.verify_suffix(candidate)
     }
 }
 
 impl Oracle16 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let key = random_block();
 
         let prefix = b"comment1=cooking%20MCs;userdata=".to_vec();
@@ -261,7 +260,7 @@ impl Oracle16 {
         })
     }
 
-    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<()> {
+    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<(), Error> {
         // The flipped next to last block will decrypt to arbitrary cleartext. Depending on the
         // precise implementation of decode_profile, this might cause problems, because this
         // cleartext could for example contain `;foo;`, or `foo=bar=baz`. For now we rely on
@@ -284,7 +283,7 @@ pub struct Oracle26 {
 impl DeterministicOracle for Oracle26 {}
 
 impl Oracle for Oracle26 {
-    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>> {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         if u.iter().any(|&c| !c.is_ascii() || c == b';' || c == b'=') {
             panic!("Invalid input.");
         }
@@ -292,13 +291,13 @@ impl Oracle for Oracle26 {
         self.common.encrypt(u)
     }
 
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<()> {
+    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
         self.common.verify_suffix(candidate)
     }
 }
 
 impl Oracle26 {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         let key = random_block();
 
         let prefix = b"comment1=cooking%20MCs;userdata=".to_vec();
@@ -314,7 +313,7 @@ impl Oracle26 {
         })
     }
 
-    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<()> {
+    pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<(), Error> {
         compare(
             Some(b"true".as_ref()),
             decode_profile(

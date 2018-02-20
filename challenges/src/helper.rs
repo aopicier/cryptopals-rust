@@ -1,9 +1,5 @@
 use std;
-use std::ascii::AsciiExt;
 use std::collections::HashMap;
-
-//use ascii::Ascii;
-//use ascii::AsciiCast;
 
 static REF_FREQS: [(u8, f32); 28] = [
     (b' ', 12.17),

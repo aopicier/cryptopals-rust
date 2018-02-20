@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 
 use std::char;
 use std::fs::File;
@@ -7,13 +7,7 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::path::Path;
 
-error_chain! {
-    errors { }
-
-    foreign_links {
-        Io(::std::io::Error) #[cfg(unix)];
-    }
-}
+use failure::{Error, ResultExt};
 
 pub trait Serialize {
     fn to_base64(&self) -> String;
@@ -51,7 +45,7 @@ impl Serialize for [u8] {
     }
 }
 
-pub fn from_base64(s: &str) -> Result<Vec<u8>> {
+pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
     if s.len() % 4 != 0 {
         bail!("input length needs to be multiple of 4");
     }
@@ -66,7 +60,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>> {
 
     let mut digits = Vec::with_capacity(n);
     for c in s.chars().take(n) {
-        digits.push(u8_from_base64(c).chain_err(|| format!("not a valid base64 string: {}", s))?);
+        digits.push(u8_from_base64(c).context(format!("not a valid base64 string: {}", s))?);
     }
 
     let mut u = Vec::with_capacity(3 * s.len() / 4);
@@ -92,7 +86,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>> {
     Ok(u)
 }
 
-pub fn from_base64_file(path: &Path) -> Result<Vec<u8>> {
+pub fn from_base64_file(path: &Path) -> Result<Vec<u8>, Error> {
     let mut content = String::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -102,15 +96,15 @@ pub fn from_base64_file(path: &Path) -> Result<Vec<u8>> {
     from_base64(&content)
 }
 
-pub fn from_base64_lines(path: &Path) -> Result<Vec<Vec<u8>>> {
+pub fn from_base64_lines(path: &Path) -> Result<Vec<Vec<u8>>, Error> {
     from_lines(path, from_base64)
 }
 
-pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>> {
+pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>, Error> {
     from_lines(path, from_hex)
 }
 
-fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>>) -> Result<Vec<Vec<u8>>> {
+fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>, Error>) -> Result<Vec<Vec<u8>>, Error> {
     let mut content = Vec::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -120,15 +114,14 @@ fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>>) -> Result<Vec
     Ok(content)
 }
 
-pub fn from_hex(s: &str) -> Result<Vec<u8>> {
+pub fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
     if s.len() % 2 != 0 {
         bail!("input length needs to be multiple of 2");
     }
 
     let mut digits = Vec::with_capacity(s.len());
     for c in s.chars() {
-        digits.push(u8_from_hex(c)
-            .chain_err(|| format!("not a valid hex string: {}", s))?);
+        digits.push(u8_from_hex(c).context(format!("not a valid hex string: {}", s))?);
     }
     Ok(
         digits
@@ -138,10 +131,10 @@ pub fn from_hex(s: &str) -> Result<Vec<u8>> {
     )
 }
 
-fn u8_from_hex(c: char) -> Result<u8> {
+fn u8_from_hex(c: char) -> Result<u8, Error> {
     match c.to_digit(16) {
         Some(i) => Ok(i as u8),
-        _ => bail!(format!("invalid character {}", c)),
+        _ => bail!("invalid character {}", c),
     }
 }
 
@@ -169,7 +162,7 @@ fn u8_to_base64(u: u8) -> char {
     }
 }
 
-fn u8_from_base64(c: char) -> Result<u8> {
+fn u8_from_base64(c: char) -> Result<u8, Error> {
     match c {
         'A'...'Z' => Ok(c as u8 - b'A'),
         'a'...'z' => Ok(26 + (c as u8 - b'a')),

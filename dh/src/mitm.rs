@@ -6,7 +6,7 @@ use communication::decrypt;
 use bignum::NumBigUint as BigNum;
 use bignum::BigNumTrait;
 
-use errors::*;
+use failure::Error;
 
 pub struct MITM<T: Communicate> {
     client_stream: T,
@@ -21,7 +21,7 @@ pub enum Mode {
 }
 
 impl<T: Communicate> MITM<T> {
-    pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MITM<T>> {
+    pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MITM<T>, Error> {
         let (client_key, server_key) = match mode {
             Mode::PublicKey => handshake_publickey(&mut client_stream, &mut server_stream)?,
             Mode::Generator => {
@@ -44,15 +44,15 @@ impl<T: Communicate> MITM<T> {
         self.client_stream.send(message).unwrap();
     }
 
-    pub fn receive_server(&mut self) -> Result<Option<Vec<u8>>> {
+    pub fn receive_server(&mut self) -> Result<Option<Vec<u8>>, Error> {
         self.server_stream.receive()
     }
 
-    pub fn receive_client(&mut self) -> Result<Option<Vec<u8>>> {
+    pub fn receive_client(&mut self) -> Result<Option<Vec<u8>>, Error> {
         self.client_stream.receive()
     }
 
-    pub fn decrypt_client(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>> {
+    pub fn decrypt_client(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
         Ok(
             self.client_key
                 .as_ref()
@@ -60,7 +60,7 @@ impl<T: Communicate> MITM<T> {
         )
     }
 
-    pub fn decrypt_server(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>> {
+    pub fn decrypt_server(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
         Ok(
             self.server_key
                 .as_ref()
@@ -72,7 +72,7 @@ impl<T: Communicate> MITM<T> {
 fn handshake_publickey<T: Communicate>(
     client_stream: &mut T,
     server_stream: &mut T,
-) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>)> {
+) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>), Error> {
     let p = client_stream.receive()?.unwrap();
     let g = client_stream.receive()?.unwrap();
     server_stream.send(&p)?;
@@ -92,7 +92,7 @@ fn handshake_generator<T: Communicate>(
     client_stream: &mut T,
     server_stream: &mut T,
     g: &BigNum,
-) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>)> {
+) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>), Error> {
     let p = client_stream.receive()?.unwrap();
     client_stream.receive()?; //Discard g
     server_stream.send(&p)?;

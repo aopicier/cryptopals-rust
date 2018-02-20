@@ -3,7 +3,7 @@ extern crate sha2;
 extern crate digest;
 extern crate xor;
 
-use digest::{BlockInput, Digest};
+use digest::Digest;
 
 use xor::XOR;
 

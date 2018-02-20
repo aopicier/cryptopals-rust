@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = ["Philipp Hartwig <ph@phhart.de>"]
 
 [dependencies]
-error-chain = "0.11"
+failure = "0.1"
 openssl = "0.9"
 
 [dependencies.unstable_features]

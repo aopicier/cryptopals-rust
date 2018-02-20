@@ -1,11 +1,7 @@
 use std;
 use std::path::Path;
 
-use aes;
-use aes::{Aes128, MODE};
-use aes::BLOCK_SIZE;
-use aes::unpad_inplace;
-
+use aes::{Aes128, AesError, BLOCK_SIZE, MODE, unpad_inplace};
 use byteorder::{ByteOrder, NativeEndian};
 
 use set1::decrypt_single_xor;
@@ -38,7 +34,7 @@ impl Server17 {
         }
     }
 
-    fn get_session_token(&self) -> Result<(Vec<u8>, Vec<u8>)> {
+    fn get_session_token(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let inputs = [
             "MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=",
             "MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=",
@@ -59,15 +55,24 @@ impl Server17 {
         Ok((ciphertext, iv))
     }
 
-    fn is_padding_valid(&self, iv: &[u8], ciphertext: &[u8]) -> Result<bool> {
-        match ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
-            Err(aes::Error(aes::ErrorKind::InvalidPadding, _)) => Ok(false),
-            Err(e) => Err(e.into()),
-            _ => Ok(true),
+    fn is_padding_valid(&self, iv: &[u8], ciphertext: &[u8]) -> Result<bool, Error> {
+        //match ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
+        //    Err(aes::Error(aes::ErrorKind::InvalidPadding, _)) => Ok(false),
+        //    Err(e) => Err(e.into()),
+        //    _ => Ok(true),
+        //}
+        if let Err(error) = ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
+            if let Some(&AesError::InvalidPadding) = error.downcast_ref::<AesError>() {
+                Ok(false)
+            } else {
+                Err(error)
+            }
+        } else {
+            Ok(true)
         }
     }
 
-    fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<()> {
+    fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<(), Error> {
         compare(
             &ciphertext.decrypt(&self.key, Some(iv), MODE::CBC)?[..],
             cleartext,
@@ -81,7 +86,7 @@ fn random_block() -> Vec<u8> {
     rng.gen_iter().take(BLOCK_SIZE).collect()
 }
 
-fn matasano3_17() -> Result<()> {
+fn matasano3_17() -> Result<(), Error> {
     let server = Server17::new();
     let (ciphertext, iv) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];
@@ -112,7 +117,7 @@ fn matasano3_17() -> Result<()> {
     server.verify_solution(&cleartext, &iv, &ciphertext)
 }
 
-fn matasano3_18() -> Result<()> {
+fn matasano3_18() -> Result<(), Error> {
     let ciphertext =
         from_base64("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")?;
     let cleartext = ciphertext.decrypt(b"YELLOW SUBMARINE", None, MODE::CTR)?;
@@ -122,7 +127,7 @@ fn matasano3_18() -> Result<()> {
     )
 }
 
-fn matasano3_19_20(input_file: &Path) -> Result<()> {
+fn matasano3_19_20(input_file: &Path) -> Result<(), Error> {
     let cleartexts = from_base64_lines(input_file)?;
     let secret_key = random_block();
     let ciphertexts = cleartexts
@@ -131,7 +136,7 @@ fn matasano3_19_20(input_file: &Path) -> Result<()> {
             c.encrypt(&secret_key, None, MODE::CTR)
                 .map_err(|err| err.into())
         })
-        .collect::<Result<Vec<Vec<u8>>>>()?;
+        .collect::<Result<Vec<Vec<u8>>, Error>>()?;
     let size = ciphertexts.iter().map(|c| c.len()).min().unwrap();
     let mut transposed_blocks: Vec<Vec<u8>> = (0..size)
         .map(|_| Vec::with_capacity(ciphertexts.len()))
@@ -154,7 +159,7 @@ fn matasano3_19_20(input_file: &Path) -> Result<()> {
     ) // encrypt or decrypt?
 }
 
-fn matasano3_21() -> Result<()> {
+fn matasano3_21() -> Result<(), Error> {
     let mt = MersenneTwister::initialize(1);
     compare(
         vec![
@@ -173,7 +178,7 @@ fn matasano3_21() -> Result<()> {
     )
 }
 
-fn matasano3_22() -> Result<()> {
+fn matasano3_22() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let seed: u16 = rng.gen();
     let mut mt = MersenneTwister::initialize(u32::from(seed));
@@ -183,7 +188,7 @@ fn matasano3_22() -> Result<()> {
     )
 }
 
-fn matasano3_23() -> Result<()> {
+fn matasano3_23() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let seed = rng.gen();
     let mut mt = MersenneTwister::initialize(seed);
@@ -198,7 +203,7 @@ fn matasano3_23() -> Result<()> {
     Ok(())
 }
 
-fn matasano3_24() -> Result<()> {
+fn matasano3_24() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let prefix_len: u8 = rng.gen();
     let cleartext = {

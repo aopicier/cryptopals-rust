@@ -24,9 +24,8 @@ extern crate rand;
 extern crate sha1;
 
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 
-#[macro_use]
 mod errors;
 
 pub mod set1;

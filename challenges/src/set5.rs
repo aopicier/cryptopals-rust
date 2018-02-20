@@ -14,7 +14,7 @@ use rsa::Rsa;
 
 use errors::*;
 
-fn handle_client<T: Communicate>(stream: T) -> Result<()> {
+fn handle_client<T: Communicate>(stream: T) -> Result<(), Error> {
     let mut server = Server::new(stream)?;
 
     while let Some(message) = server.receive()? {
@@ -23,7 +23,7 @@ fn handle_client<T: Communicate>(stream: T) -> Result<()> {
     Ok(())
 }
 
-fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Result<()> {
+fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Result<(), Error> {
     let mut mitm = MITM::new(client_stream, server_stream, Mode::PublicKey)?;
     loop {
         match mitm.receive_client()? {
@@ -50,7 +50,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
     Ok(())
 }
 
-fn run_tcp_server(port: u16) -> Result<thread::JoinHandle<Result<()>>> {
+fn run_tcp_server(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((stream, _)) => handle_client(stream),
@@ -58,7 +58,7 @@ fn run_tcp_server(port: u16) -> Result<thread::JoinHandle<Result<()>>> {
     }))
 }
 
-fn run_tcp_mitm(client_port: u16, server_port: u16) -> Result<thread::JoinHandle<Result<()>>> {
+fn run_tcp_mitm(client_port: u16, server_port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", client_port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((client_stream, _)) => {
@@ -69,19 +69,19 @@ fn run_tcp_mitm(client_port: u16, server_port: u16) -> Result<thread::JoinHandle
     }))
 }
 
-fn matasano5_34() -> Result<()> {
+fn matasano5_34() -> Result<(), Error> {
     matasano5_34_echo()?;
     matasano5_34_mitm()?;
     Ok(())
 }
 
-fn matasano5_34_echo() -> Result<()> {
+fn matasano5_34_echo() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
     let join_handle = run_tcp_server(server_port)?;
 
     let stream =
-        TcpStream::connect(("localhost", client_port)).chain_err(|| "client failed to connect")?;
+        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
     let mut client = Client::new(stream)?;
     let message = b"This is a test";
@@ -95,7 +95,7 @@ fn matasano5_34_echo() -> Result<()> {
     }
 }
 
-fn matasano5_34_mitm() -> Result<()> {
+fn matasano5_34_mitm() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
     run_tcp_server(server_port)?;
@@ -103,7 +103,7 @@ fn matasano5_34_mitm() -> Result<()> {
     let join_handle = run_tcp_mitm(client_port, server_port)?;
 
     let stream =
-        TcpStream::connect(("localhost", client_port)).chain_err(|| "client failed to connect")?;
+        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
     let mut client = Client::new(stream)?;
     // The message needs to match the hardcoded string in mitm_handle_client
@@ -118,29 +118,29 @@ fn matasano5_34_mitm() -> Result<()> {
     }
 }
 
-fn matasano5_35() -> Result<()> {
-    bail!(ErrorKind::NotImplemented);
+fn matasano5_35() -> Result<(), Error> {
+    Err(ChallengeError::NotImplemented.into())
 }
 
-fn matasano5_36() -> Result<()> {
-    bail!(ErrorKind::NotImplemented);
+fn matasano5_36() -> Result<(), Error> {
+    Err(ChallengeError::NotImplemented.into())
 }
 
-fn matasano5_37() -> Result<()> {
-    bail!(ErrorKind::NotImplemented);
+fn matasano5_37() -> Result<(), Error> {
+    Err(ChallengeError::NotImplemented.into())
 }
 
-fn matasano5_38() -> Result<()> {
-    bail!(ErrorKind::NotImplemented);
+fn matasano5_38() -> Result<(), Error> {
+    Err(ChallengeError::NotImplemented.into())
 }
 
-fn matasano5_39() -> Result<()> {
+fn matasano5_39() -> Result<(), Error> {
     let rsa = Rsa::<BigNum>::generate(512);
     let m = BigNumTrait::from_u32(42);
     compare(&m, &rsa.decrypt(&rsa.encrypt(&m)))
 }
 
-fn matasano5_40() -> Result<()> {
+fn matasano5_40() -> Result<(), Error> {
     let bits = 512;
     let m = BigNum::gen_random(bits - 1);
     let rsa1 = Rsa::generate(bits);

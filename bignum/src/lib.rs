@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate error_chain;
+extern crate failure;
 extern crate num;
 extern crate num_traits;
 extern crate openssl;
@@ -11,11 +10,10 @@ use num_traits::NumOps;
 use num::{One, Signed, Zero};
 use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
 use num::pow;
+use failure::{Error, ResultExt};
 
 pub use openssl::error;
 use openssl::bn::{BigNum, BigNumContext, BigNumRef};
-
-error_chain!{}
 
 pub type OpensslBigNum = BigNumWrapper<BigNum>;
 pub type NumBigInt = BigNumWrapper<BigInt>;
@@ -32,8 +30,8 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn from_u32(u: u32) -> Self;
     fn from_bytes_be(bytes: &[u8]) -> Self;
     fn to_bytes_be(&self) -> Vec<u8>;
-    fn from_hex_str(bytes: &str) -> Result<Self>;
-    fn from_dec_str(bytes: &str) -> Result<Self>;
+    fn from_hex_str(bytes: &str) -> Result<Self, Error>;
+    fn from_dec_str(bytes: &str) -> Result<Self, Error>;
     fn to_dec_str(&self) -> String;
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self;
     fn gen_below(bound: &Self) -> Self;
@@ -202,11 +200,11 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
         self.num.to_bytes_be()
     }
 
-    fn from_hex_str(bytes: &str) -> Result<Self> {
+    fn from_hex_str(bytes: &str) -> Result<Self, Error> {
         BigNumTrait::from_hex_str(bytes).map(|x| BigNumWrapper { num: x })
     }
 
-    fn from_dec_str(bytes: &str) -> Result<Self> {
+    fn from_dec_str(bytes: &str) -> Result<Self, Error> {
         BigNumTrait::from_dec_str(bytes).map(|x| BigNumWrapper { num: x })
     }
 
@@ -303,12 +301,12 @@ impl BigNumTrait for BigUint {
         BigUint::from_bytes_be(bytes)
     }
 
-    fn from_hex_str(bytes: &str) -> Result<Self> {
-        BigUint::from_str_radix(bytes, 16).chain_err(|| "invalid hex string")
+    fn from_hex_str(bytes: &str) -> Result<Self, Error> {
+        BigUint::from_str_radix(bytes, 16).context("invalid hex string").map_err(|err| err.into())
     }
 
-    fn from_dec_str(bytes: &str) -> Result<Self> {
-        BigUint::from_str_radix(bytes, 10).chain_err(|| "invalid dec string")
+    fn from_dec_str(bytes: &str) -> Result<Self, Error> {
+        BigUint::from_str_radix(bytes, 10).context("invalid dec string").map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {
@@ -447,12 +445,12 @@ impl BigNumTrait for BigInt {
         BigInt::from_bytes_be(Sign::Plus, bytes)
     }
 
-    fn from_hex_str(bytes: &str) -> Result<Self> {
-        BigInt::from_str_radix(bytes, 16).chain_err(|| "invalid hex string")
+    fn from_hex_str(bytes: &str) -> Result<Self, Error> {
+        BigInt::from_str_radix(bytes, 16).context("invalid hex string").map_err(|err| err.into())
     }
 
-    fn from_dec_str(bytes: &str) -> Result<Self> {
-        BigInt::from_str_radix(bytes, 10).chain_err(|| "invalid dec string")
+    fn from_dec_str(bytes: &str) -> Result<Self, Error> {
+        BigInt::from_str_radix(bytes, 10).context("invalid dec string").map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {
@@ -588,12 +586,12 @@ impl BigNumTrait for BigNum {
         BigNum::from_slice(bytes).unwrap()
     }
 
-    fn from_hex_str(bytes: &str) -> Result<Self> {
-        BigNum::from_hex_str(bytes).chain_err(|| "invalid hex string")
+    fn from_hex_str(bytes: &str) -> Result<Self, Error> {
+        BigNum::from_hex_str(bytes).context("invalid hex string").map_err(|err| err.into())
     }
 
-    fn from_dec_str(bytes: &str) -> Result<Self> {
-        BigNum::from_dec_str(bytes).chain_err(|| "invalid dec string")
+    fn from_dec_str(bytes: &str) -> Result<Self, Error> {
+        BigNum::from_dec_str(bytes).context("invalid dec string").map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {

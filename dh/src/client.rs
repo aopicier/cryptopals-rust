@@ -5,7 +5,7 @@ use communication::CommunicateEncr;
 
 use bignum::NumBigUint as BigNum;
 
-use errors::*;
+use failure::Error;
 
 pub struct Client<T: Communicate> {
     stream: T,
@@ -13,7 +13,7 @@ pub struct Client<T: Communicate> {
 }
 
 impl<T: Communicate> Client<T> {
-    pub fn new(mut stream: T) -> Result<Client<T>> {
+    pub fn new(mut stream: T) -> Result<Client<T>, Error> {
         handshake(&mut stream).map(|key| {
             Client {
                 stream: stream,
@@ -28,17 +28,17 @@ impl<T: Communicate> Client<T> {
 }
 
 impl<T: Communicate> Communicate for Client<T> {
-    fn send(&mut self, message: &[u8]) -> Result<()> {
+    fn send(&mut self, message: &[u8]) -> Result<(), Error> {
         self.stream.send_encr(message, &self.key)
     }
 
-    fn receive(&mut self) -> Result<Option<Vec<u8>>> {
+    fn receive(&mut self) -> Result<Option<Vec<u8>>, Error> {
         self.stream.receive_encr(&self.key)
     }
 }
 
 #[allow(non_snake_case)]
-fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>> {
+fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
     let mut dh = DH::<BigNum>::new();
     dh.init();
     let (p, g) = dh.parameters();

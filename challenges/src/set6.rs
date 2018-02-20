@@ -20,7 +20,7 @@ use set2::random_block;
 
 use errors::*;
 
-fn matasano6_41() -> Result<()> {
+fn matasano6_41() -> Result<(), Error> {
     let bits = 512;
     let rsa = Rsa::<BigNum>::generate(bits);
 
@@ -36,10 +36,10 @@ fn matasano6_41() -> Result<()> {
 
     let s = BigNum::gen_random(bits - 1);
     //TODO We should check that s > 1 and that s and rsa.n() have no common divisors
-    let t = s.invmod(rsa.n()).ok_or("s and n are not coprime")?;
+    let t = s.invmod(rsa.n()).ok_or(err_msg("s and n are not coprime"))?;
 
     let c2 = &(&c * &rsa.encrypt(&s)) % rsa.n();
-    let m2 = oracle(&c2).ok_or("wrong input to oracle")?;
+    let m2 = oracle(&c2).ok_or(err_msg("wrong input to oracle"))?;
     compare(m, &(&m2 * &t) % rsa.n())
 }
 
@@ -75,7 +75,7 @@ fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
     }
 }
 
-fn matasano6_42() -> Result<()> {
+fn matasano6_42() -> Result<(), Error> {
     //We lose leading zeros during the conversion to BigNum. We therefore omit it from prefix and
     //check that the length of the block is one less than the length of n.
     let bits = 1024;
@@ -110,7 +110,7 @@ fn matasano6_42() -> Result<()> {
     compare(true, verify_signature(&fake_signature.unwrap()))
 }
 
-fn matasano6_43() -> Result<()> {
+fn matasano6_43() -> Result<(), Error> {
     let params = DsaParams::generate();
 
     let y = BigNum::from_hex_str(
@@ -156,7 +156,7 @@ fn matasano6_43() -> Result<()> {
     )
 }
 
-fn matasano6_44() -> Result<()> {
+fn matasano6_44() -> Result<(), Error> {
     let params = DsaParams::generate();
 
     let y = BigNum::from_hex_str(
@@ -214,12 +214,11 @@ fn matasano6_44() -> Result<()> {
             );
         }
     }
-    bail!(ErrorKind::ItemNotFound(
-        "signatures with equal r".to_owned()
-    ));
+
+    Err(ChallengeError::ItemNotFound("signatures with equal r".to_owned()).into())
 }
 
-fn matasano6_45() -> Result<()> {
+fn matasano6_45() -> Result<(), Error> {
     let params = DsaParams::<BigNum>::generate();
     let private = DsaPrivate::generate(&params);
     let public = DsaPublic::generate(&private);
@@ -279,7 +278,7 @@ impl Server46 {
         self.rsa.encrypt(&_2)
     }
 
-    fn get_ciphertext(&self) -> Result<BigNum> {
+    fn get_ciphertext(&self) -> Result<BigNum, Error> {
         let cleartext = from_base64(
             "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
              Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
@@ -294,12 +293,12 @@ impl Server46 {
         &self.rsa.decrypt(ciphertext) % &_2 == _0
     }
 
-    fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<()> {
+    fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<(), Error> {
         compare(&self.rsa.decrypt(ciphertext), cleartext)
     }
 }
 
-fn matasano6_46() -> Result<()> {
+fn matasano6_46() -> Result<(), Error> {
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
     let server = Server46::new();
@@ -321,7 +320,7 @@ fn matasano6_46() -> Result<()> {
 }
 
 #[allow(non_snake_case)]
-fn matasano6_47_48(rsa_bits: usize) -> Result<()> {
+fn matasano6_47_48(rsa_bits: usize) -> Result<(), Error> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);

@@ -24,7 +24,7 @@ use errors::*;
 use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 use prefix_suffix_oracles::{Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 
-fn matasano2_9() -> Result<()> {
+fn matasano2_9() -> Result<(), Error> {
     compare(
         [
             89,
@@ -67,7 +67,7 @@ fn aes_128_cbc() {
     );
 }
 
-fn matasano2_10() -> Result<()> {
+fn matasano2_10() -> Result<(), Error> {
     let key = b"YELLOW SUBMARINE";
     let input = from_base64_file(Path::new("data/10.txt"))?;
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;
@@ -81,7 +81,7 @@ fn matasano2_10() -> Result<()> {
     compare(cleartext_ref.as_bytes(), &cleartext)
 }
 
-fn uses_ecb(oracle: &mut Oracle11) -> Result<bool> {
+fn uses_ecb(oracle: &mut Oracle11) -> Result<bool, Error> {
     // Assumes that oracle prepends at most one block of jibber
     // TODO: Can we relax this condition?
     let input = vec![0; 3 * BLOCK_SIZE];
@@ -90,11 +90,11 @@ fn uses_ecb(oracle: &mut Oracle11) -> Result<bool> {
     Ok(blocks[0] == blocks[1])
 }
 
-fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool> {
+fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
     Ok((oracle.encrypt(&[0])?.len()-oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
 }
 
-fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
+fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> {
     let initial = oracle.encrypt(&[])?.len();
     if !uses_padding(oracle)? {
         return Ok(initial);
@@ -122,7 +122,7 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
  *
  * To determine this number, we pass two different cleartexts to the oracle and count the number
  * of identical blocks at the start of the corresponding ciphertexts. */
-fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
+fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     if let Some(result) = oracle
         .encrypt(&[0])?
         .chunks(BLOCK_SIZE)
@@ -155,9 +155,9 @@ fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
 // We need to do this with two different constants because suffix[0] might accidentally
 // coincide with the constant we have chosen.
 
-pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
+pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     let n = prefix_blocks_count(oracle)?;
-    let helper = |k: u8| -> Result<usize> {
+    let helper = |k: u8| -> Result<usize, Error> {
         let constant_block = vec![k; BLOCK_SIZE];
 
         let mut prev = oracle.encrypt(&constant_block)?;
@@ -175,7 +175,7 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     Ok(n * BLOCK_SIZE + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
+fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     Ok(prefix_plus_suffix_length(oracle)? - prefix_length(oracle)?)
 }
 
@@ -205,13 +205,13 @@ fn test_length_functions() {
     }
 }
 
-fn matasano2_11() -> Result<()> {
+fn matasano2_11() -> Result<(), Error> {
     let mut oracle = Oracle11::new()?;
     let uses_ecb = uses_ecb(&mut oracle)?;
     oracle.verify_solution(uses_ecb)
 }
 
-fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
+fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> {
     // The following input is chosen in such a way that the cleartext in oracle looks as follows:
     //
     //            input start      input end
@@ -232,7 +232,7 @@ fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
     let mut input = vec![0; prefix_padding + BLOCK_SIZE - 1];
     let reference_ciphertexts = (0..BLOCK_SIZE)
         .map(|left_shift| oracle.encrypt(&input[left_shift..]))
-        .collect::<Result<Vec<Vec<u8>>>>()?;
+        .collect::<Result<Vec<Vec<u8>>, Error>>()?;
 
     for i in 0..suffix_len {
         let block = prefix_blocks + i / BLOCK_SIZE;
@@ -253,7 +253,7 @@ fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
     Ok(suffix)
 }
 
-fn matasano2_12() -> Result<()> {
+fn matasano2_12() -> Result<(), Error> {
     let oracle = Oracle12::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
@@ -269,7 +269,7 @@ pub fn decode_profile(u: &[u8], sep: u8) -> HashMap<&[u8], &[u8]> {
 
 /* The following function works under the single assumption that the target value "user" (to be
    replaced by "admin") is stored at the very end of the profile. */
-fn matasano2_13() -> Result<()> {
+fn matasano2_13() -> Result<(), Error> {
     let oracle = Oracle13::new()?;
 
     let prefix_len = prefix_length(&oracle)?;
@@ -290,7 +290,7 @@ fn matasano2_13() -> Result<()> {
     oracle.verify_solution(&ciphertext)
 }
 
-fn matasano2_14() -> Result<()> {
+fn matasano2_14() -> Result<(), Error> {
     let oracle = Oracle14::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
@@ -300,7 +300,7 @@ pub fn random_block() -> Vec<u8> {
     rng.gen_iter().take(BLOCK_SIZE).collect()
 }
 
-fn matasano2_15() -> Result<()> {
+fn matasano2_15() -> Result<(), Error> {
     compare(true, b"ICE ICE BABY\x04\x04\x04\x04".padding_valid())?;
     compare(false, b"ICE ICE BABY\x05\x05\x05\x05".padding_valid())?;
     compare(false, b"ICE ICE BABY\x01\x02\x03\x04".padding_valid())?;
@@ -315,7 +315,7 @@ fn matasano2_15() -> Result<()> {
     Ok(())
 }
 
-fn matasano2_16() -> Result<()> {
+fn matasano2_16() -> Result<(), Error> {
     let oracle = Oracle16::new()?;
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
