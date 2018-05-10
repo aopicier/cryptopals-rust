@@ -42,8 +42,5 @@ path = "../dsa"
 [dependencies.serialize]
 path = "../serialize"
 
-[dependencies.unstable_features]
-path = "../unstable_features"
-
 [dependencies.xor]
 path = "../xor"

@@ -4,7 +4,6 @@ version = "0.0.1"
 dependencies = [
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.9.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "unstable_features 0.0.1",
  "xor 0.0.1",
 ]
 
@@ -146,7 +145,6 @@ dependencies = [
  "rand 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "serialize 0.1.0",
  "sha1 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "unstable_features 0.0.1",
 ]
 
 [[package]]
@@ -240,7 +238,6 @@ version = "0.1.0"
 dependencies = [
  "hyper 0.10.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "serialize 0.1.0",
- "unstable_features 0.0.1",
 ]
 
 [[package]]
@@ -366,7 +363,6 @@ dependencies = [
  "rsa 0.1.0",
  "serialize 0.1.0",
  "sha1 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "unstable_features 0.0.1",
  "xor 0.0.1",
 ]
 
@@ -795,10 +791,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "traitobject 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "unstable_features"
-version = "0.0.1"
 
 [[package]]
 name = "url"

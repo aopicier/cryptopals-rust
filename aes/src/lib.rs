@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate failure;
 extern crate openssl;
-extern crate unstable_features;
 extern crate xor;
 
 use openssl::symm::{decrypt, encrypt};

@@ -8,6 +8,3 @@ hyper = "0.10"
 
 [dependencies.serialize]
 path = "../serialize"
-
-[dependencies.unstable_features]
-path = "../unstable_features"

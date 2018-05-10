@@ -12,8 +12,6 @@ use aes::BLOCK_SIZE;
 
 use serialize::from_base64_file;
 
-use unstable_features::MoveFrom;
-
 use xor::XOR;
 
 use helper::ceil_div;
@@ -284,7 +282,7 @@ fn matasano2_13() -> Result<(), Error> {
     let mut ciphertext = oracle.encrypt(&vec![0; padding + "user".len()])?;
     compare((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
-    ciphertext[blocks * BLOCK_SIZE..].move_from2(target_last_block, 0, BLOCK_SIZE);
+    ciphertext[blocks * BLOCK_SIZE..].copy_from_slice(&target_last_block[0..BLOCK_SIZE]);
 
     oracle.verify_solution(&ciphertext)
 }

@@ -18,8 +18,6 @@ use hmac_server;
 use rand;
 use rand::Rng;
 
-use unstable_features::MoveFrom;
-
 use set2::prefix_length;
 use set2::random_block;
 
@@ -36,8 +34,11 @@ use prefix_suffix_oracles::{Oracle, Oracle26};
 
 fn edit4_25(ciphertext: &[u8], key: &[u8], offset: usize, newtext: Vec<u8>) -> Result<Vec<u8>, Error> {
     let mut cleartext = ciphertext.decrypt(key, None, MODE::CTR)?;
-    let n = newtext.len();
-    cleartext[offset..].move_from2(newtext, 0, n);
+    let end = offset + newtext.len();
+    if end > cleartext.len() {
+        bail!("input out of bounds")
+    }
+    cleartext[offset..end].copy_from_slice(&newtext);
     cleartext
         .encrypt(key, None, MODE::CTR)
         .map_err(|x| x.into())

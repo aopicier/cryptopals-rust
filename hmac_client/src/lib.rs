@@ -1,6 +1,5 @@
 extern crate hyper;
 extern crate serialize;
-extern crate unstable_features;
 
 use std::time;
 use hyper::client::Client;

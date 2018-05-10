@@ -16,7 +16,6 @@ extern crate hmac_server;
 extern crate mac;
 extern crate rsa;
 extern crate serialize;
-extern crate unstable_features;
 extern crate xor;
 
 extern crate num;

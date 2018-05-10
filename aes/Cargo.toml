@@ -7,8 +7,5 @@ authors = ["Philipp Hartwig <ph@phhart.de>"]
 failure = "0.1"
 openssl = "0.9"
 
-[dependencies.unstable_features]
-path = "../unstable_features"
-
 [dependencies.xor]
 path = "../xor"

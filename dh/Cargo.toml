@@ -19,6 +19,3 @@ path = "../bignum"
 
 [dependencies.serialize]
 path = "../serialize"
-
-[dependencies.unstable_features]
-path = "../unstable_features"
