@@ -1,10 +1,6 @@
 use std::mem;
 use std::cmp;
 
-pub fn all_bytes() -> Vec<u8> {
-    (0..u32::from(std::u8::MAX) + 1).map(|u| u as u8).collect()
-}
-
 pub trait MoveFrom<T> {
     fn move_from2(&mut self, src: Vec<T>, start: usize, end: usize) -> usize;
 }

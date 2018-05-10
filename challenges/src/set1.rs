@@ -3,8 +3,6 @@ use helper::compute_score;
 use aes::{Aes128, MODE};
 use aes::BLOCK_SIZE;
 
-use unstable_features::all_bytes;
-
 use xor::XOR;
 
 use serialize::Serialize;
@@ -50,7 +48,7 @@ fn matasano1_2() -> Result<(), Error> {
 }
 
 pub fn decrypt_single_xor(input: &[u8]) -> u8 {
-    all_bytes()
+    (0u8..=255)
         .into_iter()
         .min_by_key(|&u| compute_score(&input.xor(&[u])))
         .unwrap()

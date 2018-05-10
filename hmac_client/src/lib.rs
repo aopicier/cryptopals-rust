@@ -6,7 +6,6 @@ use std::time;
 use hyper::client::Client;
 use hyper::header::ContentType;
 
-use unstable_features::all_bytes;
 use serialize::Serialize;
 
 fn mean(u: &[f32]) -> f32 {
@@ -56,7 +55,7 @@ pub fn run() {
     for i in 0..mac.len() {
         let mut u_max = 0;
         let mut stat_max = (0f32, 0f32);
-        for u in all_bytes() {
+        for u in 0..=255 {
             mac[i] = u;
             let stat = perform_measurement(&mac, n);
             let t = t_statistic(n as f32, stat_max, stat);

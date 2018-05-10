@@ -12,8 +12,6 @@ use mersenne::MersenneTwister;
 use serialize::from_base64;
 use serialize::from_base64_lines;
 
-use unstable_features::all_bytes;
-
 use xor::XOR;
 
 use rand;
@@ -97,7 +95,7 @@ fn matasano3_17() -> Result<(), Error> {
             let padding = (BLOCK_SIZE - i) as u8;
             prev[i + 1..].xor_inplace(&[(padding - 1) ^ padding]);
             //Awaits replacement for range_inclusive
-            for u in all_bytes() {
+            for u in 0u8..=255 {
                 prev[i] ^= u;
                 if server.is_padding_valid(&prev, block)? && (i < BLOCK_SIZE - 1 || {
                     prev[i - 1] ^= 1;

@@ -12,7 +12,6 @@ use aes::BLOCK_SIZE;
 
 use serialize::from_base64_file;
 
-use unstable_features::all_bytes;
 use unstable_features::MoveFrom;
 
 use xor::XOR;
@@ -238,7 +237,7 @@ fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> 
         let block = prefix_blocks + i / BLOCK_SIZE;
         //let block_range = block*BLOCK_SIZE .. (block + 1)*BLOCK_SIZE;
         let left_shift = i % BLOCK_SIZE;
-        for u in all_bytes() {
+        for u in 0u8..=255 {
             input.push(u);
             if reference_ciphertexts[left_shift][block * BLOCK_SIZE..(block + 1) * BLOCK_SIZE]
                 == oracle.encrypt(&input[left_shift..])?
