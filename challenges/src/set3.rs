@@ -1,10 +1,11 @@
 use std;
-use std::path::Path;
+use std::path::PathBuf;
 
 use aes::{Aes128, AesError, BLOCK_SIZE, MODE, unpad_inplace};
 use byteorder::{ByteOrder, NativeEndian};
 
 use set1::decrypt_single_xor;
+use set2::random_block;
 
 use mersenne;
 use mersenne::MersenneTwister;
@@ -78,12 +79,6 @@ impl Server17 {
     }
 }
 
-
-fn random_block() -> Vec<u8> {
-    let mut rng = rand::thread_rng();
-    rng.gen_iter().take(BLOCK_SIZE).collect()
-}
-
 fn matasano3_17() -> Result<(), Error> {
     let server = Server17::new();
     let (ciphertext, iv) = server.get_session_token()?;
@@ -125,36 +120,65 @@ fn matasano3_18() -> Result<(), Error> {
     )
 }
 
-fn matasano3_19_20(input_file: &Path) -> Result<(), Error> {
-    let cleartexts = from_base64_lines(input_file)?;
-    let secret_key = random_block();
-    let ciphertexts = cleartexts
-        .iter()
-        .map(|c| {
-            c.encrypt(&secret_key, None, MODE::CTR)
-                .map_err(|err| err.into())
-        })
-        .collect::<Result<Vec<Vec<u8>>, Error>>()?;
+enum Exercise {
+    _19,
+    _20
+}
+
+struct Encrypter19_20 {
+    key: Vec<u8>,
+    exercise: Exercise
+}
+
+impl Encrypter19_20 {
+    pub fn new(exercise: Exercise) -> Self {
+        Encrypter19_20 { key: random_block(), exercise: exercise }
+    }
+
+    pub fn get_ciphertexts(&self) -> Result<Vec<Vec<u8>>, Error> {
+        let mut input_file_path = PathBuf::from("data");
+        let input_file_name = match self.exercise {
+            Exercise::_19 => "19.txt",
+            Exercise::_20 => "20.txt",
+        };
+        input_file_path.push(input_file_name);
+        let cleartexts = from_base64_lines(input_file_path.as_path())?;
+        cleartexts
+            .iter()
+            .map(|c| c.encrypt(&self.key, None, MODE::CTR))
+            .collect::<Result<Vec<Vec<u8>>, Error>>()
+    }
+
+    pub fn verify_solution(&self, candidate_key: &[u8], size: usize) -> Result<(), Error> {
+        // TODO: The first entry of the recovered key is wrong because the distribution of first letters
+        // of sentences is very different from the overall distribution of letters in a text.
+        compare(
+            &vec![0; size].encrypt(&self.key, None, MODE::CTR)?[1..],
+            &candidate_key[1..],
+            ) // encrypt or decrypt?
+    }
+}
+
+fn matasano3_19_20(exercise: Exercise) -> Result<(), Error> {
+    let encrypter = Encrypter19_20::new(exercise);
+    let ciphertexts = encrypter.get_ciphertexts()?;
     let size = ciphertexts.iter().map(|c| c.len()).min().unwrap();
     let mut transposed_blocks: Vec<Vec<u8>> = (0..size)
         .map(|_| Vec::with_capacity(ciphertexts.len()))
         .collect();
+
     for ciphertext in ciphertexts {
         for (&u, bt) in ciphertext[..size].iter().zip(transposed_blocks.iter_mut()) {
             bt.push(u);
         }
     }
+
     let key = transposed_blocks
         .iter()
         .map(|b| decrypt_single_xor(b))
         .collect::<Vec<u8>>();
 
-    // TODO: The first entry of the recovered key is wrong because the distribution of first letters
-    // of sentences is very different from the overall distribution of letters in a text.
-    compare(
-        &vec![0; size].encrypt(&secret_key, None, MODE::CTR)?[1..],
-        &key[1..],
-    ) // encrypt or decrypt?
+    encrypter.verify_solution(&key, size)
 }
 
 fn matasano3_21() -> Result<(), Error> {
@@ -239,8 +263,8 @@ pub fn run() {
     println!("Set 3");
     run_exercise(matasano3_17, 17);
     run_exercise(matasano3_18, 18);
-    run_exercise(|| matasano3_19_20(Path::new("data/19.txt")), 19);
-    run_exercise(|| matasano3_19_20(Path::new("data/20.txt")), 20);
+    run_exercise(|| matasano3_19_20(Exercise::_19), 19);
+    run_exercise(|| matasano3_19_20(Exercise::_20), 20);
     run_exercise(matasano3_21, 21);
     run_exercise(matasano3_22, 22);
     run_exercise(matasano3_23, 23);

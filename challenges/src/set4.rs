@@ -31,34 +31,58 @@ use prefix_suffix_oracles::{Oracle, Oracle26};
 // use byteorder::{ByteOrder, BigEndian};
 // use sha1::Sha1;
 
+struct Encrypter25 {
+    cleartext: Vec<u8>,
+    key: Vec<u8>,
+    ciphertext: Vec<u8>,
+}
 
-fn edit4_25(ciphertext: &[u8], key: &[u8], offset: usize, newtext: Vec<u8>) -> Result<Vec<u8>, Error> {
-    let mut cleartext = ciphertext.decrypt(key, None, MODE::CTR)?;
-    let end = offset + newtext.len();
-    if end > cleartext.len() {
-        bail!("input out of bounds")
+impl Encrypter25 {
+    pub fn new() -> Result<Self, Error> {
+        let cleartext = from_base64_file(Path::new("data/25.txt"))?;
+        let key = random_block();
+        let ciphertext = cleartext.encrypt(&key, None, MODE::CTR)?;
+        Ok(Encrypter25 { cleartext: cleartext, key: key, ciphertext: ciphertext })
     }
-    cleartext[offset..end].copy_from_slice(&newtext);
-    cleartext
-        .encrypt(key, None, MODE::CTR)
-        .map_err(|x| x.into())
+
+    pub fn get_ciphertext(&self) -> &[u8] {
+        &self.ciphertext
+    }
+
+    pub fn edit(&self, offset: usize, newtext: Vec<u8>) -> Result<Vec<u8>, Error> {
+        let mut cleartext = self.cleartext.clone();
+        let end = offset + newtext.len();
+        if end > cleartext.len() {
+            bail!("input out of bounds")
+        }
+        cleartext[offset..end].copy_from_slice(&newtext);
+        cleartext
+            .encrypt(&self.key, None, MODE::CTR)
+    }
+
+    pub fn verify_solution(&self, candidate_cleartext: &[u8]) -> Result<(), Error> {
+        compare(&self.cleartext[..], candidate_cleartext )
+    }
 }
 
 fn matasano4_25() -> Result<(), Error> {
-    let cleartext = from_base64_file(Path::new("data/25.txt"))?;
-    let key = random_block();
-    let ciphertext = cleartext.encrypt(&key, None, MODE::CTR)?;
-    let keystream = edit4_25(&ciphertext, &key, 0, vec![0; ciphertext.len()])?;
-    compare(cleartext, ciphertext.xor(&keystream))
+    // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
+    // we can trivially recover the used keystream by xor'ing the ciphertext with the 
+    // known plaintext. We simply use the edit function to set the entire cleartext to 0 so that
+    // the ciphertext is even equal to the keystream.
+
+    let encrypter = Encrypter25::new()?;
+    let ciphertext = encrypter.get_ciphertext();
+    let keystream = encrypter.edit(0, vec![0; ciphertext.len()])?;
+    encrypter.verify_solution(&ciphertext.xor(&keystream))
 }
 
 fn matasano4_26() -> Result<(), Error> {
-    let oracle = Oracle26::new()?;
-
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
     // we can inject any plaintext at the same location by xor'ing the ciphertext with
     // known_plaintext ^ target_plaintext.
 
+    let oracle = Oracle26::new()?;
     let prefix_len = prefix_length(&oracle)?;
     let target_cleartext = b";admin=true";
     let mut ciphertext = oracle.encrypt(&vec![0; target_cleartext.len()])?;
@@ -67,15 +91,16 @@ fn matasano4_26() -> Result<(), Error> {
     oracle.verify_solution(&ciphertext)
 }
 
-fn setup4_27() -> (
-    Box<Fn(&[u8]) -> Result<Vec<u8>, Error>>,
-    Box<Fn(&[u8]) -> Result<(), Error>>,
-    Box<Fn(&[u8]) -> bool>,
-) {
-    let secret_key = random_block();
+struct Sender27 {
+    key: Vec<u8>
+}
 
-    let key = secret_key.clone();
-    let encrypter = move |input: &[u8]| {
+struct Receiver27 {
+    key: Vec<u8>
+}
+
+impl Sender27 {
+    pub fn encrypt(&self, input: &[u8]) -> Result<Vec<u8>, Error> {
         // Exclude ';' and '='
         if input
             .iter()
@@ -91,24 +116,30 @@ fn setup4_27() -> (
         cleartext.extend_from_slice(input);
         cleartext.extend_from_slice(suffix);
         cleartext
-            .encrypt(&key, Some(&key), MODE::CBC)
-            .map_err(|err| err.into())
-    };
+            .encrypt(&self.key, Some(&self.key), MODE::CBC)
+    }
+}
 
-    let key = secret_key.clone();
-    let receiver = move |ciphertext: &[u8]| {
-        let cleartext = ciphertext.decrypt(&key, Some(&key), MODE::CBC)?;
+impl Receiver27 {
+    pub fn try_decrypt(&self, ciphertext: &[u8]) -> Result<(), Error> {
+        let cleartext = ciphertext.decrypt(&self.key, Some(&self.key), MODE::CBC)?;
         if !cleartext.is_ascii() {
             Err(NonAscii(cleartext).into())
         } else {
             Ok(())
         }
-    };
+    }
 
-    let key = secret_key.clone();
-    let validator = move |candidate_key: &[u8]| key == candidate_key;
+    pub fn verify_solution(&self, candidate_key: &[u8]) -> Result<(), Error> {
+        compare(&self.key[..], candidate_key)
+    }
+}
 
-    (Box::new(encrypter), Box::new(receiver), Box::new(validator))
+fn get_sender_and_receiver_with_shared_key() -> (Sender27, Receiver27) {
+    let secret_key = random_block();
+    let sender = Sender27 { key: secret_key.clone() } ;
+    let receiver = Receiver27 { key: secret_key.clone() } ;
+    (sender, receiver)
 }
 
 #[derive(Debug, Fail)]
@@ -117,9 +148,9 @@ struct NonAscii(Vec<u8>);
 
 
 fn matasano4_27() -> Result<(), Error> {
-    let (encrypter, receiver, validator) = setup4_27();
+    let (sender, receiver) = get_sender_and_receiver_with_shared_key();
 
-    let ciphertext = encrypter(&[])?;
+    let ciphertext = sender.encrypt(&[])?;
 
     let mut attack_ciphertext = Vec::with_capacity(3 * BLOCK_SIZE);
     attack_ciphertext.extend_from_slice(&ciphertext[0..BLOCK_SIZE]);
@@ -128,12 +159,10 @@ fn matasano4_27() -> Result<(), Error> {
     //Push last two blocks to preserve valid padding at the end
     attack_ciphertext.extend_from_slice(&ciphertext[ciphertext.len() - 2 * BLOCK_SIZE..]);
 
-    if let Err(err) = receiver(&attack_ciphertext) {
+    if let Err(err) = receiver.try_decrypt(&attack_ciphertext) {
         if let Ok(NonAscii(attack_cleartext)) = err.downcast::<NonAscii>() {
-            return compare(
-                true,
-                validator(&attack_cleartext[0..BLOCK_SIZE]
-                          .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE])));
+            return receiver.verify_solution(&attack_cleartext[0..BLOCK_SIZE]
+                                             .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]));
         }
     }
 

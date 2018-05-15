@@ -48,7 +48,7 @@ impl Oracle for Common {
                 cleartext.encrypt(key, Some(&iv), mode)
             }
             _ => cleartext.encrypt(key, None, mode),
-        }.map_err(|err| err.into())
+        }
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
