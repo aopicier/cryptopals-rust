@@ -466,7 +466,7 @@ impl BigNumTrait for BigInt {
         let (zero, one): (BigInt, BigInt) = (Zero::zero(), One::one());
         let two = &one + &one;
         let mut result = one.clone();
-        let mut base = self % modulus;
+        let mut base = self.mod_math(&modulus);
         let mut exponent = exponent.clone();
 
         while exponent > zero {
