@@ -42,5 +42,8 @@ path = "../dsa"
 [dependencies.serialize]
 path = "../serialize"
 
+[dependencies.srp]
+path = "../srp"
+
 [dependencies.xor]
 path = "../xor"

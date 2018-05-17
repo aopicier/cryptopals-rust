@@ -1,0 +1,21 @@
+[package]
+
+name = "srp"
+version = "0.0.1"
+authors = ["ph"]
+
+[dependencies]
+byteorder = "0.5"
+failure = "0.1"
+num = "0.1"
+rand = "0.3" 
+sha2 = "0.6"
+
+[dependencies.bignum]
+path = "../bignum"
+
+[dependencies.mac]
+path = "../mac"
+
+[dependencies.serialize]
+path = "../serialize"

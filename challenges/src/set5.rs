@@ -1,21 +1,25 @@
 use std::net::{Shutdown, TcpListener, TcpStream};
+use std::sync::mpsc::channel;
 use std::thread;
 
 use diffie_hellman::client::Client;
 use diffie_hellman::communication::Communicate;
 use diffie_hellman::mitm::MITM;
 use diffie_hellman::mitm::Mode;
-use diffie_hellman::server::Server;
+use diffie_hellman::server::Server as DHServer;
 
 use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
 
 use rsa::Rsa;
 
+use srp::server::Server as SrpServer;
+use srp::client::Client as SrpClient;
+
 use errors::*;
 
 fn handle_client<T: Communicate>(stream: T) -> Result<(), Error> {
-    let mut server = Server::new(stream)?;
+    let mut server = DHServer::new(stream)?;
 
     while let Some(message) = server.receive()? {
         server.send(&message)?;
@@ -122,8 +126,45 @@ fn matasano5_35() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
+
 fn matasano5_36() -> Result<(), Error> {
-    Err(ChallengeError::NotImplemented.into())
+    let mut server = SrpServer::new();
+    let server_port: u16 = 8080;
+    let client_port: u16 = 8080;
+    let listener = TcpListener::bind(("localhost", server_port))?;
+    let (tx, rx) = channel();
+    let join_handle = thread::spawn(move || loop {
+        match listener.accept() {
+            Ok((mut stream, _)) => {
+                // Check for shutdown signal
+                if rx.try_recv().is_ok() {
+                    return Ok(());
+                }
+
+                server.handle_client(&mut stream)?;
+            }
+            Err(_) => bail!("connection failed"),
+        };
+    });
+
+    let client = SrpClient::new(b"hi".to_vec(), b"foo".to_vec());
+    let mut stream =
+        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+    client.register(&mut stream)?;
+    stream.shutdown(Shutdown::Both)?;
+    stream = TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+    client.login(&mut stream)?;
+    stream.shutdown(Shutdown::Both)?;
+
+    // Ugly hack for shutting down the server
+    tx.send(1)?;
+    stream = TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+    stream.shutdown(Shutdown::Both)?;
+
+    match join_handle.join() {
+        Ok(result) => result,
+        _ => bail!("tcp listener thread panicked"),
+    }
 }
 
 fn matasano5_37() -> Result<(), Error> {
