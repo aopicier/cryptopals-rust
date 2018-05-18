@@ -41,23 +41,19 @@ impl SRP {
         let g = BigNum::from_u32(2);
         let k = BigNum::from_u32(3);
         SRP {
-            N:  N,
-            g: g,
-            k: k,
+            N,
+            g,
+            k,
         }
     }
 
-    pub fn generate_salt(&self) -> Vec<u8> {
+    pub fn password_to_secret(&self, password: &[u8]) -> (Vec<u8>, BigNum) {
         let mut rng = rand::thread_rng();
         // Which size should the salt have?
         let salt: Vec<u8> = rng.gen_iter::<u8>().take(128).collect();
-        salt
-    }
 
-    pub fn password_to_secret(&self, salt: &[u8], password: Vec<u8>) -> BigNum {
-        let x = compute_x(salt, &password);
-        let v = self.g.mod_exp(&x, &self.N);
-        v
+        let x = compute_x(&salt, password);
+        (salt, self.g.mod_exp(&x, &self.N))
     }
 }
 
@@ -72,21 +68,23 @@ impl<'a> HandshakeState<'a> {
         let exponent = BigNum::gen_below(&srp.N);
         let power = srp.g.mod_exp(&exponent, &srp.N);
         HandshakeState {
-            srp: srp,
-            exponent: exponent,
-            power: power
+            srp,
+            exponent,
+            power,
         }
     }
 }
 
 pub struct ClientHandshake<'a> {
-    state: HandshakeState<'a>
+    state: HandshakeState<'a>,
+    password: &'a [u8],
 }
 
 impl <'a> ClientHandshake<'a> {
-    pub fn new(srp: &'a SRP) -> Self {
+    pub fn new(srp: &'a SRP, password: &'a [u8]) -> Self {
         ClientHandshake {
-            state: HandshakeState::new(srp)
+            state: HandshakeState::new(srp),
+            password
         }
     }
 
@@ -94,7 +92,7 @@ impl <'a> ClientHandshake<'a> {
         &self.state.power
     }
 
-    pub fn compute_secret(&self, B: &BigNum, salt: &[u8], password: &[u8]) -> Vec<u8> {
+    pub fn compute_secret(&self, B: &BigNum, salt: &[u8]) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
@@ -104,7 +102,7 @@ impl <'a> ClientHandshake<'a> {
         let A = &state.power;
 
         let u = compute_u(A, B);
-        let x = compute_x(salt, password);
+        let x = compute_x(salt, self.password);
 
         let S = (B - &(k * &g.mod_exp(&x, N))).mod_exp(&(a + &(&u * &x)), N);
         let K = Sha256::digest(&serialize(&S)).to_vec();
@@ -115,15 +113,19 @@ impl <'a> ClientHandshake<'a> {
 pub struct ServerHandshake<'a> {
     state: HandshakeState<'a>,
     B: BigNum,
+    salt: &'a [u8],
+    v: &'a BigNum,
 }
 
 impl <'a> ServerHandshake<'a> {
-    pub fn new(srp: &'a SRP, v: &'a BigNum) -> Self {
+    pub fn new(srp: &'a SRP, salt: &'a [u8], v: &'a BigNum) -> Self {
         let state = HandshakeState::new(srp);
         let B = &state.power + &(&srp.k * v);
         ServerHandshake {
-            state: state,
-            B: B,
+            state,
+            B,
+            salt,
+            v,
         }
     }
 
@@ -131,7 +133,7 @@ impl <'a> ServerHandshake<'a> {
         &self.B
     }
 
-    pub fn compute_secret(&self, A: &BigNum, salt: &[u8], v: &BigNum) -> Vec<u8> {
+    pub fn compute_secret(&self, A: &BigNum) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
@@ -139,9 +141,9 @@ impl <'a> ServerHandshake<'a> {
         let B = &self.B;
 
         let u = compute_u(A, B);
-        let S = (A * &v.mod_exp(&u, N)).mod_exp(b, N);
+        let S = (A * &self.v.mod_exp(&u, N)).mod_exp(b, N);
         let K = Sha256::digest(&serialize(&S)).to_vec();
-        hmac_sha256(&K, salt)
+        hmac_sha256(&K, self.salt)
     }
 }
 

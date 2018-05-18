@@ -46,8 +46,8 @@ impl<T: Read + Write> Communicate for T {
 
     fn send(&mut self, message: &[u8]) -> Result<(), Error> {
         let length = encode_length(message.len());
-        self.write(&length)?;
-        self.write(message)?;
+        self.write_all(&length)?;
+        self.write_all(message)?;
         Ok(())
     }
 }
