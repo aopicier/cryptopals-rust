@@ -1,2 +1,4 @@
 target/
 main
+*.swp
+*.bak
