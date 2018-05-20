@@ -4,16 +4,16 @@ extern crate num_traits;
 extern crate openssl;
 extern crate rand;
 
-use std::cmp::Ordering;
-use num_traits::Num;
-use num_traits::NumOps;
-use num::{One, Signed, Zero};
+use failure::{Error, ResultExt};
 use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
 use num::pow;
-use failure::{Error, ResultExt};
+use num::{One, Signed, Zero};
+use num_traits::Num;
+use num_traits::NumOps;
+use std::cmp::Ordering;
 
-pub use openssl::error;
 use openssl::bn::{BigNum, BigNumContext, BigNumRef};
+pub use openssl::error;
 
 pub type OpensslBigNum = BigNumWrapper<BigNum>;
 pub type NumBigInt = BigNumWrapper<BigInt>;
@@ -126,12 +126,14 @@ where &'a1 T: std::ops::Rem<&'a2 T, Output=T> {
 */
 
 macro_rules! impl_numops {
-    ( $T:ty ) => {
+    ($T:ty) => {
         impl<'a1, 'a2> std::ops::Add<&'a2 BigNumWrapper<$T>> for &'a1 BigNumWrapper<$T> {
             type Output = BigNumWrapper<$T>;
 
             fn add(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
-                BigNumWrapper { num: &self.num + &other.num }
+                BigNumWrapper {
+                    num: &self.num + &other.num,
+                }
             }
         }
 
@@ -139,7 +141,9 @@ macro_rules! impl_numops {
             type Output = BigNumWrapper<$T>;
 
             fn sub(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
-                BigNumWrapper { num: &self.num - &other.num }
+                BigNumWrapper {
+                    num: &self.num - &other.num,
+                }
             }
         }
 
@@ -147,7 +151,9 @@ macro_rules! impl_numops {
             type Output = BigNumWrapper<$T>;
 
             fn mul(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
-                BigNumWrapper { num: &self.num * &other.num }
+                BigNumWrapper {
+                    num: &self.num * &other.num,
+                }
             }
         }
 
@@ -155,7 +161,9 @@ macro_rules! impl_numops {
             type Output = BigNumWrapper<$T>;
 
             fn div(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
-                BigNumWrapper { num: &self.num / &other.num }
+                BigNumWrapper {
+                    num: &self.num / &other.num,
+                }
             }
         }
 
@@ -163,10 +171,12 @@ macro_rules! impl_numops {
             type Output = BigNumWrapper<$T>;
 
             fn rem(self, other: &'a2 BigNumWrapper<$T>) -> Self::Output {
-                BigNumWrapper { num: &self.num % &other.num }
+                BigNumWrapper {
+                    num: &self.num % &other.num,
+                }
             }
         }
-    }
+    };
 }
 
 impl_numops!(BigInt);
@@ -289,11 +299,15 @@ impl BigNumTrait for BigUint {
     }
 
     fn from_hex_str(bytes: &str) -> Result<Self, Error> {
-        BigUint::from_str_radix(bytes, 16).context("invalid hex string").map_err(|err| err.into())
+        BigUint::from_str_radix(bytes, 16)
+            .context("invalid hex string")
+            .map_err(|err| err.into())
     }
 
     fn from_dec_str(bytes: &str) -> Result<Self, Error> {
-        BigUint::from_str_radix(bytes, 10).context("invalid dec string").map_err(|err| err.into())
+        BigUint::from_str_radix(bytes, 10)
+            .context("invalid dec string")
+            .map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {
@@ -407,11 +421,15 @@ impl BigNumTrait for BigInt {
     }
 
     fn from_hex_str(bytes: &str) -> Result<Self, Error> {
-        BigInt::from_str_radix(bytes, 16).context("invalid hex string").map_err(|err| err.into())
+        BigInt::from_str_radix(bytes, 16)
+            .context("invalid hex string")
+            .map_err(|err| err.into())
     }
 
     fn from_dec_str(bytes: &str) -> Result<Self, Error> {
-        BigInt::from_str_radix(bytes, 10).context("invalid dec string").map_err(|err| err.into())
+        BigInt::from_str_radix(bytes, 10)
+            .context("invalid dec string")
+            .map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {
@@ -522,11 +540,15 @@ impl BigNumTrait for BigNum {
     }
 
     fn from_hex_str(bytes: &str) -> Result<Self, Error> {
-        BigNum::from_hex_str(bytes).context("invalid hex string").map_err(|err| err.into())
+        BigNum::from_hex_str(bytes)
+            .context("invalid hex string")
+            .map_err(|err| err.into())
     }
 
     fn from_dec_str(bytes: &str) -> Result<Self, Error> {
-        BigNum::from_dec_str(bytes).context("invalid dec string").map_err(|err| err.into())
+        BigNum::from_dec_str(bytes)
+            .context("invalid dec string")
+            .map_err(|err| err.into())
     }
 
     fn to_dec_str(&self) -> String {
@@ -575,7 +597,10 @@ impl BigNumTrait for BigNum {
     fn invmod(&self, n: &Self) -> Option<Self> {
         let mut result = BigNum::new().unwrap();
 
-        if result.mod_inverse(&self, n, &mut BigNumContext::new().unwrap()).is_ok() {
+        if result
+            .mod_inverse(&self, n, &mut BigNumContext::new().unwrap())
+            .is_ok()
+        {
             Some(result)
         } else {
             None
