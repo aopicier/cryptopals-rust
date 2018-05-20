@@ -24,11 +24,12 @@ impl Server {
     pub fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
         let user_name = stream.receive()?.ok_or_else(|| err_msg("user name"))?;
 
+        // TODO Rewrite once NLL has landed
         match self.user_database.entry(user_name) {
             Entry::Occupied(o) => authenticate_client(&self.params, stream, o.get()),
             Entry::Vacant(v) => {
                 let password = stream.receive()?.ok_or_else(|| err_msg("password"))?;
-                v.insert(self.params.password_to_secret(&password));
+                v.insert(self.params.password_to_verifier(&password));
                 Ok(())
             }
         }
@@ -45,8 +46,11 @@ fn authenticate_client<T: Communicate> (
     let B = state.B();
     stream.send(salt)?;
     stream.send(&serialize(B))?;
-    let server_secret = state.compute_secret(&A);
-    let client_secret = stream.receive()?.ok_or_else(|| err_msg("client secret"))?;
+    let server_secret = state.compute_hashed_secret(&A);
+    let client_secret = stream
+        .receive()?
+        .ok_or_else(|| err_msg("client secret"))?;
+
     let login_result = if server_secret == client_secret { LoginResult::Success } else { LoginResult::Failure };
     stream.send(&[login_result as u8])?;
     Ok(())

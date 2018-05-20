@@ -47,7 +47,7 @@ impl SRP {
         }
     }
 
-    pub fn password_to_secret(&self, password: &[u8]) -> (Vec<u8>, BigNum) {
+    pub fn password_to_verifier(&self, password: &[u8]) -> (Vec<u8>, BigNum) {
         let mut rng = rand::thread_rng();
         // Which size should the salt have?
         let salt: Vec<u8> = rng.gen_iter::<u8>().take(128).collect();
@@ -92,7 +92,7 @@ impl <'a> ClientHandshake<'a> {
         &self.state.power
     }
 
-    pub fn compute_secret(&self, B: &BigNum, salt: &[u8]) -> Vec<u8> {
+    pub fn compute_hashed_secret(&self, B: &BigNum, salt: &[u8]) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
@@ -105,8 +105,7 @@ impl <'a> ClientHandshake<'a> {
         let x = compute_x(salt, self.password);
 
         let S = (B - &(k * &g.mod_exp(&x, N))).mod_exp(&(a + &(&u * &x)), N);
-        let K = Sha256::digest(&serialize(&S)).to_vec();
-        hmac_sha256(&K, salt)
+        hash_secret(&S, salt)
     }
 }
 
@@ -133,7 +132,7 @@ impl <'a> ServerHandshake<'a> {
         &self.B
     }
 
-    pub fn compute_secret(&self, A: &BigNum) -> Vec<u8> {
+    pub fn compute_hashed_secret(&self, A: &BigNum) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
@@ -142,8 +141,7 @@ impl <'a> ServerHandshake<'a> {
 
         let u = compute_u(A, B);
         let S = (A * &self.v.mod_exp(&u, N)).mod_exp(b, N);
-        let K = Sha256::digest(&serialize(&S)).to_vec();
-        hmac_sha256(&K, self.salt)
+        hash_secret(&S, self.salt)
     }
 }
 
@@ -159,4 +157,13 @@ fn compute_x(salt: &[u8], password: &[u8]) -> BigNum {
     buffer.extend_from_slice(salt);
     buffer.extend_from_slice(password);
     deserialize(&Sha256::digest(&buffer))
+}
+
+pub fn hash_secret(S: &BigNum, salt: &[u8]) -> Vec<u8> {
+    let K = Sha256::digest(&serialize(S)).to_vec();
+    hmac_sha256(&K, salt)
+}
+
+pub fn zero() -> BigNum {
+    BigNum::zero()
 }

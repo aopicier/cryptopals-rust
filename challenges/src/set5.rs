@@ -1,5 +1,5 @@
 use std::net::{Shutdown, TcpListener, TcpStream};
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
 use diffie_hellman::client::Client;
@@ -15,6 +15,7 @@ use rsa::Rsa;
 
 use srp::server::Server as SrpServer;
 use srp::client::Client as SrpClient;
+use srp::client::FakeClientWithZeroKey as SrpFakeClient;
 
 use errors::*;
 
@@ -126,12 +127,9 @@ fn matasano5_35() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
-
-fn matasano5_36() -> Result<(), Error> {
+fn start_srp_tcp_server(port: u16) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
     let mut server = SrpServer::new();
-    let server_port: u16 = 8080;
-    let client_port: u16 = 8080;
-    let listener = TcpListener::bind(("localhost", server_port))?;
+    let listener = TcpListener::bind(("localhost", port))?;
     let (tx, rx) = channel();
     let join_handle = thread::spawn(move || loop {
         match listener.accept() {
@@ -146,20 +144,41 @@ fn matasano5_36() -> Result<(), Error> {
             Err(_) => bail!("connection failed"),
         };
     });
+    Ok((tx, join_handle))
+}
 
-    let client = SrpClient::new(b"hi".to_vec(), b"foo".to_vec());
-    let mut stream =
-        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
-    client.register(&mut stream)?;
-    stream.shutdown(Shutdown::Both)?;
-    stream = TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
-    client.login(&mut stream)?;
-    stream.shutdown(Shutdown::Both)?;
-
+fn shutdown_srp_tcp_server(port: u16, tx: Sender<u8>) -> Result<(), Error> {
     // Ugly hack for shutting down the server
     tx.send(1)?;
-    stream = TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+
+    let stream = TcpStream::connect(("localhost", port))
+        .context("client failed to connect")?;
+
     stream.shutdown(Shutdown::Both)?;
+    Ok(())
+}
+
+fn connect_and_execute(port: u16, action: impl Fn(&mut TcpStream) ->  Result<(), Error>) -> Result<(), Error> {
+    let mut stream = TcpStream::connect(("localhost", port))
+        .context("client failed to connect")?;
+
+    action(&mut stream)?;
+    stream.shutdown(Shutdown::Both)?;
+    Ok(())
+}
+
+fn matasano5_36() -> Result<(), Error> {
+    let port: u16 = 8080;
+    let (tx, join_handle) = start_srp_tcp_server(port)?;
+
+    let user_name = b"foo";
+    let password = b"baz";
+    let client = SrpClient::new(user_name.to_vec(), password.to_vec());
+
+    connect_and_execute(port, |stream| client.register(stream))?;
+    connect_and_execute(port, |stream| client.login(stream))?;
+
+    shutdown_srp_tcp_server(port, tx)?;
 
     match join_handle.join() {
         Ok(result) => result,
@@ -168,7 +187,25 @@ fn matasano5_36() -> Result<(), Error> {
 }
 
 fn matasano5_37() -> Result<(), Error> {
-    Err(ChallengeError::NotImplemented.into())
+    let port: u16 = 8080;
+    let (tx, join_handle) = start_srp_tcp_server(port)?;
+
+    let user_name = b"foo";
+    let password = b"baz";
+
+    let client = SrpClient::new(user_name.to_vec(), password.to_vec());
+    connect_and_execute(port, |stream| client.register(stream))?;
+    connect_and_execute(port, |stream| client.login(stream))?;
+
+    let fake_client = SrpFakeClient::new(user_name.to_vec());
+    connect_and_execute(port, |stream| fake_client.login(stream))?;
+
+    shutdown_srp_tcp_server(port, tx)?;
+
+    match join_handle.join() {
+        Ok(result) => result,
+        _ => bail!("tcp listener thread panicked"),
+    }
 }
 
 fn matasano5_38() -> Result<(), Error> {
