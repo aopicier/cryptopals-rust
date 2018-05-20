@@ -1,5 +1,7 @@
 extern crate bignum;
 extern crate byteorder;
+
+#[macro_use]
 extern crate failure;
 extern crate mac;
 extern crate num;
