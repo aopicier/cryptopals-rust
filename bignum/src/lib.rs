@@ -37,10 +37,8 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn gen_below(bound: &Self) -> Self;
     fn gen_prime(bits: usize) -> Self;
     fn gen_random(bits: usize) -> Self;
-    fn mod_math(&self, n: &Self) -> Self;
     fn invmod(&self, n: &Self) -> Option<Self>;
     fn power(&self, k: usize) -> Self;
-    fn root(&self, k: usize) -> (Self, bool);
     fn clone(x: &Self) -> Self;
     fn rsh(&self, k: usize) -> Self;
     fn lsh(&self, k: usize) -> Self;
@@ -236,12 +234,6 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
         }
     }
 
-    fn mod_math(&self, n: &Self) -> Self {
-        BigNumWrapper {
-            num: self.num.mod_math(&n.num),
-        }
-    }
-
     fn invmod(&self, n: &Self) -> Option<Self> {
         self.num.invmod(&n.num).map(|x| BigNumWrapper { num: x })
     }
@@ -250,11 +242,6 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
         BigNumWrapper {
             num: self.num.power(k),
         }
-    }
-
-    fn root(&self, k: usize) -> (Self, bool) {
-        let (root, flag) = self.num.root(k);
-        (BigNumWrapper { num: root }, flag)
     }
 
     fn clone(x: &Self) -> Self {
@@ -354,14 +341,6 @@ impl BigNumTrait for BigUint {
         rng.gen_biguint(bits)
     }
 
-    fn mod_math(&self, n: &Self) -> Self {
-        let mut r = self % n;
-        if r < Zero::zero() {
-            r = &r + n;
-        }
-        r
-    }
-
     fn invmod(&self, n: &Self) -> Option<Self> {
         let (zero, one): (BigUint, BigUint) = (Zero::zero(), One::one());
         let mut l: (BigInt, BigInt) = (Zero::zero(), One::one());
@@ -382,24 +361,6 @@ impl BigNumTrait for BigUint {
 
     fn power(&self, k: usize) -> Self {
         pow(self.clone(), k)
-    }
-
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
-    //whether we have equality.
-    fn root(&self, k: usize) -> (Self, bool) {
-        let one: BigUint = One::one();
-        let mut a = one.clone();
-        let mut b = self.clone();
-        while a <= b {
-            let mid = (&a + &b) >> 1;
-            let power = pow(mid.clone(), k); // TODO Do we need to clone here?
-            match self.cmp(&power) {
-                Ordering::Greater => a = &mid.clone() + &one,
-                Ordering::Less => b = &mid.clone() - &one,
-                Ordering::Equal => return (mid, true),
-            }
-        }
-        (b, false)
     }
 
     fn clone(n: &Self) -> Self {
@@ -458,7 +419,7 @@ impl BigNumTrait for BigInt {
     }
 
     fn to_bytes_be(&self) -> Vec<u8> {
-        assert!(self.is_positive());
+        assert!(!self.is_negative());
         self.to_bytes_be().1
     }
 
@@ -495,14 +456,6 @@ impl BigNumTrait for BigInt {
         BigInt::from_biguint(Sign::Plus, BigUint::gen_random(bits))
     }
 
-    fn mod_math(&self, n: &Self) -> Self {
-        let mut r = self % n;
-        if r.is_negative() {
-            r = &r + n;
-        }
-        r
-    }
-
     fn invmod(&self, n: &Self) -> Option<Self> {
         let (zero, one): (BigInt, BigInt) = (Zero::zero(), One::one());
         let mut l: (BigInt, BigInt) = (Zero::zero(), One::one());
@@ -523,24 +476,6 @@ impl BigNumTrait for BigInt {
 
     fn power(&self, k: usize) -> Self {
         pow(self.clone(), k)
-    }
-
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
-    //whether we have equality.
-    fn root(&self, k: usize) -> (Self, bool) {
-        let one: BigInt = One::one();
-        let mut a = one.clone();
-        let mut b = self.clone();
-        while a <= b {
-            let mid = (&a + &b) >> 1;
-            let power = pow(mid.clone(), k); // TODO Do we need to clone here?
-            match self.cmp(&power) {
-                Ordering::Greater => a = &mid.clone() + &one,
-                Ordering::Less => b = &mid.clone() - &one,
-                Ordering::Equal => return (mid, true),
-            }
-        }
-        (b, false)
     }
 
     fn clone(n: &Self) -> Self {
@@ -599,6 +534,7 @@ impl BigNumTrait for BigNum {
     }
 
     fn to_bytes_be(&self) -> Vec<u8> {
+        assert!(!self.is_negative());
         self.to_vec()
     }
 
@@ -636,27 +572,11 @@ impl BigNumTrait for BigNum {
         result
     }
 
-    fn mod_math(&self, n: &Self) -> Self {
-        let mut r = self % n;
-        if r < Self::zero() {
-            r = &r + n;
-        }
-        r
-    }
-
     fn invmod(&self, n: &Self) -> Option<Self> {
-        //let mut k = (1, 0);
-        let mut l = (Self::zero(), Self::one());
-        let mut r = (Self::clone(n), Self::clone(self));
-        while r.1 != Self::zero() {
-            let q = &r.0 / &r.1;
-            //k = (k.1, k.0 - q*k.1);
-            l = (Self::clone(&l.1), &l.0 - &(&q * &l.1));
-            r = (Self::clone(&r.1), &r.0 % &r.1);
-            //assert_eq!(k.0 * n + l.0 * self, r.0);
-        }
-        if r.0 == Self::one() {
-            Some(l.0.mod_math(n))
+        let mut result = BigNum::new().unwrap();
+
+        if result.mod_inverse(&self, n, &mut BigNumContext::new().unwrap()).is_ok() {
+            Some(result)
         } else {
             None
         }
@@ -672,29 +592,6 @@ impl BigNumTrait for BigNum {
             )
             .unwrap();
         result
-    }
-
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
-    //whether we have equality.
-    fn root(&self, k: usize) -> (Self, bool) {
-        let one = Self::one();
-        let mut a = Self::clone(&one);
-        let mut b = Self::clone(self);
-        let mut mid = BigNum::new().unwrap();
-        let mut power = BigNum::new().unwrap();
-        let mut ctx = BigNumContext::new().unwrap();
-        while a <= b {
-            mid.rshift1(&(&a + &b)).unwrap();
-            power
-                .exp(&mid, &<Self as BigNumTrait>::from_u32(k as u32), &mut ctx)
-                .unwrap();
-            match self.cmp(&power) {
-                Ordering::Greater => a = &Self::clone(&mid) + &one,
-                Ordering::Less => b = &Self::clone(&mid) - &one,
-                Ordering::Equal => return (mid, true),
-            }
-        }
-        (b, false)
     }
 
     fn clone(n: &Self) -> Self {
@@ -725,6 +622,8 @@ impl BigNumTrait for BigNum {
 pub trait BigNumExt: Sized {
     fn ceil_div(&self, k: &Self) -> (Self, Self);
     fn floor_div(&self, k: &Self) -> (Self, Self);
+    fn mod_math(&self, n: &Self) -> Self;
+    fn root(&self, k: usize) -> (Self, bool);
 }
 
 impl<T: BigNumTrait> BigNumExt for T
@@ -739,5 +638,31 @@ where
 
     fn floor_div(&self, k: &T) -> (T, T) {
         (self / k, self % k)
+    }
+
+    fn mod_math(&self, n: &T) -> T {
+        let mut r = self % n;
+        if r < Self::zero() {
+            r = &r + n;
+        }
+        r
+    }
+
+    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
+    //whether we have equality.
+    fn root(&self, k: usize) -> (Self, bool) {
+        let one = Self::one();
+        let mut a = Self::clone(&one);
+        let mut b = Self::clone(&self);
+        while a <= b {
+            let mid = (&a + &b).rsh(1);
+            let power = mid.power(k);
+            match self.cmp(&power) {
+                Ordering::Greater => a = &mid + &one,
+                Ordering::Less => b = &mid - &one,
+                Ordering::Equal => return (mid, true),
+            }
+        }
+        (b, false)
     }
 }
