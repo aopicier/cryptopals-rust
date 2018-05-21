@@ -11,7 +11,7 @@ pub struct DsaPublic<'a, T: 'a> {
 
 impl<'a, T> DsaPublic<'a, T>
 where
-    T: bignum::BigNumTrait,
+    T: bignum::BigNumTrait+bignum::BigNumExt,
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     pub fn generate(private: &'a DsaPrivate<T>) -> Self {
@@ -67,7 +67,7 @@ pub struct DsaPrivate<'a, T: 'a> {
 
 impl<'a, T> DsaPrivate<'a, T>
 where
-    T: bignum::BigNumTrait,
+    T: bignum::BigNumTrait+bignum::BigNumExt,
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     pub fn generate(params: &'a DsaParams<T>) -> Self {
@@ -121,7 +121,7 @@ pub fn rand_range_safe<T: bignum::BigNumTrait>(q: &T) -> T {
 
 pub fn fake_signature<T>(public: &DsaPublic<T>) -> Signature<T>
 where
-    T: bignum::BigNumTrait,
+    T: bignum::BigNumTrait+bignum::BigNumExt,
     for<'b> &'b T: NumOps<&'b T, T>,
 {
     let p = &public.params.p;
