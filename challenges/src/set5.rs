@@ -9,7 +9,7 @@ use diffie_hellman::mitm::Mode;
 use diffie_hellman::server::Server as DHServer;
 
 use bignum::OpensslBigNum as BigNum;
-use bignum::BigNumTrait;
+use bignum::{BigNumExt, BigNumTrait};
 
 use rsa::Rsa;
 
