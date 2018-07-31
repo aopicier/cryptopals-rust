@@ -72,7 +72,7 @@ impl Server17 {
     }
 
     fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<(), Error> {
-        compare(
+        compare_eq(
             &ciphertext.decrypt(&self.key, Some(iv), MODE::CBC)?[..],
             cleartext,
         )
@@ -115,7 +115,7 @@ fn matasano3_18() -> Result<(), Error> {
     let ciphertext =
         from_base64("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")?;
     let cleartext = ciphertext.decrypt(b"YELLOW SUBMARINE", None, MODE::CTR)?;
-    compare(
+    compare_eq(
         b"Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby ".as_ref(),
         &cleartext,
     )
@@ -156,7 +156,7 @@ impl Encrypter19_20 {
     pub fn verify_solution(&self, candidate_key: &[u8], size: usize) -> Result<(), Error> {
         // TODO: The first entry of the recovered key is wrong because the distribution of first letters
         // of sentences is very different from the overall distribution of letters in a text.
-        compare(
+        compare_eq(
             &vec![0; size].encrypt(&self.key, None, MODE::CTR)?[1..],
             &candidate_key[1..],
         ) // encrypt or decrypt?
@@ -187,7 +187,7 @@ fn matasano3_19_20(exercise: Exercise) -> Result<(), Error> {
 
 fn matasano3_21() -> Result<(), Error> {
     let mt = MersenneTwister::initialize(1);
-    compare(
+    compare_eq(
         vec![
             1_791_095_845,
             4_282_876_139,
@@ -208,7 +208,7 @@ fn matasano3_22() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let seed: u16 = rng.gen();
     let mut mt = MersenneTwister::initialize(u32::from(seed));
-    compare(
+    compare_eq(
         Some(u32::from(seed)),
         mersenne::crack_seed_from_nth(mt.nth(0).unwrap(), 0, 0..(u32::from(std::u16::MAX))),
     )
@@ -224,7 +224,7 @@ fn matasano3_23() -> Result<(), Error> {
     }
     let mut mt_clone = MersenneTwister::initialize_with_state(state);
     for _ in 0..mersenne::STATE_SIZE {
-        compare(mt.next(), mt_clone.next())?;
+        compare_eq(mt.next(), mt_clone.next())?;
     }
     Ok(())
 }
@@ -257,7 +257,7 @@ fn matasano3_24() -> Result<(), Error> {
     let random_number = <NativeEndian as ByteOrder>::read_u32(
         &ciphertext[4 * index..4 * (index + 1)].xor(&[b'A'; 4]),
     );
-    compare(
+    compare_eq(
         Some(u32::from(seed)),
         mersenne::crack_seed_from_nth(random_number, index, 0..(u32::from(std::u16::MAX))),
     )

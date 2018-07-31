@@ -52,7 +52,7 @@ impl Oracle for Common {
     }
 
     fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        compare(&self.suffix[..], candidate)
+        compare_eq(&self.suffix[..], candidate)
     }
 }
 
@@ -94,7 +94,7 @@ impl Oracle11 {
     }
 
     pub fn verify_solution(&self, uses_ecb: bool) -> Result<(), Error> {
-        compare(self.common.mode == MODE::ECB, uses_ecb)
+        compare_eq(self.common.mode == MODE::ECB, uses_ecb)
     }
 }
 
@@ -174,7 +174,7 @@ impl Oracle13 {
     }
 
     pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<(), Error> {
-        compare(
+        compare_eq(
             Some(b"admin".as_ref()),
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, None, MODE::ECB)?,
@@ -266,7 +266,7 @@ impl Oracle16 {
         // cleartext could for example contain `;foo;`, or `foo=bar=baz`. For now we rely on
         // the fact that decode_profile accepts such inputs.
 
-        compare(
+        compare_eq(
             Some(b"true".as_ref()),
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?,
@@ -314,7 +314,7 @@ impl Oracle26 {
     }
 
     pub fn verify_solution(&self, ciphertext: &[u8]) -> Result<(), Error> {
-        compare(
+        compare_eq(
             Some(b"true".as_ref()),
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, None, MODE::CTR)?,

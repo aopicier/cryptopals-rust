@@ -32,7 +32,7 @@ fn matasano1_1() -> Result<(), Error> {
                         696e206c696b65206120706f69736f6e6f7573206\
                         d757368726f6f6d";
 
-    compare(
+    compare_eq(
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
         &from_hex(input_string)?.to_base64(),
     )
@@ -41,7 +41,7 @@ fn matasano1_1() -> Result<(), Error> {
 fn matasano1_2() -> Result<(), Error> {
     let input1 = "1c0111001f010100061a024b53535009181c";
     let input2 = "686974207468652062756c6c277320657965";
-    compare(
+    compare_eq(
         "746865206b696420646f6e277420706c6179",
         &from_hex(input1)?.xor(&from_hex(input2)?).to_hex(),
     )
@@ -57,7 +57,7 @@ pub fn decrypt_single_xor(input: &[u8]) -> u8 {
 fn matasano1_3() -> Result<(), Error> {
     let input = from_hex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")?;
     let key = decrypt_single_xor(&input);
-    compare(
+    compare_eq(
         b"Cooking MC's like a pound of bacon".as_ref(),
         &input.xor(&[key]),
     )
@@ -71,14 +71,14 @@ fn matasano1_4() -> Result<(), Error> {
         .flat_map(|line: Vec<u8>| (0u8..128).map(move |u| line.xor(&[u])))
         .min_by_key(|cand| compute_score(cand))
         .unwrap();
-    compare(b"Now that the party is jumping\n".as_ref(), &result)
+    compare_eq(b"Now that the party is jumping\n".as_ref(), &result)
 }
 
 fn matasano1_5() -> Result<(), Error> {
     let input = b"Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
 
     let passphrase = b"ICE";
-    compare(
+    compare_eq(
         "0b3637272a2b2e63622c2e69692a23693a2a3c632\
          4202d623d63343c2a26226324272765272a282b2f2\
          0430a652e2c652a3124333a653e2b2027630c692b2\
@@ -144,7 +144,7 @@ fn decrypt_xor(input: &[u8]) -> Vec<u8> {
 fn matasano1_6() -> Result<(), Error> {
     let input = from_base64_file(Path::new("data/6.txt"))?;
     let key = decrypt_xor(&input);
-    compare(b"Terminator X: Bring the noise".as_ref(), &key)
+    compare_eq(b"Terminator X: Bring the noise".as_ref(), &key)
 }
 
 fn matasano1_7() -> Result<(), Error> {
@@ -158,7 +158,7 @@ fn matasano1_7() -> Result<(), Error> {
     let mut cleartext_ref = String::new();
     file.read_to_string(&mut cleartext_ref)?;
 
-    compare(cleartext_ref.as_bytes(), &cleartext)
+    compare_eq(cleartext_ref.as_bytes(), &cleartext)
 }
 
 fn matasano1_8() -> Result<(), Error> {
@@ -171,7 +171,7 @@ fn matasano1_8() -> Result<(), Error> {
         .map(|line| line.unwrap())
         .find(|line| has_duplicates(line.as_bytes().chunks(2 * BLOCK_SIZE)));
 
-    compare(
+    compare_eq(
         Some(
             "d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5\
              d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649\

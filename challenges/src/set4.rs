@@ -64,7 +64,7 @@ impl Encrypter25 {
     }
 
     pub fn verify_solution(&self, candidate_cleartext: &[u8]) -> Result<(), Error> {
-        compare(&self.cleartext[..], candidate_cleartext)
+        compare_eq(&self.cleartext[..], candidate_cleartext)
     }
 }
 
@@ -133,7 +133,7 @@ impl Receiver27 {
     }
 
     pub fn verify_solution(&self, candidate_key: &[u8]) -> Result<(), Error> {
-        compare(&self.key[..], candidate_key)
+        compare_eq(&self.key[..], candidate_key)
     }
 }
 
@@ -177,7 +177,7 @@ fn matasano4_27() -> Result<(), Error> {
 }
 
 fn matasano4_28() -> Result<(), Error> {
-    compare(
+    compare_eq(
         from_hex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")?,
         mac_sha1(b"The quick brown fox ", b"jumps over the lazy dog"),
     )
@@ -293,7 +293,7 @@ fn matasano4_30() -> Result<(), Error> {
 }
 
 fn matasano4_31() -> Result<(), Error> {
-    compare(
+    compare_eq(
         from_hex("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")?,
         hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"),
     )

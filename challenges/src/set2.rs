@@ -22,7 +22,7 @@ use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 use prefix_suffix_oracles::{Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 
 fn matasano2_9() -> Result<(), Error> {
-    compare(
+    compare_eq(
         [
             89, 69, 76, 76, 79, 87, 32, 83, 85, 66, 77, 65, 82, 73, 78, 69, 4, 4, 4, 4,
         ]
@@ -57,7 +57,7 @@ fn matasano2_10() -> Result<(), Error> {
     let mut cleartext_ref = String::new();
     file.read_to_string(&mut cleartext_ref)?;
 
-    compare(cleartext_ref.as_bytes(), &cleartext)
+    compare_eq(cleartext_ref.as_bytes(), &cleartext)
 }
 
 fn uses_ecb(oracle: &mut Oracle11) -> Result<bool, Error> {
@@ -262,7 +262,7 @@ fn matasano2_13() -> Result<(), Error> {
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
     let mut ciphertext = oracle.encrypt(&vec![0; padding + "user".len()])?;
-    compare((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
+    compare_eq((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
     ciphertext[blocks * BLOCK_SIZE..].copy_from_slice(&target_last_block[0..BLOCK_SIZE]);
 
@@ -280,11 +280,11 @@ pub fn random_block() -> Vec<u8> {
 }
 
 fn matasano2_15() -> Result<(), Error> {
-    compare(true, b"ICE ICE BABY\x04\x04\x04\x04".padding_valid())?;
-    compare(false, b"ICE ICE BABY\x05\x05\x05\x05".padding_valid())?;
-    compare(false, b"ICE ICE BABY\x01\x02\x03\x04".padding_valid())?;
-    compare(false, b"ICE ICE BABY\x03\x03\x03".padding_valid())?;
-    compare(
+    compare_eq(true, b"ICE ICE BABY\x04\x04\x04\x04".padding_valid())?;
+    compare_eq(false, b"ICE ICE BABY\x05\x05\x05\x05".padding_valid())?;
+    compare_eq(false, b"ICE ICE BABY\x01\x02\x03\x04".padding_valid())?;
+    compare_eq(false, b"ICE ICE BABY\x03\x03\x03".padding_valid())?;
+    compare_eq(
         true,
         padding_valid(
             b"ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C",
@@ -299,7 +299,7 @@ fn matasano2_16() -> Result<(), Error> {
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
     let mut ciphertext = oracle.encrypt(&vec![0; padding])?;
-    compare((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
+    compare_eq((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
     let target_last_block = b";admin=true".pad();
     let current_last_block = vec![BLOCK_SIZE as u8; BLOCK_SIZE];

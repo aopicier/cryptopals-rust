@@ -42,7 +42,7 @@ fn matasano6_41() -> Result<(), Error> {
 
     let c2 = &(&c * &rsa.encrypt(&s)) % rsa.n();
     let m2 = oracle(&c2).ok_or_else(|| err_msg("wrong input to oracle"))?;
-    compare(m, &(&m2 * &t) % rsa.n())
+    compare_eq(m, &(&m2 * &t) % rsa.n())
 }
 
 fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
@@ -109,7 +109,7 @@ fn matasano6_42() -> Result<(), Error> {
     };
 
     let fake_signature = find_signature(size, &suffix);
-    compare(true, verify_signature(&fake_signature.unwrap()))
+    compare_eq(true, verify_signature(&fake_signature.unwrap()))
 }
 
 fn matasano6_43() -> Result<(), Error> {
@@ -141,7 +141,7 @@ fn matasano6_43() -> Result<(), Error> {
 
     // ~ echo -n 15fb2873d16b3e129ff76d0918fd7ada54659e49 | sha1sum
     // 0954edd5e0afe5542a4adf012611a91912a3ec16  -
-    compare(
+    compare_eq(
         Some(BigNum::from_hex_str(
             "15fb2873d16b3e129ff76d0918fd7ada54659e49",
         )?),
@@ -198,7 +198,7 @@ fn matasano6_44() -> Result<(), Error> {
             let x = public.secret_key_from_two_signatures_with_same_k(m1, s1, m2, s2);
             // ~ echo -n "f1b733db159c66bce071d21e044a48b0e4c1665a" | sha1sum
             // ca8f6f7c66fa362d40760d135b763eb8527d3d52  -
-            return compare(
+            return compare_eq(
                 BigNum::from_hex_str("f1b733db159c66bce071d21e044a48b0e4c1665a").unwrap(),
                 x,
             );
@@ -229,7 +229,7 @@ fn matasano6_45() -> Result<(), Error> {
 
     //Arbitrary message
     let m = rand_range_safe(&params.q);
-    compare(true, public_fake.verify_signature(&m, &signature))
+    compare_eq(true, public_fake.verify_signature(&m, &signature))
 }
 
 // `oracle` tells us whether the cleartext corresponding to a ciphertext is even or odd.
@@ -284,7 +284,7 @@ impl Server46 {
     }
 
     fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<(), Error> {
-        compare(&self.rsa.decrypt(ciphertext), cleartext)
+        compare_eq(&self.rsa.decrypt(ciphertext), cleartext)
     }
 }
 
@@ -394,7 +394,7 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<(), Error> {
         Mi.sort();
         Mi.dedup();
         if Mi.len() == 1 && Mi[0].0 == Mi[0].1 {
-            return compare(&m, &Mi[0].0);
+            return compare_eq(&m, &Mi[0].0);
         }
         i += 1;
         s_prev = si;

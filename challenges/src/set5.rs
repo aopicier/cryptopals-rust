@@ -40,7 +40,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
     loop {
         match mitm.receive_client()? {
             Some(message) => {
-                compare(
+                compare_eq(
                     mitm.decrypt_client(message.clone())?,
                     Some(b"This is a test".to_vec()),
                 )?;
@@ -50,7 +50,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
         }
         match mitm.receive_server()? {
             Some(message) => {
-                compare(
+                compare_eq(
                     mitm.decrypt_server(message.clone())?,
                     Some(b"This is a test".to_vec()),
                 )?;
@@ -101,7 +101,7 @@ fn matasano5_34_echo() -> Result<(), Error> {
     let mut client = Client::new(stream)?;
     let message = b"This is a test";
     client.send(message)?;
-    compare(Some(message.to_vec()), client.receive()?)?;
+    compare_eq(Some(message.to_vec()), client.receive()?)?;
 
     client.stream().shutdown(Shutdown::Both)?;
     match join_handle.join() {
@@ -124,7 +124,7 @@ fn matasano5_34_mitm() -> Result<(), Error> {
     // The message needs to match the hardcoded string in mitm_handle_client
     let message = b"This is a test";
     client.send(message)?;
-    compare(Some(message.to_vec()), client.receive()?)?;
+    compare_eq(Some(message.to_vec()), client.receive()?)?;
 
     client.stream().shutdown(Shutdown::Both)?;
     match join_handle.join() {
@@ -336,7 +336,7 @@ fn create_client_with_random_password(
 fn matasano5_39() -> Result<(), Error> {
     let rsa = Rsa::<BigNum>::generate(512);
     let m = BigNumTrait::from_u32(42);
-    compare(&m, &rsa.decrypt(&rsa.encrypt(&m)))
+    compare_eq(&m, &rsa.decrypt(&rsa.encrypt(&m)))
 }
 
 fn matasano5_40() -> Result<(), Error> {
@@ -368,7 +368,7 @@ fn matasano5_40() -> Result<(), Error> {
         + &(&(&c2 * &x2) * &x2.invmod(n2).unwrap()))
         + &(&(&c3 * &x3) * &x3.invmod(n3).unwrap()))
         % &(&(n1 * n2) * n3);
-    compare(&m, &c.root(3).0)
+    compare_eq(&m, &c.root(3).0)
 }
 
 pub fn run() {

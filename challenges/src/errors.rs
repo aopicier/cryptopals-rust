@@ -25,7 +25,7 @@ pub enum ChallengeError {
     Skipped(&'static str),
 }
 
-pub fn compare<T>(x: T, y: T) -> Result<(), Error>
+pub fn compare_eq<T>(x: T, y: T) -> Result<(), Error>
 where
     T: Eq + std::fmt::Debug,
 {
