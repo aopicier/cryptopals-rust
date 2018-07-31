@@ -73,8 +73,8 @@ where
     pub fn generate(params: &'a DsaParams<T>) -> Self {
         let x = rand_range_safe(&params.q);
         DsaPrivate {
-            params: params,
-            x: x,
+            params,
+            x
         }
     }
 
@@ -105,7 +105,7 @@ where
             }
             break;
         }
-        (Signature { r: r, s: s }, k)
+        (Signature { r, s }, k)
     }
 }
 
@@ -147,7 +147,7 @@ impl<T: bignum::BigNumTrait> DsaParams<T> {
             ).unwrap();
         let q = T::from_hex_str("f4f47f05794b256174bba6e9b396a7707e563c5b").unwrap();
         let g = T::from_hex_str("5958c9d3898b224b12672c0b98e06c60df923cb8bc999d119458fef538b8fa4046c8db53039db620c094c9fa077ef389b5322a559946a71903f990f1f7e0e025e2d7f7cf494aff1a0470f5b64c36b625a097f1651fe775323556fe00b3608c887892878480e99041be601a62166ca6894bdd41a7054ec89f756ba9fc95302291").unwrap();
-        DsaParams { p: p, q: q, g: g }
+        DsaParams { p, q, g }
     }
 }
 

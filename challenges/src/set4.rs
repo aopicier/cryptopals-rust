@@ -42,7 +42,7 @@ impl Encrypter25 {
         let cleartext = from_base64_file(Path::new("data/25.txt"))?;
         let key = random_block();
         let ciphertext = cleartext.encrypt(&key, None, MODE::CTR)?;
-        Ok(Encrypter25 { cleartext: cleartext, key: key, ciphertext: ciphertext })
+        Ok(Encrypter25 { cleartext, key, ciphertext })
     }
 
     pub fn get_ciphertext(&self) -> &[u8] {

@@ -71,7 +71,7 @@ impl Mitm {
             .ok_or_else(|| err_msg("client secret"))?;
 
         stream.send(&[LoginResult::Success as u8])?;
-        Ok(PasswordOracle { g: g.clone(), N: self.params.N().clone(), A: A, client_secret })
+        Ok(PasswordOracle { g: g.clone(), N: self.params.N().clone(), A, client_secret })
     }
 
     pub fn password_to_client_secret(&self, A: &BigNum, password_candidate: &[u8]) -> Vec<u8> {

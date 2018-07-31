@@ -36,7 +36,7 @@ impl MersenneTwister {
                 .wrapping_mul(0x6c07_8965)
                 .wrapping_add(i as u32);
         }
-        MersenneTwister { mt: mt, index: 0 }
+        MersenneTwister { mt, index: 0 }
     }
 
     /*

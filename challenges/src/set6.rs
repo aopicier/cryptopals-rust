@@ -36,10 +36,10 @@ fn matasano6_41() -> Result<(), Error> {
 
     let s = BigNum::gen_random(bits - 1);
     //TODO We should check that s > 1 and that s and rsa.n() have no common divisors
-    let t = s.invmod(rsa.n()).ok_or(err_msg("s and n are not coprime"))?;
+    let t = s.invmod(rsa.n()).ok_or_else(|| err_msg("s and n are not coprime"))?;
 
     let c2 = &(&c * &rsa.encrypt(&s)) % rsa.n();
-    let m2 = oracle(&c2).ok_or(err_msg("wrong input to oracle"))?;
+    let m2 = oracle(&c2).ok_or_else(|| err_msg("wrong input to oracle"))?;
     compare(m, &(&m2 * &t) % rsa.n())
 }
 
@@ -123,7 +123,7 @@ fn matasano6_43() -> Result<(), Error> {
     )?;
     let public = DsaPublic {
         params: &params,
-        y: y,
+        y
     };
     let m = BigNum::from_hex_str("d2d0714f014a9784047eaeccf956520045c45265")?;
     let signature = Signature {
@@ -141,7 +141,7 @@ fn matasano6_43() -> Result<(), Error> {
         .map(|x| {
             DsaPrivate {
                 params: &params,
-                x: x,
+                x,
             }
         })
         .find(|private| DsaPublic::generate(private).y == public.y);
@@ -170,7 +170,7 @@ fn matasano6_44() -> Result<(), Error> {
     )?;
     let public = DsaPublic {
         params: &params,
-        y: y,
+        y,
     };
 
     let path = Path::new("data/44.txt");
@@ -266,7 +266,7 @@ struct Server46 {
 impl Server46 {
     fn new() -> Self {
         let rsa = Rsa::generate(1024);
-        Server46 { rsa: rsa }
+        Server46 { rsa }
     }
 
     fn n(&self) -> &BigNum {

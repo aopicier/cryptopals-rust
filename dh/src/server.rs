@@ -16,8 +16,8 @@ impl<T: Communicate> Server<T> {
     pub fn new(mut stream: T) -> Result<Server<T>, Error> {
         handshake(&mut stream).map(|key| {
             Server {
-                stream: stream,
-                key: key,
+                stream,
+                key
             }
         })
     }

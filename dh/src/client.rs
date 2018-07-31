@@ -16,8 +16,8 @@ impl<T: Communicate> Client<T> {
     pub fn new(mut stream: T) -> Result<Client<T>, Error> {
         handshake(&mut stream).map(|key| {
             Client {
-                stream: stream,
-                key: key,
+                stream,
+                key
             }
         })
     }
@@ -40,6 +40,7 @@ impl<T: Communicate> Communicate for Client<T> {
 #[allow(non_snake_case)]
 fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
     let mut dh = DH::<BigNum>::new();
+    // TODO Remove init method
     dh.init();
     let (p, g) = dh.parameters();
     stream.send(&p)?;

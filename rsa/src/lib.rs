@@ -22,7 +22,7 @@ where
         let et = &pn * &qn;
         let e = T::from_u32(3);
         let d = e.invmod(&et).unwrap(); // Only works if e does not divide et
-        Rsa { n: n, d: d, e: e }
+        Rsa { n, d, e }
     }
 
     pub fn encrypt(&self, m: &T) -> T {

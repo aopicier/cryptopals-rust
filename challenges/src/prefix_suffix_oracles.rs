@@ -75,10 +75,10 @@ impl Oracle11 {
 
         Ok(Oracle11 {
             common: Common {
-                key: key,
-                prefix: prefix,
-                suffix: suffix,
-                mode: mode,
+                key,
+                prefix,
+                suffix,
+                mode,
             },
             already_called: false,
         })
@@ -127,9 +127,9 @@ impl Oracle12 {
 
         Ok(Oracle12 {
             common: Common {
-                key: key,
+                key,
                 prefix: Vec::new(),
-                suffix: suffix,
+                suffix,
                 mode: MODE::ECB,
             },
         })
@@ -165,9 +165,9 @@ impl Oracle13 {
 
         Ok(Oracle13 {
             common: Common {
-                key: key,
-                prefix: prefix,
-                suffix: suffix,
+                key,
+                prefix,
+                suffix,
                 mode: MODE::ECB,
             },
         })
@@ -216,9 +216,9 @@ impl Oracle14 {
 
         Ok(Oracle14 {
             common: Common {
-                key: key,
-                prefix: prefix,
-                suffix: suffix,
+                key,
+                prefix,
+                suffix,
                 mode: MODE::ECB,
             },
         })
@@ -252,9 +252,9 @@ impl Oracle16 {
 
         Ok(Oracle16 {
             common: Common {
-                key: key,
-                prefix: prefix,
-                suffix: suffix,
+                key,
+                prefix,
+                suffix,
                 mode: MODE::CBC,
             },
         })
@@ -305,9 +305,9 @@ impl Oracle26 {
 
         Ok(Oracle26 {
             common: Common {
-                key: key,
-                prefix: prefix,
-                suffix: suffix,
+                key,
+                prefix,
+                suffix,
                 mode: MODE::CTR,
             },
         })

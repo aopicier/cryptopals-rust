@@ -132,7 +132,7 @@ struct Encrypter19_20 {
 
 impl Encrypter19_20 {
     pub fn new(exercise: Exercise) -> Self {
-        Encrypter19_20 { key: random_block(), exercise: exercise }
+        Encrypter19_20 { key: random_block(), exercise }
     }
 
     pub fn get_ciphertexts(&self) -> Result<Vec<Vec<u8>>, Error> {

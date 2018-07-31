@@ -29,10 +29,10 @@ impl<T: Communicate> MITM<T> {
             }
         };
         Ok(MITM {
-            client_stream: client_stream,
-            server_stream: server_stream,
-            client_key: client_key,
-            server_key: server_key,
+            client_stream,
+            server_stream,
+            client_key,
+            server_key
         })
     }
 
