@@ -65,7 +65,7 @@ impl MersenneTwister {
     }
 
     pub fn initialize_with_state(mt: [u32; STATE_SIZE]) -> MersenneTwister {
-        MersenneTwister { mt: mt, index: 0 }
+        MersenneTwister { mt, index: 0 }
     }
 }
 
