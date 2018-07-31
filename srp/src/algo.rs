@@ -1,8 +1,11 @@
 extern crate rand;
 extern crate serialize;
 
+use communication::Communicate;
+
+pub use bignum::NumBigInt as BigNum;
 use bignum::BigNumTrait;
-use bignum::NumBigInt as BigNum;
+use failure::Error;
 use mac::hmac_sha256;
 use sha2::{Sha256, Digest};
 
@@ -30,6 +33,10 @@ pub fn deserialize<T: BigNumTrait>(x: &[u8]) -> T {
 
 impl SRP {
     pub fn new() -> Self {
+        Self::new_with_k(3)
+    }
+
+    pub fn new_with_k(k: u32) -> Self {
         let N_hex = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74\
                      020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f1437\
                      4fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7ed\
@@ -39,11 +46,10 @@ impl SRP {
 
         let N = BigNum::from_hex_str(N_hex).unwrap();
         let g = BigNum::from_u32(2);
-        let k = BigNum::from_u32(3);
         SRP {
             N,
             g,
-            k,
+            k: BigNum::from_u32(k),
         }
     }
 
@@ -54,6 +60,14 @@ impl SRP {
 
         let x = compute_x(&salt, password);
         (salt, self.g.mod_exp(&x, &self.N))
+    }
+
+    pub fn g(&self) -> &BigNum {
+        &self.g
+    }
+
+    pub fn N(&self) -> &BigNum {
+        &self.N
     }
 }
 
@@ -77,14 +91,12 @@ impl<'a> HandshakeState<'a> {
 
 pub struct ClientHandshake<'a> {
     state: HandshakeState<'a>,
-    password: &'a [u8],
 }
 
 impl <'a> ClientHandshake<'a> {
-    pub fn new(srp: &'a SRP, password: &'a [u8]) -> Self {
+    pub fn new(srp: &'a SRP) -> Self {
         ClientHandshake {
             state: HandshakeState::new(srp),
-            password
         }
     }
 
@@ -92,19 +104,16 @@ impl <'a> ClientHandshake<'a> {
         &self.state.power
     }
 
-    pub fn compute_hashed_secret(&self, B: &BigNum, salt: &[u8]) -> Vec<u8> {
+    pub fn compute_hashed_secret(&self, B: &BigNum, u: &BigNum, salt: &[u8], password: &[u8]) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
         let g = &srp.g;
         let k = &srp.k;
         let a = &state.exponent;
-        let A = &state.power;
 
-        let u = compute_u(A, B);
-        let x = compute_x(salt, self.password);
-
-        let S = (B - &(k * &g.mod_exp(&x, N))).mod_exp(&(a + &(&u * &x)), N);
+        let x = compute_x(salt, password);
+        let S = (B - &(k * &g.mod_exp(&x, N))).mod_exp(&(a + &(u * &x)), N);
         hash_secret(&S, salt)
     }
 }
@@ -132,27 +141,33 @@ impl <'a> ServerHandshake<'a> {
         &self.B
     }
 
-    pub fn compute_hashed_secret(&self, A: &BigNum) -> Vec<u8> {
+    pub fn compute_hashed_secret(&self, A: &BigNum, u: &BigNum) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
         let b = &state.exponent;
-        let B = &self.B;
 
-        let u = compute_u(A, B);
-        let S = (A * &self.v.mod_exp(&u, N)).mod_exp(b, N);
+        let S = (A * &self.v.mod_exp(u, N)).mod_exp(b, N);
         hash_secret(&S, self.salt)
     }
 }
 
-fn compute_u(A: &BigNum, B: &BigNum) -> BigNum {
-    let mut buffer = Vec::new();
-    buffer.extend_from_slice(&serialize(A));
-    buffer.extend_from_slice(&serialize(B));
-    deserialize(&Sha256::digest(&buffer))
+pub trait UComputer {
+    fn compute_u<T: Communicate>(&BigNum, &BigNum, &mut T) -> Result<BigNum, Error>;
 }
 
-fn compute_x(salt: &[u8], password: &[u8]) -> BigNum {
+pub struct DefaultUComputer;
+
+impl UComputer for DefaultUComputer {
+    fn compute_u<T: Communicate>(A: &BigNum, B: &BigNum, _: &mut T) -> Result<BigNum, Error> {
+        let mut buffer = Vec::new();
+        buffer.extend_from_slice(&serialize(A));
+        buffer.extend_from_slice(&serialize(B));
+        Ok(deserialize(&Sha256::digest(&buffer)))
+    }
+}
+
+pub fn compute_x(salt: &[u8], password: &[u8]) -> BigNum {
     let mut buffer = Vec::with_capacity(salt.len() + password.len());
     buffer.extend_from_slice(salt);
     buffer.extend_from_slice(password);
