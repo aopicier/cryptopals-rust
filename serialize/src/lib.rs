@@ -3,8 +3,8 @@ extern crate failure;
 
 use std::char;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::BufRead;
+use std::io::BufReader;
 use std::path::Path;
 
 use failure::{Error, ResultExt};
@@ -104,7 +104,10 @@ pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>, Error> {
     from_lines(path, from_hex)
 }
 
-fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>, Error>) -> Result<Vec<Vec<u8>>, Error> {
+fn from_lines(
+    path: &Path,
+    converter: fn(&str) -> Result<Vec<u8>, Error>,
+) -> Result<Vec<Vec<u8>>, Error> {
     let mut content = Vec::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -123,12 +126,10 @@ pub fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
     for c in s.chars() {
         digits.push(u8_from_hex(c).context(format!("not a valid hex string: {}", s))?);
     }
-    Ok(
-        digits
-            .chunks(2)
-            .map(|c| (c[0] << 4) + c[1])
-            .collect::<Vec<u8>>(),
-    )
+    Ok(digits
+        .chunks(2)
+        .map(|c| (c[0] << 4) + c[1])
+        .collect::<Vec<u8>>())
 }
 
 fn u8_from_hex(c: char) -> Result<u8, Error> {

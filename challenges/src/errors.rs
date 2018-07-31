@@ -1,14 +1,18 @@
 use std;
 
-pub use failure::{Error, ResultExt, err_msg};
+pub use failure::{err_msg, Error, ResultExt};
 
 #[derive(Debug, Fail)]
 pub enum ChallengeError {
-    #[fail(display = "Comparison failed. Expected: {}, found: {}", expected, actual)]
+    #[fail(
+        display = "Comparison failed. Expected: {}, found: {}",
+        expected,
+        actual
+    )]
     ComparisonFailed {
         // TODO Can this be made generic?
         expected: String,
-        actual: String
+        actual: String,
     },
 
     #[fail(display = "Not implemented.")]
@@ -28,7 +32,10 @@ where
     if x == y {
         Ok(())
     } else {
-        Err(ChallengeError::ComparisonFailed {expected: format!("{:?}", x), actual: format!("{:?}", y)}.into())
+        Err(ChallengeError::ComparisonFailed {
+            expected: format!("{:?}", x),
+            actual: format!("{:?}", y),
+        }.into())
     }
 }
 

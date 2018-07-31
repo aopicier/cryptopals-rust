@@ -3,17 +3,17 @@ extern crate serialize;
 
 use communication::Communicate;
 
-pub use bignum::NumBigInt as BigNum;
 use bignum::BigNumTrait;
+pub use bignum::NumBigInt as BigNum;
 use failure::Error;
 use mac::hmac_sha256;
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 use rand::Rng;
 
 pub enum LoginResult {
     Success,
-    Failure
+    Failure,
 }
 
 #[derive(Debug)]
@@ -93,7 +93,7 @@ pub struct ClientHandshake<'a> {
     state: HandshakeState<'a>,
 }
 
-impl <'a> ClientHandshake<'a> {
+impl<'a> ClientHandshake<'a> {
     pub fn new(srp: &'a SRP) -> Self {
         ClientHandshake {
             state: HandshakeState::new(srp),
@@ -104,7 +104,13 @@ impl <'a> ClientHandshake<'a> {
         &self.state.power
     }
 
-    pub fn compute_hashed_secret(&self, B: &BigNum, u: &BigNum, salt: &[u8], password: &[u8]) -> Vec<u8> {
+    pub fn compute_hashed_secret(
+        &self,
+        B: &BigNum,
+        u: &BigNum,
+        salt: &[u8],
+        password: &[u8],
+    ) -> Vec<u8> {
         let state = &self.state;
         let srp = state.srp;
         let N = &srp.N;
@@ -125,16 +131,11 @@ pub struct ServerHandshake<'a> {
     v: &'a BigNum,
 }
 
-impl <'a> ServerHandshake<'a> {
+impl<'a> ServerHandshake<'a> {
     pub fn new(srp: &'a SRP, salt: &'a [u8], v: &'a BigNum) -> Self {
         let state = HandshakeState::new(srp);
         let B = &state.power + &(&srp.k * v);
-        ServerHandshake {
-            state,
-            B,
-            salt,
-            v,
-        }
+        ServerHandshake { state, B, salt, v }
     }
 
     pub fn B(&self) -> &BigNum {

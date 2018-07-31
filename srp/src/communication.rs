@@ -12,9 +12,9 @@ pub trait Communicate {
 }
 
 fn message_length<T: Read>(stream: &mut T) -> Result<Option<usize>, Error> {
-    Ok(read_n_bytes(stream, 4)?.as_ref().map(|message| {
-        <LittleEndian as ByteOrder>::read_u32(message) as usize
-    }))
+    Ok(read_n_bytes(stream, 4)?
+        .as_ref()
+        .map(|message| <LittleEndian as ByteOrder>::read_u32(message) as usize))
 }
 
 fn encode_length(length: usize) -> Vec<u8> {

@@ -7,7 +7,7 @@ extern crate rand;
 extern crate sha1;
 
 pub mod algo;
-pub mod communication;
 pub mod client;
+pub mod communication;
 pub mod mitm;
 pub mod server;

@@ -1,6 +1,9 @@
-use algo::{SRP, BigNum, ClientHandshake, UComputer, DefaultUComputer, serialize, deserialize, LoginResult, hash_secret, zero};
+use algo::{
+    deserialize, hash_secret, serialize, zero, BigNum, ClientHandshake, DefaultUComputer,
+    LoginResult, UComputer, SRP,
+};
 use communication::Communicate;
-use failure::{Error, err_msg};
+use failure::{err_msg, Error};
 use std::marker::PhantomData;
 
 #[derive(Debug, Fail)]
@@ -11,7 +14,7 @@ struct ClientBase<U: UComputer> {
     params: SRP,
     user_name: Vec<u8>,
     password: Vec<u8>,
-    computer: PhantomData<U>
+    computer: PhantomData<U>,
 }
 
 impl<U: UComputer> ClientBase<U> {
@@ -20,7 +23,7 @@ impl<U: UComputer> ClientBase<U> {
             params,
             user_name,
             password,
-            computer: PhantomData
+            computer: PhantomData,
         }
     }
 
@@ -41,7 +44,11 @@ impl<U: UComputer> ClientBase<U> {
         let secret = state.compute_hashed_secret(&B, &u, &salt, &self.password);
         stream.send(&secret)?;
         let login_result = stream.receive()?.ok_or_else(|| err_msg("login result"))?;
-        if login_result == [LoginResult::Success as u8] { Ok(()) } else { Err(LoginFailed().into()) }
+        if login_result == [LoginResult::Success as u8] {
+            Ok(())
+        } else {
+            Err(LoginFailed().into())
+        }
     }
 }
 
@@ -55,13 +62,13 @@ impl UComputer for SimplifiedUComputer {
 }
 
 pub struct Client {
-    base: ClientBase<DefaultUComputer>
+    base: ClientBase<DefaultUComputer>,
 }
 
 impl Client {
     pub fn new(user_name: Vec<u8>, password: Vec<u8>) -> Self {
         Client {
-            base: ClientBase::new( SRP::new(), user_name, password )
+            base: ClientBase::new(SRP::new(), user_name, password),
         }
     }
 
@@ -75,13 +82,13 @@ impl Client {
 }
 
 pub struct SimplifiedClient {
-    base: ClientBase<SimplifiedUComputer>
+    base: ClientBase<SimplifiedUComputer>,
 }
 
 impl SimplifiedClient {
     pub fn new(user_name: Vec<u8>, password: Vec<u8>) -> Self {
         SimplifiedClient {
-            base: ClientBase::new( SRP::new_with_k(0), user_name, password )
+            base: ClientBase::new(SRP::new_with_k(0), user_name, password),
         }
     }
 
@@ -100,9 +107,7 @@ pub struct FakeClientWithZeroKey {
 
 impl FakeClientWithZeroKey {
     pub fn new(user_name: Vec<u8>) -> Self {
-        FakeClientWithZeroKey {
-            user_name,
-        }
+        FakeClientWithZeroKey { user_name }
     }
 
     pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
@@ -112,9 +117,7 @@ impl FakeClientWithZeroKey {
         // Send zero for A
         stream.send(&serialize(&_0))?;
 
-        let salt: Vec<u8> = stream
-            .receive()?
-            .ok_or_else(|| err_msg("salt"))?;
+        let salt: Vec<u8> = stream.receive()?.ok_or_else(|| err_msg("salt"))?;
 
         // Discard B
         stream.receive()?.ok_or_else(|| err_msg("B"))?;
@@ -124,10 +127,12 @@ impl FakeClientWithZeroKey {
         let secret = hash_secret(&_0, &salt);
         stream.send(&secret)?;
 
-        let login_result = stream
-            .receive()?
-            .ok_or_else(|| err_msg("login result"))?;
+        let login_result = stream.receive()?.ok_or_else(|| err_msg("login result"))?;
 
-        if login_result == [LoginResult::Success as u8] { Ok(()) } else { Err(LoginFailed().into()) }
+        if login_result == [LoginResult::Success as u8] {
+            Ok(())
+        } else {
+            Err(LoginFailed().into())
+        }
     }
 }

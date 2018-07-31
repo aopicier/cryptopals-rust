@@ -14,12 +14,7 @@ pub struct Client<T: Communicate> {
 
 impl<T: Communicate> Client<T> {
     pub fn new(mut stream: T) -> Result<Client<T>, Error> {
-        handshake(&mut stream).map(|key| {
-            Client {
-                stream,
-                key
-            }
-        })
+        handshake(&mut stream).map(|key| Client { stream, key })
     }
 
     pub fn stream(&self) -> &T {

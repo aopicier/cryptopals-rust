@@ -7,8 +7,8 @@ use std::path::Path;
 use rand;
 use rand::Rng;
 
-use aes::{pad, padding_valid, Aes128, MODE};
 use aes::BLOCK_SIZE;
+use aes::{pad, padding_valid, Aes128, MODE};
 
 use serialize::from_base64_file;
 
@@ -24,27 +24,9 @@ use prefix_suffix_oracles::{Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 fn matasano2_9() -> Result<(), Error> {
     compare(
         [
-            89,
-            69,
-            76,
-            76,
-            79,
-            87,
-            32,
-            83,
-            85,
-            66,
-            77,
-            65,
-            82,
-            73,
-            78,
-            69,
-            4,
-            4,
-            4,
-            4,
-        ].as_ref(),
+            89, 69, 76, 76, 79, 87, 32, 83, 85, 66, 77, 65, 82, 73, 78, 69, 4, 4, 4, 4,
+        ]
+            .as_ref(),
         &pad(b"YELLOW SUBMARINE".as_ref(), 20)?,
     )
 }
@@ -88,7 +70,7 @@ fn uses_ecb(oracle: &mut Oracle11) -> Result<bool, Error> {
 }
 
 fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
-    Ok((oracle.encrypt(&[0])?.len()-oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
+    Ok((oracle.encrypt(&[0])?.len() - oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
 }
 
 fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> {

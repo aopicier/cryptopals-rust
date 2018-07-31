@@ -4,14 +4,14 @@ use rsa::Rsa;
 
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
-use serialize::{Serialize, from_base64};
+use serialize::{from_base64, Serialize};
 
 use rand;
 use rand::Rng;
 
 use std::fs::File;
-use std::io::BufReader;
 use std::io::BufRead;
+use std::io::BufReader;
 use std::path::Path;
 
 use std::cmp;
@@ -36,7 +36,9 @@ fn matasano6_41() -> Result<(), Error> {
 
     let s = BigNum::gen_random(bits - 1);
     //TODO We should check that s > 1 and that s and rsa.n() have no common divisors
-    let t = s.invmod(rsa.n()).ok_or_else(|| err_msg("s and n are not coprime"))?;
+    let t = s
+        .invmod(rsa.n())
+        .ok_or_else(|| err_msg("s and n are not coprime"))?;
 
     let c2 = &(&c * &rsa.encrypt(&s)) % rsa.n();
     let m2 = oracle(&c2).ok_or_else(|| err_msg("wrong input to oracle"))?;
@@ -121,16 +123,12 @@ fn matasano6_43() -> Result<(), Error> {
          1dec568280ce678e931868d23eb095fde9d3779191b8c0299d6e07b\
          bb283e6633451e535c45513b2d33c99ea17",
     )?;
-    let public = DsaPublic {
-        params: &params,
-        y
-    };
+    let public = DsaPublic { params: &params, y };
     let m = BigNum::from_hex_str("d2d0714f014a9784047eaeccf956520045c45265")?;
     let signature = Signature {
         r: BigNum::from_dec_str("548099063082341131477253921760299949438196259240")?,
         s: BigNum::from_dec_str("857042759984254168557880549501802188789837994940")?,
     };
-
 
     let zero = BigNum::zero();
     let one = BigNum::one();
@@ -138,12 +136,7 @@ fn matasano6_43() -> Result<(), Error> {
         .map(BigNumTrait::from_u32)
         .map(|k| public.secret_key_from_k(&m, &signature, &k))
         .filter(|x| x != &zero && x != &one)
-        .map(|x| {
-            DsaPrivate {
-                params: &params,
-                x,
-            }
-        })
+        .map(|x| DsaPrivate { params: &params, x })
         .find(|private| DsaPublic::generate(private).y == public.y);
 
     // ~ echo -n 15fb2873d16b3e129ff76d0918fd7ada54659e49 | sha1sum
@@ -168,10 +161,7 @@ fn matasano6_44() -> Result<(), Error> {
          f98a6a4d83d8279ee65d71c1203d2c96d65ebbf7cce9d3\
          2971c3de5084cce04a2e147821",
     )?;
-    let public = DsaPublic {
-        params: &params,
-        y,
-    };
+    let public = DsaPublic { params: &params, y };
 
     let path = Path::new("data/44.txt");
     let file = File::open(&path)?;

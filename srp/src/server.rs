@@ -1,6 +1,8 @@
-use algo::{serialize, deserialize, UComputer, DefaultUComputer, SRP, ServerHandshake, LoginResult};
-use std::collections::HashMap;
+use algo::{
+    deserialize, serialize, DefaultUComputer, LoginResult, ServerHandshake, UComputer, SRP,
+};
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 use rand;
@@ -8,7 +10,7 @@ use rand::Rng;
 
 use communication::Communicate;
 
-use failure::{Error, err_msg};
+use failure::{err_msg, Error};
 
 use bignum::NumBigInt as BigNum;
 
@@ -26,7 +28,7 @@ impl UComputer for SimplifiedUComputer {
 struct ServerBase<U: UComputer> {
     params: SRP,
     user_database: HashMap<Vec<u8>, (Vec<u8>, BigNum)>,
-    computer: PhantomData<U>
+    computer: PhantomData<U>,
 }
 
 impl<U: UComputer> ServerBase<U> {
@@ -52,11 +54,11 @@ impl<U: UComputer> ServerBase<U> {
         }
     }
 
-    fn authenticate_client<T: Communicate> (
+    fn authenticate_client<T: Communicate>(
         params: &SRP,
         stream: &mut T,
         &(ref salt, ref v): &(Vec<u8>, BigNum),
-        ) -> Result<(), Error> {
+    ) -> Result<(), Error> {
         let state = ServerHandshake::new(params, salt, v);
         let A = deserialize(&stream.receive()?.ok_or_else(|| err_msg("A"))?);
         let B = state.B();
@@ -64,24 +66,26 @@ impl<U: UComputer> ServerBase<U> {
         stream.send(&serialize(B))?;
         let u = U::compute_u::<T>(&A, &B, stream)?;
         let server_secret = state.compute_hashed_secret(&A, &u);
-        let client_secret = stream
-            .receive()?
-            .ok_or_else(|| err_msg("client secret"))?;
+        let client_secret = stream.receive()?.ok_or_else(|| err_msg("client secret"))?;
 
-        let login_result = if server_secret == client_secret { LoginResult::Success } else { LoginResult::Failure };
+        let login_result = if server_secret == client_secret {
+            LoginResult::Success
+        } else {
+            LoginResult::Failure
+        };
         stream.send(&[login_result as u8])?;
         Ok(())
     }
 }
 
 pub struct Server {
-    base: ServerBase<DefaultUComputer>
+    base: ServerBase<DefaultUComputer>,
 }
 
 impl Server {
     pub fn new() -> Self {
         Server {
-            base: ServerBase::new(  SRP::new())
+            base: ServerBase::new(SRP::new()),
         }
     }
 
@@ -91,13 +95,13 @@ impl Server {
 }
 
 pub struct SimplifiedServer {
-    base: ServerBase<SimplifiedUComputer>
+    base: ServerBase<SimplifiedUComputer>,
 }
 
 impl SimplifiedServer {
     pub fn new() -> Self {
         SimplifiedServer {
-            base: ServerBase::new(  SRP::new_with_k(0))
+            base: ServerBase::new(SRP::new_with_k(0)),
         }
     }
 

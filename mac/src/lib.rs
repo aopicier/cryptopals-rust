@@ -1,6 +1,6 @@
+extern crate digest;
 extern crate sha1;
 extern crate sha2;
-extern crate digest;
 extern crate xor;
 
 use digest::Digest;
@@ -38,7 +38,7 @@ pub fn hmac_sha256(key: &[u8], message: &[u8]) -> Vec<u8> {
 // This function assumes that the block size of D is 64.
 // This is correct for SHA-1 and SHA-256.
 fn prepare_key<D: Digest>(key: &[u8]) -> Vec<u8> {
-    // TODO Somehow use <D as BlockInput>::BlockSize to obtain 
+    // TODO Somehow use <D as BlockInput>::BlockSize to obtain
     // the actual block size.
     let block_size = 64;
     let mut key = if key.len() > block_size {

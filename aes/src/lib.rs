@@ -23,14 +23,10 @@ pub enum AesError {
     InvalidPadding,
 
     #[fail(display = "failed to encrypt block {:?}", block)]
-    EncryptionFailed {
-        block: Vec<u8>
-    },
+    EncryptionFailed { block: Vec<u8> },
 
     #[fail(display = "failed to decrypt block {:?}", block)]
-    DecryptionFailed {
-        block: Vec<u8>
-    }
+    DecryptionFailed { block: Vec<u8> },
 }
 
 pub fn pad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
@@ -69,11 +65,9 @@ pub fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
     if !(1 <= padding && padding <= k) {
         return Ok(false);
     }
-    Ok(
-        u[u.len() - padding as usize..]
-            .iter()
-            .all(|&b| b == padding),
-    )
+    Ok(u[u.len() - padding as usize..]
+        .iter()
+        .all(|&b| b == padding))
 }
 
 trait Crypto {
@@ -115,7 +109,9 @@ impl Aes128 for [u8] {
         );
 
         let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
-            .map_err(|_| AesError::EncryptionFailed { block:  self.to_vec() })?;
+            .map_err(|_| AesError::EncryptionFailed {
+                block: self.to_vec(),
+            })?;
 
         ciphertext.truncate(BLOCK_SIZE);
         Ok(ciphertext)
@@ -130,8 +126,11 @@ impl Aes128 for [u8] {
         let dummy_padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
         let mut u = self.to_vec();
         u.extend_from_slice(&dummy_padding);
-        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u)
-            .map_err(|_| AesError::DecryptionFailed { block:  self.to_vec() }.into())
+        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
+            AesError::DecryptionFailed {
+                block: self.to_vec(),
+            }.into()
+        })
     }
 
     fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error> {
@@ -226,7 +225,9 @@ impl Crypto for [u8] {
         }
 
         let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
-            .map_err(|_| AesError::EncryptionFailed { block:  self.to_vec() })?;
+            .map_err(|_| AesError::EncryptionFailed {
+                block: self.to_vec(),
+            })?;
 
         ciphertext.truncate(BLOCK_SIZE);
         Ok(ciphertext)
@@ -240,8 +241,11 @@ impl Crypto for [u8] {
         let dummy_padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
         let mut u = self.to_vec();
         u.extend_from_slice(&dummy_padding);
-        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u)
-            .map_err(|_| AesError::DecryptionFailed { block:  self.to_vec() }.into())
+        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
+            AesError::DecryptionFailed {
+                block: self.to_vec(),
+            }.into()
+        })
     }
 
     fn encrypt_aes128_ecb(&self, key: &[u8]) -> Result<Vec<u8>, Error> {

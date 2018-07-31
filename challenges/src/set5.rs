@@ -7,8 +7,8 @@ use rand::Rng;
 
 use diffie_hellman::client::Client;
 use diffie_hellman::communication::Communicate;
-use diffie_hellman::mitm::MITM;
 use diffie_hellman::mitm::Mode;
+use diffie_hellman::mitm::MITM;
 use diffie_hellman::server::Server as DHServer;
 
 use bignum::OpensslBigNum as BigNum;
@@ -312,7 +312,8 @@ fn matasano5_38() -> Result<(), Error> {
         .ok_or_else(|| err_msg("could not determine password"))?;
 
     let impostor = SrpSimplifiedClient::new(user_name.to_vec(), password.to_vec());
-    connect_and_execute(port, |stream| impostor.login(stream)).context("impostor did not succeed")?;
+    connect_and_execute(port, |stream| impostor.login(stream))
+        .context("impostor did not succeed")?;
 
     shutdown_srp_tcp_server(port, tx)?;
 
@@ -365,7 +366,8 @@ fn matasano5_40() -> Result<(), Error> {
 
     let c = &(&(&(&(&c1 * &x1) * &x1.invmod(n1).unwrap())
         + &(&(&c2 * &x2) * &x2.invmod(n2).unwrap()))
-        + &(&(&c3 * &x3) * &x3.invmod(n3).unwrap())) % &(&(n1 * n2) * n3);
+        + &(&(&c3 * &x3) * &x3.invmod(n3).unwrap()))
+        % &(&(n1 * n2) * n3);
     compare(&m, &c.root(3).0)
 }
 

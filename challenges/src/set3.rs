@@ -1,7 +1,7 @@
 use std;
 use std::path::PathBuf;
 
-use aes::{Aes128, AesError, BLOCK_SIZE, MODE, unpad_inplace};
+use aes::{unpad_inplace, Aes128, AesError, BLOCK_SIZE, MODE};
 use byteorder::{ByteOrder, NativeEndian};
 
 use set1::decrypt_single_xor;
@@ -92,12 +92,13 @@ fn matasano3_17() -> Result<(), Error> {
             //Awaits replacement for range_inclusive
             for u in 0u8..=255 {
                 prev[i] ^= u;
-                if server.is_padding_valid(&prev, block)? && (i < BLOCK_SIZE - 1 || {
-                    prev[i - 1] ^= 1;
-                    let result = server.is_padding_valid(&prev, block)?;
-                    prev[i - 1] ^= 1;
-                    result
-                }) {
+                if server.is_padding_valid(&prev, block)?
+                    && (i < BLOCK_SIZE - 1 || {
+                        prev[i - 1] ^= 1;
+                        let result = server.is_padding_valid(&prev, block)?;
+                        prev[i - 1] ^= 1;
+                        result
+                    }) {
                     cleartext[block_offset + i] = padding ^ u;
                     break;
                 }
@@ -122,17 +123,20 @@ fn matasano3_18() -> Result<(), Error> {
 
 enum Exercise {
     _19,
-    _20
+    _20,
 }
 
 struct Encrypter19_20 {
     key: Vec<u8>,
-    exercise: Exercise
+    exercise: Exercise,
 }
 
 impl Encrypter19_20 {
     pub fn new(exercise: Exercise) -> Self {
-        Encrypter19_20 { key: random_block(), exercise }
+        Encrypter19_20 {
+            key: random_block(),
+            exercise,
+        }
     }
 
     pub fn get_ciphertexts(&self) -> Result<Vec<Vec<u8>>, Error> {
@@ -155,7 +159,7 @@ impl Encrypter19_20 {
         compare(
             &vec![0; size].encrypt(&self.key, None, MODE::CTR)?[1..],
             &candidate_key[1..],
-            ) // encrypt or decrypt?
+        ) // encrypt or decrypt?
     }
 }
 

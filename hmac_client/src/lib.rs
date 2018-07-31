@@ -1,9 +1,9 @@
 extern crate hyper;
 extern crate serialize;
 
-use std::time;
 use hyper::client::Client;
 use hyper::header::ContentType;
+use std::time;
 
 use serialize::Serialize;
 

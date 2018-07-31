@@ -22,10 +22,9 @@ pub trait CommunicateNew {
 
 pub trait CommunicateEncr: Communicate {
     fn receive_encr(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
-        Ok(
-            self.receive()?
-                .map(|message| decrypt(message, key).unwrap()),
-        )
+        Ok(self
+            .receive()?
+            .map(|message| decrypt(message, key).unwrap()))
     }
 
     fn send_encr(&mut self, message: &[u8], key: &[u8]) -> Result<(), Error> {
@@ -44,9 +43,9 @@ pub fn decrypt(mut message: Vec<u8>, key: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 fn message_length<T: Read>(stream: &mut T) -> Result<Option<usize>, Error> {
-    Ok(read_n_bytes(stream, 4)?.as_ref().map(|message| {
-        <LittleEndian as ByteOrder>::read_u32(message) as usize
-    }))
+    Ok(read_n_bytes(stream, 4)?
+        .as_ref()
+        .map(|message| <LittleEndian as ByteOrder>::read_u32(message) as usize))
 }
 
 fn encode_length(length: usize) -> Vec<u8> {

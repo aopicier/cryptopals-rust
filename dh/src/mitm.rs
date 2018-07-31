@@ -1,10 +1,10 @@
 use algo::{secret_to_key, serialize};
 
-use communication::Communicate;
 use communication::decrypt;
+use communication::Communicate;
 
-use bignum::NumBigUint as BigNum;
 use bignum::BigNumTrait;
+use bignum::NumBigUint as BigNum;
 
 use failure::Error;
 
@@ -32,7 +32,7 @@ impl<T: Communicate> MITM<T> {
             client_stream,
             server_stream,
             client_key,
-            server_key
+            server_key,
         })
     }
 
@@ -53,19 +53,17 @@ impl<T: Communicate> MITM<T> {
     }
 
     pub fn decrypt_client(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
-        Ok(
-            self.client_key
-                .as_ref()
-                .map(|key| decrypt(message, key).unwrap()),
-        )
+        Ok(self
+            .client_key
+            .as_ref()
+            .map(|key| decrypt(message, key).unwrap()))
     }
 
     pub fn decrypt_server(&self, message: Vec<u8>) -> Result<Option<Vec<u8>>, Error> {
-        Ok(
-            self.server_key
-                .as_ref()
-                .map(|key| decrypt(message, key).unwrap()),
-        )
+        Ok(self
+            .server_key
+            .as_ref()
+            .map(|key| decrypt(message, key).unwrap()))
     }
 }
 

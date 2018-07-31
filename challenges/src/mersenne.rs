@@ -1,7 +1,6 @@
 use std::ops::Range;
 pub const STATE_SIZE: usize = 624;
 
-
 // The following code is a direct translation of the pseudocode found on Wikipedia
 
 /*

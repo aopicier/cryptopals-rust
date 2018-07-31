@@ -5,11 +5,11 @@ extern crate hyper;
 extern crate iron;
 extern crate params;
 
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
-use std::fs::File;
-use std::io::Read;
-use std::io::BufReader;
 
 use iron::prelude::*;
 use iron::status;

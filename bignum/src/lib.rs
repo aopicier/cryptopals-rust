@@ -614,8 +614,7 @@ impl BigNumTrait for BigNum {
                 self,
                 &<Self as BigNumTrait>::from_u32(k as u32),
                 &mut BigNumContext::new().unwrap(),
-            )
-            .unwrap();
+            ).unwrap();
         result
     }
 

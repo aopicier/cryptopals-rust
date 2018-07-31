@@ -1,18 +1,18 @@
 use helper::compute_score;
 
-use aes::{Aes128, MODE};
 use aes::BLOCK_SIZE;
+use aes::{Aes128, MODE};
 
 use xor::XOR;
 
-use serialize::Serialize;
 use serialize::from_base64_file;
+use serialize::Serialize;
 use serialize::{from_hex, from_hex_lines};
 
 use std::fs::File;
-use std::io::Read;
-use std::io::BufReader;
 use std::io::BufRead;
+use std::io::BufReader;
+use std::io::Read;
 use std::path::Path;
 
 use errors::*;
@@ -92,11 +92,9 @@ fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32, Error> {
         bail!("inputs need to have the same length");
     }
 
-    Ok(
-        u.xor(v)
-            .iter()
-            .fold(0u32, |a, &b| a + u32::from(nonzero_bits(b))),
-    )
+    Ok(u.xor(v)
+        .iter()
+        .fold(0u32, |a, &b| a + u32::from(nonzero_bits(b))))
 }
 
 fn nonzero_bits(mut u: u8) -> u8 {
@@ -120,7 +118,8 @@ fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
     let score = |keysize| {
         input.chunks(2 * keysize).take(8).fold(0, |a, x| {
             a + hamming_distance(&x[..keysize], &x[keysize..]).unwrap()
-        }) as f32 / keysize as f32
+        }) as f32
+            / keysize as f32
     };
     let mut scores: Vec<(usize, u32)> = (2..40).map(|size| (size, score(size) as u32)).collect();
     scores.sort_by(|&(_, s), &(_, t)| s.cmp(&t));
@@ -167,9 +166,10 @@ fn matasano1_8() -> Result<(), Error> {
     let path = Path::new("data/8.txt");
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
-    let result = reader.lines().map(|line| line.unwrap()).find(|line| {
-        has_duplicates(line.as_bytes().chunks(2 * BLOCK_SIZE))
-    });
+    let result = reader
+        .lines()
+        .map(|line| line.unwrap())
+        .find(|line| has_duplicates(line.as_bytes().chunks(2 * BLOCK_SIZE)));
 
     compare(
         Some(

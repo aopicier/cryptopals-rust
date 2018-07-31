@@ -9,8 +9,8 @@ use xor::XOR;
 use serialize::from_base64_file;
 use serialize::from_hex;
 
-use mac::mac_sha1;
 use mac::hmac_sha1;
+use mac::mac_sha1;
 
 use hmac_client;
 use hmac_server;
@@ -42,7 +42,11 @@ impl Encrypter25 {
         let cleartext = from_base64_file(Path::new("data/25.txt"))?;
         let key = random_block();
         let ciphertext = cleartext.encrypt(&key, None, MODE::CTR)?;
-        Ok(Encrypter25 { cleartext, key, ciphertext })
+        Ok(Encrypter25 {
+            cleartext,
+            key,
+            ciphertext,
+        })
     }
 
     pub fn get_ciphertext(&self) -> &[u8] {
@@ -56,18 +60,17 @@ impl Encrypter25 {
             bail!("input out of bounds")
         }
         cleartext[offset..end].copy_from_slice(&newtext);
-        cleartext
-            .encrypt(&self.key, None, MODE::CTR)
+        cleartext.encrypt(&self.key, None, MODE::CTR)
     }
 
     pub fn verify_solution(&self, candidate_cleartext: &[u8]) -> Result<(), Error> {
-        compare(&self.cleartext[..], candidate_cleartext )
+        compare(&self.cleartext[..], candidate_cleartext)
     }
 }
 
 fn matasano4_25() -> Result<(), Error> {
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
-    // we can trivially recover the used keystream by xor'ing the ciphertext with the 
+    // we can trivially recover the used keystream by xor'ing the ciphertext with the
     // known plaintext. We simply use the edit function to set the entire cleartext to 0 so that
     // the ciphertext is even equal to the keystream.
 
@@ -92,11 +95,11 @@ fn matasano4_26() -> Result<(), Error> {
 }
 
 struct Sender27 {
-    key: Vec<u8>
+    key: Vec<u8>,
 }
 
 struct Receiver27 {
-    key: Vec<u8>
+    key: Vec<u8>,
 }
 
 impl Sender27 {
@@ -115,8 +118,7 @@ impl Sender27 {
         cleartext.extend_from_slice(prefix);
         cleartext.extend_from_slice(input);
         cleartext.extend_from_slice(suffix);
-        cleartext
-            .encrypt(&self.key, Some(&self.key), MODE::CBC)
+        cleartext.encrypt(&self.key, Some(&self.key), MODE::CBC)
     }
 }
 
@@ -137,15 +139,18 @@ impl Receiver27 {
 
 fn get_sender_and_receiver_with_shared_key() -> (Sender27, Receiver27) {
     let secret_key = random_block();
-    let sender = Sender27 { key: secret_key.clone() } ;
-    let receiver = Receiver27 { key: secret_key.clone() } ;
+    let sender = Sender27 {
+        key: secret_key.clone(),
+    };
+    let receiver = Receiver27 {
+        key: secret_key.clone(),
+    };
     (sender, receiver)
 }
 
 #[derive(Debug, Fail)]
 #[fail(display = "invalid input: {:?}", _0)]
 struct NonAscii(Vec<u8>);
-
 
 fn matasano4_27() -> Result<(), Error> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
@@ -161,8 +166,10 @@ fn matasano4_27() -> Result<(), Error> {
 
     if let Err(err) = receiver.try_decrypt(&attack_ciphertext) {
         if let Ok(NonAscii(attack_cleartext)) = err.downcast::<NonAscii>() {
-            return receiver.verify_solution(&attack_cleartext[0..BLOCK_SIZE]
-                                             .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]));
+            return receiver.verify_solution(
+                &attack_cleartext[0..BLOCK_SIZE]
+                    .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
+            );
         }
     }
 
@@ -273,7 +280,8 @@ fn matasano4_29() -> Result<(), Error> {
 fn matasano4_29() -> Result<(), Error> {
     Err(ChallengeError::Skipped(
         "Requires a patched version of the sha1 crate. \
-         See the source code for detailed instructions.").into())
+         See the source code for detailed instructions.",
+    ).into())
 }
 
 fn matasano4_30() -> Result<(), Error> {
@@ -290,7 +298,6 @@ fn matasano4_31() -> Result<(), Error> {
         hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"),
     )
 }
-
 
 fn matasano4_32() -> Result<(), Error> {
     let skip_exercise = true;

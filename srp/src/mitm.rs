@@ -1,17 +1,17 @@
 use algo;
-use algo::{serialize, deserialize, SRP, LoginResult};
+use algo::{deserialize, serialize, LoginResult, SRP};
 use communication::Communicate;
 
-use failure::{Error, err_msg};
+use failure::{err_msg, Error};
 
-use bignum::NumBigInt as BigNum;
 use bignum::BigNumTrait;
+use bignum::NumBigInt as BigNum;
 
 pub struct PasswordOracle {
     g: BigNum,
     N: BigNum,
     A: BigNum,
-    client_secret: Vec<u8>
+    client_secret: Vec<u8>,
 }
 
 impl PasswordOracle {
@@ -31,7 +31,7 @@ impl PasswordOracle {
         let x = algo::compute_x(salt, password_candidate);
 
         // The crucial point is that for B = g the expression
-        // (B ^ a) % N 
+        // (B ^ a) % N
         // from the client computation is equal to A.
         let S = &(A * &B.mod_exp(&(u * &x), N)) % N;
         algo::hash_secret(&S, salt)
@@ -66,12 +66,15 @@ impl Mitm {
         stream.send(&serialize(B))?;
         stream.send(&serialize(u))?;
 
-        let client_secret = stream
-            .receive()?
-            .ok_or_else(|| err_msg("client secret"))?;
+        let client_secret = stream.receive()?.ok_or_else(|| err_msg("client secret"))?;
 
         stream.send(&[LoginResult::Success as u8])?;
-        Ok(PasswordOracle { g: g.clone(), N: self.params.N().clone(), A, client_secret })
+        Ok(PasswordOracle {
+            g: g.clone(),
+            N: self.params.N().clone(),
+            A,
+            client_secret,
+        })
     }
 
     pub fn password_to_client_secret(&self, A: &BigNum, password_candidate: &[u8]) -> Vec<u8> {
@@ -85,7 +88,7 @@ impl Mitm {
         let x = algo::compute_x(salt, password_candidate);
 
         // The crucial point is that for B = g the expression
-        // (B ^ a) % N 
+        // (B ^ a) % N
         // from the client computation is equal to A.
         let S = &(A * &B.mod_exp(&(u * &x), N)) % N;
         algo::hash_secret(&S, salt)

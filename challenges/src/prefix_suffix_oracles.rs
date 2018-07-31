@@ -1,16 +1,16 @@
 use rand;
 use rand::Rng;
 
-use aes::{Aes128, MODE};
 use aes::BLOCK_SIZE;
+use aes::{Aes128, MODE};
 
 use serialize::from_base64;
 
 use errors::*;
 use failure::Error;
 
-use set2::random_block;
 use set2::decode_profile;
+use set2::random_block;
 
 pub trait Oracle {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error>;
