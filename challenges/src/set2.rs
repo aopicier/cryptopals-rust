@@ -311,14 +311,13 @@ fn matasano2_16() -> Result<(), Error> {
     oracle.verify_solution(&ciphertext)
 }
 
-pub fn run() {
-    println!("Set 2");
-    run_exercise(matasano2_9, 9);
-    run_exercise(matasano2_10, 10);
-    run_exercise(matasano2_11, 11);
-    run_exercise(matasano2_12, 12);
-    run_exercise(matasano2_13, 13);
-    run_exercise(matasano2_14, 14);
-    run_exercise(matasano2_15, 15);
-    run_exercise(matasano2_16, 16);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano2_9);
+    challenges.push(matasano2_10);
+    challenges.push(matasano2_11);
+    challenges.push(matasano2_12);
+    challenges.push(matasano2_13);
+    challenges.push(matasano2_14);
+    challenges.push(matasano2_15);
+    challenges.push(matasano2_16);
 }

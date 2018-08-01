@@ -26,7 +26,7 @@ extern crate sha1;
 #[macro_use]
 extern crate failure;
 
-mod errors;
+pub mod errors;
 
 pub mod set1;
 pub mod set2;

@@ -5,10 +5,11 @@ use aes::{Aes128, MODE};
 
 use xor::XOR;
 
-use serialize::from_base64_file;
 use serialize::Serialize;
+use serialize::from_base64_file;
 use serialize::{from_hex, from_hex_lines};
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -118,8 +119,7 @@ fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
     let score = |keysize| {
         input.chunks(2 * keysize).take(8).fold(0, |a, x| {
             a + hamming_distance(&x[..keysize], &x[keysize..]).unwrap()
-        }) as f32
-            / keysize as f32
+        }) as f32 / keysize as f32
     };
     let mut scores: Vec<(usize, u32)> = (2..40).map(|size| (size, score(size) as u32)).collect();
     scores.sort_by(|&(_, s), &(_, t)| s.cmp(&t));
@@ -198,14 +198,13 @@ where
     len != v.len()
 }
 
-pub fn run() {
-    println!("Set 1");
-    run_exercise(matasano1_1, 1);
-    run_exercise(matasano1_2, 2);
-    run_exercise(matasano1_3, 3);
-    run_exercise(matasano1_4, 4);
-    run_exercise(matasano1_5, 5);
-    run_exercise(matasano1_6, 6);
-    run_exercise(matasano1_7, 7);
-    run_exercise(matasano1_8, 8);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano1_1);
+    challenges.push(matasano1_2);
+    challenges.push(matasano1_3);
+    challenges.push(matasano1_4);
+    challenges.push(matasano1_5);
+    challenges.push(matasano1_6);
+    challenges.push(matasano1_7);
+    challenges.push(matasano1_8);
 }

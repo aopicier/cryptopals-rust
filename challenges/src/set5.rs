@@ -84,6 +84,11 @@ fn run_tcp_mitm(
     }))
 }
 
+fn matasano5_33() -> Result<(), Error> {
+    // See diffie_hellman crate
+    Ok(())
+}
+
 fn matasano5_34() -> Result<(), Error> {
     matasano5_34_echo()?;
     matasano5_34_mitm()?;
@@ -371,13 +376,13 @@ fn matasano5_40() -> Result<(), Error> {
     compare_eq(&m, &c.root(3).0)
 }
 
-pub fn run() {
-    println!("Set 5");
-    run_exercise(matasano5_34, 34);
-    run_exercise(matasano5_35, 35);
-    run_exercise(matasano5_36, 36);
-    run_exercise(matasano5_37, 37);
-    run_exercise(matasano5_38, 38);
-    run_exercise(matasano5_39, 39);
-    run_exercise(matasano5_40, 40);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano5_33);
+    challenges.push(matasano5_34);
+    challenges.push(matasano5_35);
+    challenges.push(matasano5_36);
+    challenges.push(matasano5_37);
+    challenges.push(matasano5_38);
+    challenges.push(matasano5_39);
+    challenges.push(matasano5_40);
 }

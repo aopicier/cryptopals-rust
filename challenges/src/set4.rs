@@ -318,14 +318,13 @@ fn matasano4_32() -> Result<(), Error> {
     Ok(()) //TODO Add proper error handling
 }
 
-pub fn run() {
-    println!("Set 4");
-    run_exercise(matasano4_25, 25);
-    run_exercise(matasano4_26, 26);
-    run_exercise(matasano4_27, 27);
-    run_exercise(matasano4_28, 28);
-    run_exercise(matasano4_29, 29);
-    run_exercise(matasano4_30, 30);
-    run_exercise(matasano4_31, 31);
-    run_exercise(matasano4_32, 32);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano4_25);
+    challenges.push(matasano4_26);
+    challenges.push(matasano4_27);
+    challenges.push(matasano4_28);
+    challenges.push(matasano4_29);
+    challenges.push(matasano4_30);
+    challenges.push(matasano4_31);
+    challenges.push(matasano4_32);
 }

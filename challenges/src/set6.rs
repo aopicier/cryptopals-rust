@@ -402,14 +402,13 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<(), Error> {
     }
 }
 
-pub fn run() {
-    println!("Set 6");
-    run_exercise(matasano6_41, 41);
-    run_exercise(matasano6_42, 42);
-    run_exercise(matasano6_43, 43);
-    run_exercise(matasano6_44, 44);
-    run_exercise(matasano6_45, 45);
-    run_exercise(matasano6_46, 46);
-    run_exercise(|| matasano6_47_48(128), 47);
-    run_exercise(|| matasano6_47_48(384), 48);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano6_41);
+    challenges.push(matasano6_42);
+    challenges.push(matasano6_43);
+    challenges.push(matasano6_44);
+    challenges.push(matasano6_45);
+    challenges.push(matasano6_46);
+    challenges.push(|| matasano6_47_48(128));
+    challenges.push(|| matasano6_47_48(384));
 }

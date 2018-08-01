@@ -263,14 +263,13 @@ fn matasano3_24() -> Result<(), Error> {
     )
 }
 
-pub fn run() {
-    println!("Set 3");
-    run_exercise(matasano3_17, 17);
-    run_exercise(matasano3_18, 18);
-    run_exercise(|| matasano3_19_20(Exercise::_19), 19);
-    run_exercise(|| matasano3_19_20(Exercise::_20), 20);
-    run_exercise(matasano3_21, 21);
-    run_exercise(matasano3_22, 22);
-    run_exercise(matasano3_23, 23);
-    run_exercise(matasano3_24, 24);
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+    challenges.push(matasano3_17);
+    challenges.push(matasano3_18);
+    challenges.push(|| matasano3_19_20(Exercise::_19));
+    challenges.push(|| matasano3_19_20(Exercise::_20));
+    challenges.push(matasano3_21);
+    challenges.push(matasano3_22);
+    challenges.push(matasano3_23);
+    challenges.push(matasano3_24);
 }
