@@ -62,7 +62,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
     Ok(())
 }
 
-fn run_tcp_server(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
+fn run_dh_server(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((stream, _)) => handle_client(stream),
@@ -70,7 +70,7 @@ fn run_tcp_server(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Er
     }))
 }
 
-fn run_tcp_mitm(
+fn run_dh_mitm(
     client_port: u16,
     server_port: u16,
 ) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
@@ -98,7 +98,7 @@ fn matasano5_34() -> Result<(), Error> {
 fn matasano5_34_echo() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
-    let join_handle = run_tcp_server(server_port)?;
+    let join_handle = run_dh_server(server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
@@ -118,9 +118,9 @@ fn matasano5_34_echo() -> Result<(), Error> {
 fn matasano5_34_mitm() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
-    run_tcp_server(server_port)?;
+    run_dh_server(server_port)?;
 
-    let join_handle = run_tcp_mitm(client_port, server_port)?;
+    let join_handle = run_dh_mitm(client_port, server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
@@ -142,7 +142,7 @@ fn matasano5_35() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
-fn start_srp_tcp_server(
+fn start_srp_server(
     port: u16,
 ) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
     let mut server = SrpServer::new();
@@ -164,8 +164,8 @@ fn start_srp_tcp_server(
     Ok((tx, join_handle))
 }
 
-// TODO Merge with start_srp_tcp_server
-fn start_simplified_srp_tcp_server(
+// TODO Merge with start_srp_server
+fn start_simplified_srp_server(
     port: u16,
 ) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
     let mut server = SrpSimplifiedServer::new();
@@ -198,7 +198,7 @@ fn start_mitm_srp_server(
     }))
 }
 
-fn shutdown_srp_tcp_server(port: u16, tx: Sender<u8>) -> Result<(), Error> {
+fn shutdown_srp_server(port: u16, tx: Sender<u8>) -> Result<(), Error> {
     // Ugly hack for shutting down the server
     tx.send(1)?;
 
@@ -221,7 +221,7 @@ fn connect_and_execute(
 
 fn matasano5_36() -> Result<(), Error> {
     let port: u16 = 8080;
-    let (tx, join_handle) = start_srp_tcp_server(port)?;
+    let (tx, join_handle) = start_srp_server(port)?;
 
     let user_name = b"foo";
     let password = b"baz";
@@ -230,7 +230,7 @@ fn matasano5_36() -> Result<(), Error> {
     connect_and_execute(port, |stream| client.register(stream))?;
     connect_and_execute(port, |stream| client.login(stream))?;
 
-    shutdown_srp_tcp_server(port, tx)?;
+    shutdown_srp_server(port, tx)?;
 
     match join_handle.join() {
         Ok(result) => result,
@@ -240,7 +240,7 @@ fn matasano5_36() -> Result<(), Error> {
 
 fn matasano5_37() -> Result<(), Error> {
     let port: u16 = 8080;
-    let (tx, join_handle) = start_srp_tcp_server(port)?;
+    let (tx, join_handle) = start_srp_server(port)?;
 
     let user_name = b"foo";
     let password = b"baz";
@@ -252,7 +252,7 @@ fn matasano5_37() -> Result<(), Error> {
     let fake_client = SrpFakeClient::new(user_name.to_vec());
     connect_and_execute(port, |stream| fake_client.login(stream))?;
 
-    shutdown_srp_tcp_server(port, tx)?;
+    shutdown_srp_server(port, tx)?;
 
     match join_handle.join() {
         Ok(result) => result,
@@ -292,7 +292,7 @@ fn matasano5_38() -> Result<(), Error> {
 
     let port: u16 = 8080;
     let port_mitm: u16 = 8081;
-    let (tx, jh_server) = start_simplified_srp_tcp_server(port)?;
+    let (tx, jh_server) = start_simplified_srp_server(port)?;
 
     let user_name = b"foo";
     let client = create_client_with_random_password(user_name, dictionary);
@@ -320,7 +320,7 @@ fn matasano5_38() -> Result<(), Error> {
     connect_and_execute(port, |stream| impostor.login(stream))
         .context("impostor did not succeed")?;
 
-    shutdown_srp_tcp_server(port, tx)?;
+    shutdown_srp_server(port, tx)?;
 
     match jh_server.join() {
         Ok(result) => result,

@@ -9,7 +9,6 @@ use serialize::Serialize;
 use serialize::from_base64_file;
 use serialize::{from_hex, from_hex_lines};
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
