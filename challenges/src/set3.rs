@@ -79,7 +79,7 @@ impl Server17 {
     }
 }
 
-fn matasano3_17() -> Result<(), Error> {
+fn challenge_17() -> Result<(), Error> {
     let server = Server17::new();
     let (ciphertext, iv) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];
@@ -111,7 +111,7 @@ fn matasano3_17() -> Result<(), Error> {
     server.verify_solution(&cleartext, &iv, &ciphertext)
 }
 
-fn matasano3_18() -> Result<(), Error> {
+fn challenge_18() -> Result<(), Error> {
     let ciphertext =
         from_base64("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")?;
     let cleartext = ciphertext.decrypt(b"YELLOW SUBMARINE", None, MODE::CTR)?;
@@ -163,7 +163,7 @@ impl Encrypter19_20 {
     }
 }
 
-fn matasano3_19_20(exercise: Exercise) -> Result<(), Error> {
+fn challenge_19_20(exercise: Exercise) -> Result<(), Error> {
     let encrypter = Encrypter19_20::new(exercise);
     let ciphertexts = encrypter.get_ciphertexts()?;
     let size = ciphertexts.iter().map(|c| c.len()).min().unwrap();
@@ -185,7 +185,7 @@ fn matasano3_19_20(exercise: Exercise) -> Result<(), Error> {
     encrypter.verify_solution(&key, size)
 }
 
-fn matasano3_21() -> Result<(), Error> {
+fn challenge_21() -> Result<(), Error> {
     let mt = MersenneTwister::initialize(1);
     compare_eq(
         vec![
@@ -204,7 +204,7 @@ fn matasano3_21() -> Result<(), Error> {
     )
 }
 
-fn matasano3_22() -> Result<(), Error> {
+fn challenge_22() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let seed: u16 = rng.gen();
     let mut mt = MersenneTwister::initialize(u32::from(seed));
@@ -214,7 +214,7 @@ fn matasano3_22() -> Result<(), Error> {
     )
 }
 
-fn matasano3_23() -> Result<(), Error> {
+fn challenge_23() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let seed = rng.gen();
     let mut mt = MersenneTwister::initialize(seed);
@@ -229,7 +229,7 @@ fn matasano3_23() -> Result<(), Error> {
     Ok(())
 }
 
-fn matasano3_24() -> Result<(), Error> {
+fn challenge_24() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let prefix_len: u8 = rng.gen();
     let cleartext = {
@@ -264,12 +264,12 @@ fn matasano3_24() -> Result<(), Error> {
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano3_17);
-    challenges.push(matasano3_18);
-    challenges.push(|| matasano3_19_20(Exercise::_19));
-    challenges.push(|| matasano3_19_20(Exercise::_20));
-    challenges.push(matasano3_21);
-    challenges.push(matasano3_22);
-    challenges.push(matasano3_23);
-    challenges.push(matasano3_24);
+    challenges.push(challenge_17);
+    challenges.push(challenge_18);
+    challenges.push(|| challenge_19_20(Exercise::_19));
+    challenges.push(|| challenge_19_20(Exercise::_20));
+    challenges.push(challenge_21);
+    challenges.push(challenge_22);
+    challenges.push(challenge_23);
+    challenges.push(challenge_24);
 }

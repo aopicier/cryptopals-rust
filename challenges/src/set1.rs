@@ -27,7 +27,7 @@ fn transposed_blocks(input: &[u8], size: usize) -> Vec<Vec<u8>> {
     transposed_blocks
 }
 
-fn matasano1_1() -> Result<(), Error> {
+fn challenge_1() -> Result<(), Error> {
     let input_string = "49276d206b696c6c696e6720796f757220627261\
                         696e206c696b65206120706f69736f6e6f7573206\
                         d757368726f6f6d";
@@ -38,7 +38,7 @@ fn matasano1_1() -> Result<(), Error> {
     )
 }
 
-fn matasano1_2() -> Result<(), Error> {
+fn challenge_2() -> Result<(), Error> {
     let input1 = "1c0111001f010100061a024b53535009181c";
     let input2 = "686974207468652062756c6c277320657965";
     compare_eq(
@@ -54,7 +54,7 @@ pub fn decrypt_single_xor(input: &[u8]) -> u8 {
         .unwrap()
 }
 
-fn matasano1_3() -> Result<(), Error> {
+fn challenge_3() -> Result<(), Error> {
     let input = from_hex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")?;
     let key = decrypt_single_xor(&input);
     compare_eq(
@@ -63,7 +63,7 @@ fn matasano1_3() -> Result<(), Error> {
     )
 }
 
-fn matasano1_4() -> Result<(), Error> {
+fn challenge_4() -> Result<(), Error> {
     let path = Path::new("data/4.txt");
     let lines = from_hex_lines(path)?;
     let result = lines
@@ -74,7 +74,7 @@ fn matasano1_4() -> Result<(), Error> {
     compare_eq(b"Now that the party is jumping\n".as_ref(), &result)
 }
 
-fn matasano1_5() -> Result<(), Error> {
+fn challenge_5() -> Result<(), Error> {
     let input = b"Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
 
     let passphrase = b"ICE";
@@ -140,13 +140,13 @@ fn decrypt_xor(input: &[u8]) -> Vec<u8> {
         .unwrap()
 }
 
-fn matasano1_6() -> Result<(), Error> {
+fn challenge_6() -> Result<(), Error> {
     let input = from_base64_file(Path::new("data/6.txt"))?;
     let key = decrypt_xor(&input);
     compare_eq(b"Terminator X: Bring the noise".as_ref(), &key)
 }
 
-fn matasano1_7() -> Result<(), Error> {
+fn challenge_7() -> Result<(), Error> {
     let key = b"YELLOW SUBMARINE";
     let ciphertext = from_base64_file(Path::new("data/7.txt"))?;
     let cleartext = ciphertext.decrypt(key, None, MODE::ECB)?;
@@ -160,7 +160,7 @@ fn matasano1_7() -> Result<(), Error> {
     compare_eq(cleartext_ref.as_bytes(), &cleartext)
 }
 
-fn matasano1_8() -> Result<(), Error> {
+fn challenge_8() -> Result<(), Error> {
     //Find the line with a repeating 16 byte block (<=> with a repeating 32 hex-digits block)
     let path = Path::new("data/8.txt");
     let file = File::open(&path)?;
@@ -198,12 +198,12 @@ where
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano1_1);
-    challenges.push(matasano1_2);
-    challenges.push(matasano1_3);
-    challenges.push(matasano1_4);
-    challenges.push(matasano1_5);
-    challenges.push(matasano1_6);
-    challenges.push(matasano1_7);
-    challenges.push(matasano1_8);
+    challenges.push(challenge_1);
+    challenges.push(challenge_2);
+    challenges.push(challenge_3);
+    challenges.push(challenge_4);
+    challenges.push(challenge_5);
+    challenges.push(challenge_6);
+    challenges.push(challenge_7);
+    challenges.push(challenge_8);
 }

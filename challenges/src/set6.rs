@@ -20,7 +20,7 @@ use set2::random_block;
 
 use errors::*;
 
-fn matasano6_41() -> Result<(), Error> {
+fn challenge_41() -> Result<(), Error> {
     let bits = 512;
     let rsa = Rsa::<BigNum>::generate(bits);
 
@@ -77,7 +77,7 @@ fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
     }
 }
 
-fn matasano6_42() -> Result<(), Error> {
+fn challenge_42() -> Result<(), Error> {
     //We lose leading zeros during the conversion to BigNum. We therefore omit it from prefix and
     //check that the length of the block is one less than the length of n.
     let bits = 1024;
@@ -112,7 +112,7 @@ fn matasano6_42() -> Result<(), Error> {
     compare_eq(true, verify_signature(&fake_signature.unwrap()))
 }
 
-fn matasano6_43() -> Result<(), Error> {
+fn challenge_43() -> Result<(), Error> {
     let params = DsaParams::generate();
 
     let y = BigNum::from_hex_str(
@@ -149,7 +149,7 @@ fn matasano6_43() -> Result<(), Error> {
     )
 }
 
-fn matasano6_44() -> Result<(), Error> {
+fn challenge_44() -> Result<(), Error> {
     let params = DsaParams::generate();
 
     let y = BigNum::from_hex_str(
@@ -208,7 +208,7 @@ fn matasano6_44() -> Result<(), Error> {
     Err(ChallengeError::ItemNotFound("signatures with equal r".to_owned()).into())
 }
 
-fn matasano6_45() -> Result<(), Error> {
+fn challenge_45() -> Result<(), Error> {
     let params = DsaParams::<BigNum>::generate();
     let private = DsaPrivate::generate(&params);
     let public = DsaPublic::generate(&private);
@@ -288,7 +288,7 @@ impl Server46 {
     }
 }
 
-fn matasano6_46() -> Result<(), Error> {
+fn challenge_46() -> Result<(), Error> {
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
     let server = Server46::new();
@@ -310,7 +310,7 @@ fn matasano6_46() -> Result<(), Error> {
 }
 
 #[allow(non_snake_case)]
-fn matasano6_47_48(rsa_bits: usize) -> Result<(), Error> {
+fn challenge_47_48(rsa_bits: usize) -> Result<(), Error> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
@@ -403,12 +403,12 @@ fn matasano6_47_48(rsa_bits: usize) -> Result<(), Error> {
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano6_41);
-    challenges.push(matasano6_42);
-    challenges.push(matasano6_43);
-    challenges.push(matasano6_44);
-    challenges.push(matasano6_45);
-    challenges.push(matasano6_46);
-    challenges.push(|| matasano6_47_48(128));
-    challenges.push(|| matasano6_47_48(384));
+    challenges.push(challenge_41);
+    challenges.push(challenge_42);
+    challenges.push(challenge_43);
+    challenges.push(challenge_44);
+    challenges.push(challenge_45);
+    challenges.push(challenge_46);
+    challenges.push(|| challenge_47_48(128));
+    challenges.push(|| challenge_47_48(384));
 }

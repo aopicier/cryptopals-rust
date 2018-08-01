@@ -84,18 +84,18 @@ fn run_dh_mitm(
     }))
 }
 
-fn matasano5_33() -> Result<(), Error> {
+fn challenge_33() -> Result<(), Error> {
     // See diffie_hellman crate
     Ok(())
 }
 
-fn matasano5_34() -> Result<(), Error> {
-    matasano5_34_echo()?;
-    matasano5_34_mitm()?;
+fn challenge_34() -> Result<(), Error> {
+    challenge_34_echo()?;
+    challenge_34_mitm()?;
     Ok(())
 }
 
-fn matasano5_34_echo() -> Result<(), Error> {
+fn challenge_34_echo() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
     let join_handle = run_dh_server(server_port)?;
@@ -115,7 +115,7 @@ fn matasano5_34_echo() -> Result<(), Error> {
     }
 }
 
-fn matasano5_34_mitm() -> Result<(), Error> {
+fn challenge_34_mitm() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
     run_dh_server(server_port)?;
@@ -138,7 +138,7 @@ fn matasano5_34_mitm() -> Result<(), Error> {
     }
 }
 
-fn matasano5_35() -> Result<(), Error> {
+fn challenge_35() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
@@ -219,7 +219,7 @@ fn connect_and_execute(
     Ok(())
 }
 
-fn matasano5_36() -> Result<(), Error> {
+fn challenge_36() -> Result<(), Error> {
     let port: u16 = 8080;
     let (tx, join_handle) = start_srp_server(port)?;
 
@@ -238,7 +238,7 @@ fn matasano5_36() -> Result<(), Error> {
     }
 }
 
-fn matasano5_37() -> Result<(), Error> {
+fn challenge_37() -> Result<(), Error> {
     let port: u16 = 8080;
     let (tx, join_handle) = start_srp_server(port)?;
 
@@ -260,7 +260,7 @@ fn matasano5_37() -> Result<(), Error> {
     }
 }
 
-fn matasano5_38() -> Result<(), Error> {
+fn challenge_38() -> Result<(), Error> {
     // Dictionary of the 25 most popular passwords
     let dictionary = &[
         b"123456".to_vec(),
@@ -338,13 +338,13 @@ fn create_client_with_random_password(
     SrpSimplifiedClient::new(user_name.to_vec(), password.to_vec())
 }
 
-fn matasano5_39() -> Result<(), Error> {
+fn challenge_39() -> Result<(), Error> {
     let rsa = Rsa::<BigNum>::generate(512);
     let m = BigNumTrait::from_u32(42);
     compare_eq(&m, &rsa.decrypt(&rsa.encrypt(&m)))
 }
 
-fn matasano5_40() -> Result<(), Error> {
+fn challenge_40() -> Result<(), Error> {
     let bits = 512;
     let m = BigNum::gen_random(bits - 1);
     let rsa1 = Rsa::generate(bits);
@@ -377,12 +377,12 @@ fn matasano5_40() -> Result<(), Error> {
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano5_33);
-    challenges.push(matasano5_34);
-    challenges.push(matasano5_35);
-    challenges.push(matasano5_36);
-    challenges.push(matasano5_37);
-    challenges.push(matasano5_38);
-    challenges.push(matasano5_39);
-    challenges.push(matasano5_40);
+    challenges.push(challenge_33);
+    challenges.push(challenge_34);
+    challenges.push(challenge_35);
+    challenges.push(challenge_36);
+    challenges.push(challenge_37);
+    challenges.push(challenge_38);
+    challenges.push(challenge_39);
+    challenges.push(challenge_40);
 }

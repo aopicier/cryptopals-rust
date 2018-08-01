@@ -68,7 +68,7 @@ impl Encrypter25 {
     }
 }
 
-fn matasano4_25() -> Result<(), Error> {
+fn challenge_25() -> Result<(), Error> {
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
     // we can trivially recover the used keystream by xor'ing the ciphertext with the
     // known plaintext. We simply use the edit function to set the entire cleartext to 0 so that
@@ -80,7 +80,7 @@ fn matasano4_25() -> Result<(), Error> {
     encrypter.verify_solution(&ciphertext.xor(&keystream))
 }
 
-fn matasano4_26() -> Result<(), Error> {
+fn challenge_26() -> Result<(), Error> {
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
     // we can inject any plaintext at the same location by xor'ing the ciphertext with
     // known_plaintext ^ target_plaintext.
@@ -152,7 +152,7 @@ fn get_sender_and_receiver_with_shared_key() -> (Sender27, Receiver27) {
 #[fail(display = "invalid input: {:?}", _0)]
 struct NonAscii(Vec<u8>);
 
-fn matasano4_27() -> Result<(), Error> {
+fn challenge_27() -> Result<(), Error> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
 
     let ciphertext = sender.encrypt(&[])?;
@@ -176,7 +176,7 @@ fn matasano4_27() -> Result<(), Error> {
     bail!("attack ciphertext did not deceive the receiver");
 }
 
-fn matasano4_28() -> Result<(), Error> {
+fn challenge_28() -> Result<(), Error> {
     compare_eq(
         from_hex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12")?,
         mac_sha1(b"The quick brown fox ", b"jumps over the lazy dog"),
@@ -244,7 +244,7 @@ fn padding(length: usize) -> Vec<u8> {
     w
 }
 
-fn matasano4_29() -> Result<(), Error> {
+fn challenge_29() -> Result<(), Error> {
     let input = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
     let suffix = b";admin=true";
 
@@ -277,14 +277,14 @@ fn matasano4_29() -> Result<(), Error> {
 }
 */
 
-fn matasano4_29() -> Result<(), Error> {
+fn challenge_29() -> Result<(), Error> {
     Err(ChallengeError::Skipped(
         "Requires a patched version of the sha1 crate. \
          See the source code for detailed instructions.",
     ).into())
 }
 
-fn matasano4_30() -> Result<(), Error> {
+fn challenge_30() -> Result<(), Error> {
     /* Skipping/postponing Challenge 30 because
      * 1) SHA1 was much more interesting anyway,
      * 2) no MD4 implementation seems to be available.  */
@@ -292,14 +292,14 @@ fn matasano4_30() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
-fn matasano4_31() -> Result<(), Error> {
+fn challenge_31() -> Result<(), Error> {
     compare_eq(
         from_hex("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9")?,
         hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"),
     )
 }
 
-fn matasano4_32() -> Result<(), Error> {
+fn challenge_32() -> Result<(), Error> {
     let skip_exercise = true;
 
     if skip_exercise {
@@ -319,12 +319,12 @@ fn matasano4_32() -> Result<(), Error> {
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano4_25);
-    challenges.push(matasano4_26);
-    challenges.push(matasano4_27);
-    challenges.push(matasano4_28);
-    challenges.push(matasano4_29);
-    challenges.push(matasano4_30);
-    challenges.push(matasano4_31);
-    challenges.push(matasano4_32);
+    challenges.push(challenge_25);
+    challenges.push(challenge_26);
+    challenges.push(challenge_27);
+    challenges.push(challenge_28);
+    challenges.push(challenge_29);
+    challenges.push(challenge_30);
+    challenges.push(challenge_31);
+    challenges.push(challenge_32);
 }

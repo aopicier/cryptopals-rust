@@ -21,7 +21,7 @@ use errors::*;
 use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 use prefix_suffix_oracles::{Oracle11, Oracle12, Oracle13, Oracle14, Oracle16};
 
-fn matasano2_9() -> Result<(), Error> {
+fn challenge_9() -> Result<(), Error> {
     compare_eq(
         [
             89, 69, 76, 76, 79, 87, 32, 83, 85, 66, 77, 65, 82, 73, 78, 69, 4, 4, 4, 4,
@@ -46,7 +46,7 @@ fn aes_128_cbc() {
     );
 }
 
-fn matasano2_10() -> Result<(), Error> {
+fn challenge_10() -> Result<(), Error> {
     let key = b"YELLOW SUBMARINE";
     let input = from_base64_file(Path::new("data/10.txt"))?;
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;
@@ -184,7 +184,7 @@ fn test_length_functions() {
     }
 }
 
-fn matasano2_11() -> Result<(), Error> {
+fn challenge_11() -> Result<(), Error> {
     let mut oracle = Oracle11::new()?;
     let uses_ecb = uses_ecb(&mut oracle)?;
     oracle.verify_solution(uses_ecb)
@@ -232,7 +232,7 @@ fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> 
     Ok(suffix)
 }
 
-fn matasano2_12() -> Result<(), Error> {
+fn challenge_12() -> Result<(), Error> {
     let oracle = Oracle12::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
@@ -248,7 +248,7 @@ pub fn decode_profile(u: &[u8], sep: u8) -> HashMap<&[u8], &[u8]> {
 
 /* The following function works under the single assumption that the target value "user" (to be
    replaced by "admin") is stored at the very end of the profile. */
-fn matasano2_13() -> Result<(), Error> {
+fn challenge_13() -> Result<(), Error> {
     let oracle = Oracle13::new()?;
 
     let prefix_len = prefix_length(&oracle)?;
@@ -269,7 +269,7 @@ fn matasano2_13() -> Result<(), Error> {
     oracle.verify_solution(&ciphertext)
 }
 
-fn matasano2_14() -> Result<(), Error> {
+fn challenge_14() -> Result<(), Error> {
     let oracle = Oracle14::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
@@ -279,7 +279,7 @@ pub fn random_block() -> Vec<u8> {
     rng.gen_iter().take(BLOCK_SIZE).collect()
 }
 
-fn matasano2_15() -> Result<(), Error> {
+fn challenge_15() -> Result<(), Error> {
     compare_eq(true, b"ICE ICE BABY\x04\x04\x04\x04".padding_valid())?;
     compare_eq(false, b"ICE ICE BABY\x05\x05\x05\x05".padding_valid())?;
     compare_eq(false, b"ICE ICE BABY\x01\x02\x03\x04".padding_valid())?;
@@ -294,7 +294,7 @@ fn matasano2_15() -> Result<(), Error> {
     Ok(())
 }
 
-fn matasano2_16() -> Result<(), Error> {
+fn challenge_16() -> Result<(), Error> {
     let oracle = Oracle16::new()?;
 
     let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
@@ -312,12 +312,12 @@ fn matasano2_16() -> Result<(), Error> {
 }
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(matasano2_9);
-    challenges.push(matasano2_10);
-    challenges.push(matasano2_11);
-    challenges.push(matasano2_12);
-    challenges.push(matasano2_13);
-    challenges.push(matasano2_14);
-    challenges.push(matasano2_15);
-    challenges.push(matasano2_16);
+    challenges.push(challenge_9);
+    challenges.push(challenge_10);
+    challenges.push(challenge_11);
+    challenges.push(challenge_12);
+    challenges.push(challenge_13);
+    challenges.push(challenge_14);
+    challenges.push(challenge_15);
+    challenges.push(challenge_16);
 }
