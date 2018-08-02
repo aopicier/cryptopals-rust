@@ -5,11 +5,11 @@ use std::thread;
 use rand;
 use rand::Rng;
 
-use diffie_hellman::client::Client;
+use diffie_hellman::client::ClientSession;
 use diffie_hellman::communication::Communicate;
 use diffie_hellman::mitm::Mode;
-use diffie_hellman::mitm::MITM;
-use diffie_hellman::server::Server as DHServer;
+use diffie_hellman::mitm::MitmSession;
+use diffie_hellman::server::ServerSession as DhServerSession;
 
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
@@ -27,7 +27,7 @@ use srp::server::SimplifiedServer as SrpSimplifiedServer;
 use errors::*;
 
 fn handle_client<T: Communicate>(stream: T) -> Result<(), Error> {
-    let mut server = DHServer::new(stream)?;
+    let mut server = DhServerSession::new(stream)?;
 
     while let Some(message) = server.receive()? {
         server.send(&message)?;
@@ -36,7 +36,7 @@ fn handle_client<T: Communicate>(stream: T) -> Result<(), Error> {
 }
 
 fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Result<(), Error> {
-    let mut mitm = MITM::new(client_stream, server_stream, Mode::PublicKey)?;
+    let mut mitm = MitmSession::new(client_stream, server_stream, Mode::PublicKey)?;
     loop {
         match mitm.receive_client()? {
             Some(message) => {
@@ -103,7 +103,7 @@ fn challenge_34_echo() -> Result<(), Error> {
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
-    let mut client = Client::new(stream)?;
+    let mut client = ClientSession::new(stream)?;
     let message = b"This is a test";
     client.send(message)?;
     compare_eq(Some(message.to_vec()), client.receive()?)?;
@@ -125,7 +125,7 @@ fn challenge_34_mitm() -> Result<(), Error> {
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
-    let mut client = Client::new(stream)?;
+    let mut client = ClientSession::new(stream)?;
     // The message needs to match the hardcoded string in mitm_handle_client
     let message = b"This is a test";
     client.send(message)?;

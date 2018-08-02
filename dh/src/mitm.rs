@@ -8,7 +8,7 @@ use bignum::NumBigUint as BigNum;
 
 use failure::Error;
 
-pub struct MITM<T: Communicate> {
+pub struct MitmSession<T: Communicate> {
     client_stream: T,
     server_stream: T,
     client_key: Option<Vec<u8>>,
@@ -20,15 +20,15 @@ pub enum Mode {
     Generator,
 }
 
-impl<T: Communicate> MITM<T> {
-    pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MITM<T>, Error> {
+impl<T: Communicate> MitmSession<T> {
+    pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MitmSession<T>, Error> {
         let (client_key, server_key) = match mode {
             Mode::PublicKey => handshake_publickey(&mut client_stream, &mut server_stream)?,
             Mode::Generator => {
                 handshake_generator(&mut client_stream, &mut server_stream, &BigNum::one())?
             }
         };
-        Ok(MITM {
+        Ok(MitmSession {
             client_stream,
             server_stream,
             client_key,

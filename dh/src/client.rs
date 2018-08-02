@@ -7,14 +7,14 @@ use bignum::NumBigUint as BigNum;
 
 use failure::Error;
 
-pub struct Client<T: Communicate> {
+pub struct ClientSession<T: Communicate> {
     stream: T,
     key: Vec<u8>,
 }
 
-impl<T: Communicate> Client<T> {
-    pub fn new(mut stream: T) -> Result<Client<T>, Error> {
-        handshake(&mut stream).map(|key| Client { stream, key })
+impl<T: Communicate> ClientSession<T> {
+    pub fn new(mut stream: T) -> Result<ClientSession<T>, Error> {
+        handshake(&mut stream).map(|key| ClientSession { stream, key })
     }
 
     pub fn stream(&self) -> &T {
@@ -22,7 +22,7 @@ impl<T: Communicate> Client<T> {
     }
 }
 
-impl<T: Communicate> Communicate for Client<T> {
+impl<T: Communicate> Communicate for ClientSession<T> {
     fn send(&mut self, message: &[u8]) -> Result<(), Error> {
         self.stream.send_encr(message, &self.key)
     }
