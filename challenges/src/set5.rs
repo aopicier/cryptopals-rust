@@ -23,6 +23,7 @@ use srp::mitm::Mitm as SrpSimplifiedMitm;
 use srp::mitm::PasswordOracle as MitmPasswordOracle;
 use srp::server::Server as SrpServer;
 use srp::server::SimplifiedServer as SrpSimplifiedServer;
+use srp::server::ClientHandler;
 
 use errors::*;
 
@@ -142,33 +143,10 @@ fn challenge_35() -> Result<(), Error> {
     Err(ChallengeError::NotImplemented.into())
 }
 
-fn start_srp_server(
+fn start_srp_listener<T: ClientHandler>(
+    mut server: T,
     port: u16,
 ) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
-    let mut server = SrpServer::new();
-    let listener = TcpListener::bind(("localhost", port))?;
-    let (tx, rx) = channel();
-    let join_handle = thread::spawn(move || loop {
-        match listener.accept() {
-            Ok((mut stream, _)) => {
-                // Check for shutdown signal
-                if rx.try_recv().is_ok() {
-                    return Ok(());
-                }
-
-                server.handle_client(&mut stream)?;
-            }
-            Err(_) => bail!("connection failed"),
-        };
-    });
-    Ok((tx, join_handle))
-}
-
-// TODO Merge with start_srp_server
-fn start_simplified_srp_server(
-    port: u16,
-) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
-    let mut server = SrpSimplifiedServer::new();
     let listener = TcpListener::bind(("localhost", port))?;
     let (tx, rx) = channel();
     let join_handle = thread::spawn(move || loop {
@@ -221,7 +199,7 @@ fn connect_and_execute(
 
 fn challenge_36() -> Result<(), Error> {
     let port: u16 = 8080;
-    let (tx, join_handle) = start_srp_server(port)?;
+    let (tx, join_handle) = start_srp_listener(SrpServer::new(), port)?;
 
     let user_name = b"foo";
     let password = b"baz";
@@ -240,7 +218,7 @@ fn challenge_36() -> Result<(), Error> {
 
 fn challenge_37() -> Result<(), Error> {
     let port: u16 = 8080;
-    let (tx, join_handle) = start_srp_server(port)?;
+    let (tx, join_handle) = start_srp_listener(SrpServer::new(), port)?;
 
     let user_name = b"foo";
     let password = b"baz";
@@ -292,7 +270,7 @@ fn challenge_38() -> Result<(), Error> {
 
     let port: u16 = 8080;
     let port_mitm: u16 = 8081;
-    let (tx, jh_server) = start_simplified_srp_server(port)?;
+    let (tx, jh_server) = start_srp_listener(SrpSimplifiedServer::new(), port)?;
 
     let user_name = b"foo";
     let client = create_client_with_random_password(user_name, dictionary);

@@ -78,6 +78,10 @@ impl<U: UComputer> ServerBase<U> {
     }
 }
 
+pub trait ClientHandler: Send + 'static {
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error>;
+}
+
 pub struct Server {
     base: ServerBase<DefaultUComputer>,
 }
@@ -88,8 +92,10 @@ impl Server {
             base: ServerBase::new(SRP::new()),
         }
     }
+}
 
-    pub fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
+impl ClientHandler for Server {
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
         self.base.handle_client(stream)
     }
 }
@@ -104,8 +110,10 @@ impl SimplifiedServer {
             base: ServerBase::new(SRP::new_with_k(0)),
         }
     }
+}
 
-    pub fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
+impl ClientHandler for SimplifiedServer {
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
         self.base.handle_client(stream)
     }
 }
