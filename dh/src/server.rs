@@ -30,12 +30,11 @@ impl<T: Communicate> Communicate for ServerSession<T> {
 
 #[allow(non_snake_case)]
 fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
-    let mut dh = DH::<BigNum>::new();
     let p = stream.receive()?.unwrap();
     let g = stream.receive()?.unwrap();
-    dh.init_with_parameters(p, g);
-    let A = dh.public_key();
-    stream.send(&A)?;
-    let B = stream.receive()?.unwrap();
-    Ok(dh.shared_key(&B))
+    let dh = DH::<BigNum>::new_with_parameters(p, g);
+    let B = dh.public_key();
+    stream.send(&B)?;
+    let A = stream.receive()?.unwrap();
+    Ok(dh.shared_key(&A))
 }

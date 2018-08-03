@@ -21,7 +21,11 @@ pub enum Mode {
 }
 
 impl<T: Communicate> MitmSession<T> {
-    pub fn new(mut client_stream: T, mut server_stream: T, mode: Mode) -> Result<MitmSession<T>, Error> {
+    pub fn new(
+        mut client_stream: T,
+        mut server_stream: T,
+        mode: Mode,
+    ) -> Result<MitmSession<T>, Error> {
         let (client_key, server_key) = match mode {
             Mode::PublicKey => handshake_publickey(&mut client_stream, &mut server_stream)?,
             Mode::Generator => {

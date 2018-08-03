@@ -2,10 +2,10 @@ extern crate num;
 extern crate rand;
 extern crate serialize;
 
-use bignum;
+use bignum::BigNumTrait;
 use sha1::Sha1;
 
-pub struct DH<T: bignum::BigNumTrait> {
+pub struct DH<T: BigNumTrait> {
     p: T,
     g: T,
     a: T,
@@ -17,24 +17,16 @@ pub fn secret_to_key(s: &[u8]) -> Vec<u8> {
     m.digest().bytes()[0..16].to_vec()
 }
 
-pub fn serialize<T: bignum::BigNumTrait>(x: &T) -> Vec<u8> {
+pub fn serialize<T: BigNumTrait>(x: &T) -> Vec<u8> {
     x.to_bytes_be()
 }
 
-pub fn deserialize<T: bignum::BigNumTrait>(x: &[u8]) -> T {
+pub fn deserialize<T: BigNumTrait>(x: &[u8]) -> T {
     T::from_bytes_be(x)
 }
 
-impl<T: bignum::BigNumTrait> DH<T> {
+impl<T: BigNumTrait> DH<T> {
     pub fn new() -> Self {
-        DH {
-            p: T::zero(),
-            g: T::zero(),
-            a: T::zero(),
-        }
-    }
-
-    pub fn init(&mut self) {
         let p_hex = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74\
                      020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f1437\
                      4fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7ed\
@@ -44,41 +36,35 @@ impl<T: bignum::BigNumTrait> DH<T> {
 
         let p = T::from_hex_str(p_hex).unwrap();
         let g = T::from_u32(2);
-        //let p = 37.to_biguint().unwrap();
-        //let g = 5.to_biguint().unwrap();
-        self.p = p;
-        self.g = g;
+        Self::new_with(p, g)
     }
 
-    pub fn init_with_parameters(&mut self, p: Vec<u8>, g: Vec<u8>) {
-        self.p = deserialize(&p);
-        self.g = deserialize(&g);
+    pub fn new_with_parameters(p: Vec<u8>, g: Vec<u8>) -> Self {
+        Self::new_with(deserialize(&p), deserialize(&g))
+    }
+
+    fn new_with(p: T, g: T) -> Self {
+        let a = T::gen_below(&p);
+        DH { p, g, a }
     }
 
     pub fn parameters(&self) -> (Vec<u8>, Vec<u8>) {
         (serialize(&self.p), serialize(&self.g))
     }
 
-    fn generate_private_key(&mut self) {
-        //let mut rng = rand::thread_rng();
-        let a = T::gen_below(&self.p);
-        self.a = a;
-    }
-
-    pub fn public_key(&mut self) -> Vec<u8> {
-        self.generate_private_key();
+    pub fn public_key(&self) -> Vec<u8> {
         serialize(&self.g.mod_exp(&self.a, &self.p))
     }
 
     #[allow(non_snake_case)]
-    pub fn shared_key(&mut self, B: &[u8]) -> Vec<u8> {
+    pub fn shared_key(&self, B: &[u8]) -> Vec<u8> {
         let B: T = deserialize(B);
         let s = B.mod_exp(&self.a, &self.p);
         secret_to_key(&serialize(&s))
     }
 }
 
-impl<T: bignum::BigNumTrait> Default for DH<T> {
+impl<T: BigNumTrait> Default for DH<T> {
     fn default() -> Self {
         Self::new()
     }

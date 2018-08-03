@@ -34,9 +34,7 @@ impl<T: Communicate> Communicate for ClientSession<T> {
 
 #[allow(non_snake_case)]
 fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
-    let mut dh = DH::<BigNum>::new();
-    // TODO Remove init method
-    dh.init();
+    let dh = DH::<BigNum>::new();
     let (p, g) = dh.parameters();
     stream.send(&p)?;
     stream.send(&g)?;
