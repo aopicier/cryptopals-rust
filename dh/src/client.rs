@@ -5,7 +5,7 @@ use communication::CommunicateEncr;
 
 use bignum::NumBigUint as BigNum;
 
-use failure::Error;
+use failure::{Error, err_msg};
 
 pub struct ClientSession<T: Communicate> {
     stream: T,
@@ -40,6 +40,6 @@ fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
     stream.send(&g)?;
     let A = dh.public_key();
     stream.send(&A)?;
-    let B = stream.receive()?.unwrap();
+    let B = stream.receive()?.ok_or_else(|| err_msg("did not receive B"))?;
     Ok(dh.shared_key(&B))
 }
