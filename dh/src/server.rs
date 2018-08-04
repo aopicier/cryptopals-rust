@@ -3,7 +3,7 @@ use algo::DH;
 use communication::Communicate;
 use communication::CommunicateEncr;
 
-use failure::{Error, err_msg};
+use failure::{err_msg, Error};
 
 use bignum::NumBigUint as BigNum;
 
@@ -30,11 +30,17 @@ impl<T: Communicate> Communicate for ServerSession<T> {
 
 #[allow(non_snake_case)]
 fn handshake<T: Communicate>(stream: &mut T) -> Result<Vec<u8>, Error> {
-    let p = stream.receive()?.ok_or_else(|| err_msg("did not receive p"))?;
-    let g = stream.receive()?.ok_or_else(|| err_msg("did not receive g"))?;
+    let p = stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive p"))?;
+    let g = stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive g"))?;
     let dh = DH::<BigNum>::new_with_parameters(p, g);
     let B = dh.public_key();
     stream.send(&B)?;
-    let A = stream.receive()?.ok_or_else(|| err_msg("did not receive A"))?;;
+    let A = stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive A"))?;;
     Ok(dh.shared_key(&A))
 }

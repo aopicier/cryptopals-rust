@@ -5,8 +5,8 @@ use aes::{Aes128, MODE};
 
 use xor::XOR;
 
-use serialize::Serialize;
 use serialize::from_base64_file;
+use serialize::Serialize;
 use serialize::{from_hex, from_hex_lines};
 
 use std::fs::File;
@@ -118,7 +118,8 @@ fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
     let score = |keysize| {
         input.chunks(2 * keysize).take(8).fold(0, |a, x| {
             a + hamming_distance(&x[..keysize], &x[keysize..]).unwrap()
-        }) as f32 / keysize as f32
+        }) as f32
+            / keysize as f32
     };
     let mut scores: Vec<(usize, u32)> = (2..40).map(|size| (size, score(size) as u32)).collect();
     scores.sort_by(|&(_, s), &(_, t)| s.cmp(&t));

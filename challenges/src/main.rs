@@ -1,8 +1,8 @@
 extern crate challenges;
 extern crate failure;
 use challenges::errors::run_exercise;
-use std::env;
 use failure::Error;
+use std::env;
 
 fn main() {
     let mut challenges = Vec::<fn() -> Result<(), Error>>::new();
@@ -19,11 +19,14 @@ fn main() {
     match challenge_indices(challenges_count) {
         Ok(indices) => {
             for i in indices {
-                run_exercise(challenges[i-1], i as u8);
+                run_exercise(challenges[i - 1], i as u8);
             }
-        },
+        }
         Err(arg) => {
-            println!("Provided argument \"{}\" is invalid. Expected a number between 1 and {} ", arg, challenges_count);
+            println!(
+                "Provided argument \"{}\" is invalid. Expected a number between 1 and {} ",
+                arg, challenges_count
+            );
         }
     }
 }
@@ -37,7 +40,7 @@ fn challenge_indices(challenges_count: usize) -> Result<Vec<usize>, String> {
     let mut indices = Vec::new();
     for arg in args.into_iter().skip(1) {
         if let Ok(index) = arg.parse::<usize>() {
-            if index >=1 && index <= challenges_count {
+            if index >= 1 && index <= challenges_count {
                 indices.push(index);
                 continue;
             }

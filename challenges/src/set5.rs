@@ -7,8 +7,8 @@ use rand::Rng;
 
 use diffie_hellman::client::ClientSession;
 use diffie_hellman::communication::Communicate;
-use diffie_hellman::mitm::Mode;
 use diffie_hellman::mitm::MitmSession;
+use diffie_hellman::mitm::Mode;
 use diffie_hellman::server::ServerSession as DhServerSession;
 
 use bignum::OpensslBigNum as BigNum;
@@ -21,9 +21,9 @@ use srp::client::FakeClientWithZeroKey as SrpFakeClient;
 use srp::client::SimplifiedClient as SrpSimplifiedClient;
 use srp::mitm::Mitm as SrpSimplifiedMitm;
 use srp::mitm::PasswordOracle as MitmPasswordOracle;
+use srp::server::ClientHandler;
 use srp::server::Server as SrpServer;
 use srp::server::SimplifiedServer as SrpSimplifiedServer;
-use srp::server::ClientHandler;
 
 use errors::*;
 
