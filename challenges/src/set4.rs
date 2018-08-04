@@ -25,9 +25,9 @@ use errors::*;
 
 use prefix_suffix_oracles::{Oracle, Oracle26};
 
-// The following imports are only required for challenge 29
-// use byteorder::{ByteOrder, BigEndian, WriteBytesExt};
-// use sha1::Sha1;
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use sha1::Sha1;
+use std::mem;
 
 struct Encrypter25 {
     cleartext: Vec<u8>,
@@ -181,42 +181,42 @@ fn challenge_28() -> Result<(), Error> {
     )
 }
 
-/* The solution to challenge 29 requires a patched version of the sha1 crate.
- * To be precise, you have to clone the rust-sha1 repository and the apply the
- * following patch (tested for version 0.2.0 of rust-sha1):
+// Below we want to create an instance of the Sha1 type from the
+// sha1 crate with a specific state. Unfortunately the sha1 crate
+// does not offer any way to do this.
+// We therfore include a copy of the Sha1 type here. We can then create
+// an instance of our type with the desired state and transmute it to Sha1.
 
-------------------------------------
-diff --git a/src/lib.rs b/src/lib.rs
-index 352888b..325b94f 100644
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -74,6 +74,18 @@ impl Sha1 {
-         }
-     }
+struct Sha1_0_20 {
+    _state: Sha1State,
+    _blocks: Blocks,
+    _len: u64,
+}
 
-+    /// Creates a sha1 hash object with a predefined state.
-+    pub fn new_with_state_and_length(state: [u32; 5], len: u64) -> Sha1 {
-+        Sha1 {
-+            state: Sha1State { state: state },
-+            len: len,
-+            blocks: Blocks {
-+                len: 0,
-+                block: [0; 64],
-+            },
-+        }
-+    }
-+
-     /// Resets the hash object to it's initial state.
-     pub fn reset(&mut self) {
-         self.state = DEFAULT_STATE;
-------------------------------------
+struct Blocks {
+    _len: u32,
+    _block: [u8; 64],
+}
 
-Finally point Cargo.toml to your patched version of rust-sha1. */
+struct Sha1State {
+    _state: [u32; 5],
+}
 
-/*
+impl Sha1_0_20 {
+    fn new(state: [u32; 5], len: u64) -> Self {
+        Sha1_0_20 {
+            _state: Sha1State { _state: state },
+            _len: len,
+            _blocks: Blocks {
+                _len: 0,
+                _block: [0; 64],
+            },
+        }
+    }
+}
 
 struct Server29 {
-    key: Vec<u8>
+    key: Vec<u8>,
 }
 
 impl Server29 {
@@ -228,7 +228,9 @@ impl Server29 {
     }
 
     pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
-        let message = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon".to_vec();
+        let message =
+            b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
+                .to_vec();
         let mac = mac_sha1(&self.key, &message);
         (message, mac)
     }
@@ -255,7 +257,7 @@ fn challenge_29() -> Result<(), Error> {
     let suffix = b";admin=true";
 
     // Split the 20 bytes of `hash` into chunks of four
-    // bytes and transmute each chunk into an u32.
+    // bytes and interpret each chunk as a u32.
     let mut state: [u32; 5] = [0; 5];
     for (b, s) in hash.chunks(4).zip(state.iter_mut()) {
         *s = BigEndian::read_u32(b)
@@ -264,7 +266,10 @@ fn challenge_29() -> Result<(), Error> {
     for key_len in 0..200 {
         let secret_len = input.len() + key_len;
         let padding = padding(secret_len);
-        let mut m2 = Sha1::new_with_state_and_length(state, (secret_len + padding.len()) as u64);
+        let mut m2: Sha1;
+        unsafe {
+            m2 = mem::transmute(Sha1_0_20::new(state, (secret_len + padding.len()) as u64));
+        }
         m2.update(suffix);
         let mac = m2.digest().bytes();
 
@@ -277,14 +282,6 @@ fn challenge_29() -> Result<(), Error> {
         }
     }
     bail!("No matching message found.");
-}
-*/
-
-fn challenge_29() -> Result<(), Error> {
-    Err(ChallengeError::Skipped(
-        "Requires a patched version of the sha1 crate. \
-         See the source code for detailed instructions.",
-    ).into())
 }
 
 fn challenge_30() -> Result<(), Error> {
