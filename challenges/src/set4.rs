@@ -26,9 +26,7 @@ use errors::*;
 use prefix_suffix_oracles::{Oracle, Oracle26};
 
 // The following imports are only required for challenge 29
-//
-// use std::mem;
-// use byteorder::{ByteOrder, BigEndian};
+// use byteorder::{ByteOrder, BigEndian, WriteBytesExt};
 // use sha1::Sha1;
 
 struct Encrypter25 {
@@ -216,46 +214,51 @@ index 352888b..325b94f 100644
 Finally point Cargo.toml to your patched version of rust-sha1. */
 
 /*
-fn setup4_29() -> (Box<Fn(&[u8]) -> Vec<u8>>, Box<Fn(&[u8], &[u8]) -> bool>) {
-    let mut rng = rand::thread_rng();
-    let key_len = rng.gen_range(1, 200);
-    let secret_key: Vec<u8> = rng.gen_iter().take(key_len).collect();
 
-    let key = secret_key.clone();
-    let compute_mac = move |message: &[u8]| mac_sha1(&key, message);
+struct Server29 {
+    key: Vec<u8>
+}
 
-    let key = secret_key.clone();
-    let verify_mac = move |message: &[u8], mac: &[u8]| &mac_sha1(&key, message)[..] == mac;
-    (Box::new(compute_mac), Box::new(verify_mac))
+impl Server29 {
+    pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        let key_len = rng.gen_range(1, 200);
+        let key: Vec<u8> = rng.gen_iter().take(key_len).collect();
+        Server29 { key }
+    }
+
+    pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
+        let message = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon".to_vec();
+        let mac = mac_sha1(&self.key, &message);
+        (message, mac)
+    }
+
+    pub fn verify_mac(&self, message: &[u8], mac: &[u8]) -> bool {
+        mac_sha1(&self.key, message) == mac
+    }
 }
 
 fn padding(length: usize) -> Vec<u8> {
-    let mut w = Vec::<u8>::with_capacity(137);
-    w.extend_from_slice(&[0x80u8]);
-    let padding = 64 - ((length + 9) % 64);
-    for _ in 0..padding {
+    let mut w = Vec::new();
+    w.push(0x80u8);
+    let zero_padding_count = 64 - ((length + 9) % 64);
+    for _ in 0..zero_padding_count {
         w.push(0u8);
     }
-    w.extend_from_slice(unsafe {
-        &mem::transmute::<_, [u8; 8]>(
-            (((length as u64) % 64 + (length as u64) / 64 * 64) * 8).to_be(),
-        )
-    });
+    w.write_u64::<BigEndian>((length as u64) * 8).unwrap();
     w
 }
 
 fn challenge_29() -> Result<(), Error> {
-    let input = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
+    let server = Server29::new();
+    let (input, hash) = server.get_message_with_mac();
     let suffix = b";admin=true";
 
-    let (compute_mac, verify_mac) = setup4_29();
-    let hash = compute_mac(input);
-
+    // Split the 20 bytes of `hash` into chunks of four
+    // bytes and transmute each chunk into an u32.
     let mut state: [u32; 5] = [0; 5];
     for (b, s) in hash.chunks(4).zip(state.iter_mut()) {
-        //Transmute four u8 values to u32
-
-        *s = <BigEndian as ByteOrder>::read_u32(b)
+        *s = BigEndian::read_u32(b)
     }
 
     for key_len in 0..200 {
@@ -266,10 +269,10 @@ fn challenge_29() -> Result<(), Error> {
         let mac = m2.digest().bytes();
 
         let mut message = Vec::new();
-        message.extend_from_slice(input);
+        message.extend_from_slice(&input);
         message.extend_from_slice(&padding);
         message.extend_from_slice(suffix);
-        if verify_mac(&message, &mac) {
+        if server.verify_mac(&message, &mac) {
             return Ok(());
         }
     }
