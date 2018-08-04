@@ -45,7 +45,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
                     mitm.decrypt_client(message.clone())?,
                     Some(b"This is a test".to_vec()),
                 )?;
-                mitm.send_server(&message);
+                mitm.send_server(&message)?;
             }
             None => break,
         }
@@ -55,7 +55,7 @@ fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Res
                     mitm.decrypt_server(message.clone())?,
                     Some(b"This is a test".to_vec()),
                 )?;
-                mitm.send_client(&message);
+                mitm.send_client(&message)?;
             }
             None => break,
         }

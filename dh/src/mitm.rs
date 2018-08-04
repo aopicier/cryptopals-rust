@@ -6,7 +6,7 @@ use communication::Communicate;
 use bignum::BigNumTrait;
 use bignum::NumBigUint as BigNum;
 
-use failure::Error;
+use failure::{err_msg, Error};
 
 pub struct MitmSession<T: Communicate> {
     client_stream: T,
@@ -40,12 +40,12 @@ impl<T: Communicate> MitmSession<T> {
         })
     }
 
-    pub fn send_server(&mut self, message: &[u8]) {
-        self.server_stream.send(message).unwrap();
+    pub fn send_server(&mut self, message: &[u8]) -> Result<(), Error> {
+        self.server_stream.send(message)
     }
 
-    pub fn send_client(&mut self, message: &[u8]) {
-        self.client_stream.send(message).unwrap();
+    pub fn send_client(&mut self, message: &[u8]) -> Result<(), Error> {
+        self.client_stream.send(message)
     }
 
     pub fn receive_server(&mut self) -> Result<Option<Vec<u8>>, Error> {
@@ -75,8 +75,12 @@ fn handshake_publickey<T: Communicate>(
     client_stream: &mut T,
     server_stream: &mut T,
 ) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>), Error> {
-    let p = client_stream.receive()?.unwrap();
-    let g = client_stream.receive()?.unwrap();
+    let p = client_stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive p"))?;
+    let g = client_stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive g"))?;
     server_stream.send(&p)?;
     server_stream.send(&g)?;
     //Discard actual public keys
@@ -95,13 +99,20 @@ fn handshake_generator<T: Communicate>(
     server_stream: &mut T,
     g: &BigNum,
 ) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>), Error> {
-    let p = client_stream.receive()?.unwrap();
+    let p = client_stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive p"))?;
     client_stream.receive()?; //Discard g
     server_stream.send(&p)?;
     server_stream.send(&serialize(g))?;
     //Discard actual public keys
-    let A = client_stream.receive()?.unwrap();
-    let B = server_stream.receive()?.unwrap();
+    let A = client_stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive A"))?;;
+    let B = server_stream
+        .receive()?
+        .ok_or_else(|| err_msg("did not receive B"))?;;
+
     //Send fake public keys
     client_stream.send(&B)?;
     server_stream.send(&A)?;
