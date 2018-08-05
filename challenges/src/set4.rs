@@ -240,11 +240,27 @@ impl Server29 {
     }
 }
 
+/* A SHA-1 hasher consists of an internal state of 160 bits and a function which takes 512
+ * bits of data and mangles them with the current state to produce a new state. In order to compute
+ * the hash of a message, the message is first padded with the padding function below so that
+ * its length is a multiple of 512 bits. It is then split into chunks of 512 bits and the chunks
+ * are consecutively passed to the mangling function (starting with a hardcoded initial state).
+ * The resulting state is the hash of the message.
+ *
+ * In other words, SHA1(message) = state after processing (message || padding)
+ *
+ * Hence if we use SHA1(message) as the initial state of a hasher and then use
+ * this hasher to compute the hash of another-message, the resulting hash will be equal to
+ * SHA1(message || padding || another-message)
+ *
+ * This observation is the basis for the following challenge.
+ */
+
 fn padding(length: usize) -> Vec<u8> {
     let mut w = Vec::new();
     w.push(0x80u8);
-    let zero_padding_count = 64 - ((length + 9) % 64);
-    for _ in 0..zero_padding_count {
+    let zero_padding_length = 64 - ((length + 9) % 64);
+    for _ in 0..zero_padding_length {
         w.push(0u8);
     }
     w.write_u64::<BigEndian>((length as u64) * 8).unwrap();
@@ -253,30 +269,31 @@ fn padding(length: usize) -> Vec<u8> {
 
 fn challenge_29() -> Result<(), Error> {
     let server = Server29::new();
-    let (input, hash) = server.get_message_with_mac();
-    let suffix = b";admin=true";
+    let (original_message, mac) = server.get_message_with_mac();
+    let new_message = b";admin=true";
 
-    // Split the 20 bytes of `hash` into chunks of four
+    // Split the 20 bytes of `mac` into chunks of four
     // bytes and interpret each chunk as a u32.
     let mut state: [u32; 5] = [0; 5];
-    for (b, s) in hash.chunks(4).zip(state.iter_mut()) {
+    for (b, s) in mac.chunks(4).zip(state.iter_mut()) {
         *s = BigEndian::read_u32(b)
     }
 
+    // We do not know the actual key length so we have to try different possibilities.
     for key_len in 0..200 {
-        let secret_len = input.len() + key_len;
+        let secret_len = original_message.len() + key_len;
         let padding = padding(secret_len);
         let mut m2: Sha1;
         unsafe {
             m2 = mem::transmute(Sha1_0_20::new(state, (secret_len + padding.len()) as u64));
         }
-        m2.update(suffix);
+        m2.update(new_message);
         let mac = m2.digest().bytes();
 
         let mut message = Vec::new();
-        message.extend_from_slice(&input);
+        message.extend_from_slice(&original_message);
         message.extend_from_slice(&padding);
-        message.extend_from_slice(suffix);
+        message.extend_from_slice(new_message);
         if server.verify_mac(&message, &mac) {
             return Ok(());
         }
