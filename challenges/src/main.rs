@@ -45,7 +45,6 @@ fn challenge_indices(challenges_count: usize) -> Result<Vec<usize>, String> {
                 continue;
             }
         }
-        println!("{}", arg);
         return Err(arg);
     }
     Ok(indices)
