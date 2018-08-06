@@ -34,7 +34,7 @@ fn main() {
 fn challenge_indices(challenges_count: usize) -> Result<Vec<usize>, String> {
     let args = env::args();
     if args.len() <= 1 {
-        return Ok((1..challenges_count).collect());
+        return Ok((1..=challenges_count).collect());
     }
 
     let mut indices = Vec::new();
