@@ -9,8 +9,11 @@ name = "challenges"
 path = "src/lib.rs"
 
 [dependencies]
+block-buffer = "0.3"
 byteorder = "0.5"
 failure = "0.1"
+fake-simd = "0.1"
+md4 = "0.7.0"
 num = "0.1"
 rand = "0.3"
 sha1 = "0.2"

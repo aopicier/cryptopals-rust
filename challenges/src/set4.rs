@@ -10,7 +10,7 @@ use serialize::from_base64_file;
 use serialize::from_hex;
 
 use mac::hmac_sha1;
-use mac::mac_sha1;
+use mac::{mac_sha1, mac_md4};
 
 use hmac_client;
 use hmac_server;
@@ -25,9 +25,13 @@ use errors::*;
 
 use prefix_suffix_oracles::{Oracle, Oracle26};
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use sha1::Sha1;
+use md4::{Md4, Digest};
 use std::mem;
+
+use block_buffer::BlockBuffer512;
+use simd::u32x4;
 
 struct Encrypter25 {
     cleartext: Vec<u8>,
@@ -203,9 +207,10 @@ struct Sha1State {
 }
 
 impl Sha1_0_20 {
-    fn new(state: [u32; 5], len: u64) -> Self {
+    fn new(state: &[u32], len: u64) -> Self {
+        assert_eq!(5, state.len());
         Sha1_0_20 {
-            _state: Sha1State { _state: state },
+            _state: Sha1State { _state: [state[0], state[1], state[2], state[3], state[4]] },
             _len: len,
             _blocks: Blocks {
                 _len: 0,
@@ -240,6 +245,31 @@ impl Server29 {
     }
 }
 
+struct Server30 {
+    key: Vec<u8>,
+}
+
+impl Server30 {
+    pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        let key_len = rng.gen_range(1, 200);
+        let key: Vec<u8> = rng.gen_iter().take(key_len).collect();
+        Server30 { key }
+    }
+
+    pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
+        let message =
+            b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
+                .to_vec();
+        let mac = mac_md4(&self.key, &message);
+        (message, mac)
+    }
+
+    pub fn verify_mac(&self, message: &[u8], mac: &[u8]) -> bool {
+        mac_md4(&self.key, message) == mac
+    }
+}
+
 /* A SHA-1 hasher consists of an internal state of 160 bits and a function which takes 512
  * bits of data and mangles them with the current state to produce a new state. In order to compute
  * the hash of a message, the message is first padded with the padding function below so that
@@ -256,14 +286,14 @@ impl Server29 {
  * This observation is the basis for the following challenge.
  */
 
-fn padding(length: usize) -> Vec<u8> {
+fn padding<T: ByteOrder>(length: usize) -> Vec<u8> {
     let mut w = Vec::new();
     w.push(0x80u8);
     let zero_padding_length = 64 - ((length + 9) % 64);
     for _ in 0..zero_padding_length {
         w.push(0u8);
     }
-    w.write_u64::<BigEndian>((length as u64) * 8).unwrap();
+    w.write_u64::<T>((length as u64) * 8).unwrap();
     w
 }
 
@@ -274,18 +304,15 @@ fn challenge_29() -> Result<(), Error> {
 
     // Split the 20 bytes of `mac` into chunks of four
     // bytes and interpret each chunk as a u32.
-    let mut state: [u32; 5] = [0; 5];
-    for (b, s) in mac.chunks(4).zip(state.iter_mut()) {
-        *s = BigEndian::read_u32(b)
-    }
+    let state: Vec<u32> = mac.chunks(4).map(|b| BigEndian::read_u32(b)).collect();
 
     // We do not know the actual key length so we have to try different possibilities.
     for key_len in 0..200 {
         let secret_len = original_message.len() + key_len;
-        let padding = padding(secret_len);
+        let padding = padding::<BigEndian>(secret_len);
         let mut m2: Sha1;
         unsafe {
-            m2 = mem::transmute(Sha1_0_20::new(state, (secret_len + padding.len()) as u64));
+            m2 = mem::transmute(Sha1_0_20::new(&state, (secret_len + padding.len()) as u64));
         }
         m2.update(new_message);
         let mac = m2.digest().bytes();
@@ -301,12 +328,57 @@ fn challenge_29() -> Result<(), Error> {
     bail!("No matching message found.");
 }
 
-fn challenge_30() -> Result<(), Error> {
-    /* Skipping/postponing Challenge 30 because
-     * 1) SHA1 was much more interesting anyway,
-     * 2) no MD4 implementation seems to be available.  */
+struct Md4_0_7 {
+    _length_bytes: u64,
+    _buffer: BlockBuffer512,
+    _state: Md4State,
+}
 
-    Err(ChallengeError::NotImplemented.into())
+struct Md4State {
+    _s: u32x4,
+}
+
+impl Md4_0_7 {
+    fn new(state: &[u32], len: u64) -> Self {
+        assert_eq!(4, state.len());
+        Md4_0_7 {
+            _state: Md4State { _s: u32x4(state[0], state[1], state[2], state[3]) },
+            _length_bytes: len,
+            _buffer: BlockBuffer512::default()
+        }
+    }
+}
+
+// TODO Share code with challenge_29
+fn challenge_30() -> Result<(), Error> {
+    let server = Server30::new();
+    let (original_message, mac) = server.get_message_with_mac();
+    let new_message = b";admin=true";
+
+    // Split the 16 bytes of `mac` into chunks of four
+    // bytes and interpret each chunk as a u32.
+    let state: Vec<u32> = mac.chunks(4).map(|b| LittleEndian::read_u32(b)).collect();
+
+    // We do not know the actual key length so we have to try different possibilities.
+    for key_len in 0..200 {
+        let secret_len = original_message.len() + key_len;
+        let padding = padding::<LittleEndian>(secret_len);
+        let mut m2: Md4;
+        unsafe {
+            m2 = mem::transmute(Md4_0_7::new(&state, (secret_len + padding.len()) as u64));
+        }
+        m2.input(new_message);
+        let mac = m2.result().to_vec();
+
+        let mut message = Vec::new();
+        message.extend_from_slice(&original_message);
+        message.extend_from_slice(&padding);
+        message.extend_from_slice(new_message);
+        if server.verify_mac(&message, &mac) {
+            return Ok(());
+        }
+    }
+    bail!("No matching message found.");
 }
 
 fn challenge_31() -> Result<(), Error> {

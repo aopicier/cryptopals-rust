@@ -19,6 +19,9 @@ extern crate serialize;
 extern crate srp;
 extern crate xor;
 
+extern crate block_buffer;
+extern crate fake_simd as simd;
+extern crate md4;
 extern crate num;
 extern crate rand;
 extern crate sha1;
