@@ -1,4 +1,5 @@
 extern crate digest;
+extern crate md4;
 extern crate sha1;
 extern crate sha2;
 extern crate xor;
@@ -7,12 +8,20 @@ use digest::Digest;
 
 use xor::XOR;
 
-pub fn mac_sha1(key: &[u8], message: &[u8]) -> Vec<u8> {
+fn mac<D: Digest>(key: &[u8], message: &[u8]) -> Vec<u8> {
     let mut data = Vec::with_capacity(key.len() + message.len());
     data.extend_from_slice(key);
     data.extend_from_slice(message);
 
-    sha1::Sha1::digest(&data).to_vec()
+    D::digest(&data).to_vec()
+}
+
+pub fn mac_sha1(key: &[u8], message: &[u8]) -> Vec<u8> {
+    mac::<sha1::Sha1>(key, message)
+}
+
+pub fn mac_md4(key: &[u8], message: &[u8]) -> Vec<u8> {
+    mac::<md4::Md4>(key, message)
 }
 
 fn hmac<D: Digest>(key: &[u8], message: &[u8]) -> Vec<u8> {

@@ -5,6 +5,7 @@ authors = ["ph"]
 
 [dependencies]
 digest = "0.7"
+md4 = "0.7"
 sha-1 = "0.7"
 sha2 = "0.7"
 
