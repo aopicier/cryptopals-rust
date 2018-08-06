@@ -29,6 +29,7 @@ use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use sha1::Sha1;
 use md4::{Md4, Digest};
 use std::mem;
+use std::marker::PhantomData;
 
 use block_buffer::BlockBuffer512;
 use simd::u32x4;
@@ -220,53 +221,29 @@ impl Sha1_0_20 {
     }
 }
 
-struct Server29 {
+struct MacServer<T: MacHelper> {
     key: Vec<u8>,
+    phantom: PhantomData<T>
 }
 
-impl Server29 {
+impl<T: MacHelper> MacServer<T> {
     pub fn new() -> Self {
         let mut rng = rand::thread_rng();
         let key_len = rng.gen_range(1, 200);
         let key: Vec<u8> = rng.gen_iter().take(key_len).collect();
-        Server29 { key }
+        Self { key, phantom: PhantomData }
     }
 
     pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
         let message =
             b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
                 .to_vec();
-        let mac = mac_sha1(&self.key, &message);
+        let mac = T::compute_mac(&self.key, &message);
         (message, mac)
     }
 
     pub fn verify_mac(&self, message: &[u8], mac: &[u8]) -> bool {
-        mac_sha1(&self.key, message) == mac
-    }
-}
-
-struct Server30 {
-    key: Vec<u8>,
-}
-
-impl Server30 {
-    pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
-        let key_len = rng.gen_range(1, 200);
-        let key: Vec<u8> = rng.gen_iter().take(key_len).collect();
-        Server30 { key }
-    }
-
-    pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
-        let message =
-            b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-                .to_vec();
-        let mac = mac_md4(&self.key, &message);
-        (message, mac)
-    }
-
-    pub fn verify_mac(&self, message: &[u8], mac: &[u8]) -> bool {
-        mac_md4(&self.key, message) == mac
+        T::compute_mac(&self.key, message) == mac
     }
 }
 
@@ -297,25 +274,78 @@ fn padding<T: ByteOrder>(length: usize) -> Vec<u8> {
     w
 }
 
-fn challenge_29() -> Result<(), Error> {
-    let server = Server29::new();
+trait MacHelper {
+    fn compute_mac(message: &[u8], key: &[u8]) -> Vec<u8>;
+    fn hash_to_state(hash: &[u8]) -> Vec<u32>;
+    fn padding(length: usize) -> Vec<u8>;
+    fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8>;
+}
+
+struct Sha1Helper {}
+
+impl MacHelper for Sha1Helper {
+    fn compute_mac(message: &[u8], key: &[u8]) -> Vec<u8> {
+        mac_sha1(message, key)
+    }
+
+    fn hash_to_state(hash: &[u8]) -> Vec<u32> {
+        hash.chunks(4).map(|b| BigEndian::read_u32(b)).collect()
+    }
+
+    fn padding(length: usize) -> Vec<u8> {
+        padding::<BigEndian>(length)
+    }
+
+    fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8> {
+        let mut m2: Sha1;
+        unsafe {
+            m2 = mem::transmute(Sha1_0_20::new(&state, len as u64));
+        }
+        m2.update(new_message);
+        m2.digest().bytes().to_vec() // TODO
+    }
+}
+
+struct Md4Helper {}
+
+impl MacHelper for Md4Helper {
+    fn compute_mac(message: &[u8], key: &[u8]) -> Vec<u8> {
+        mac_md4(message, key)
+    }
+
+    fn hash_to_state(hash: &[u8]) -> Vec<u32> {
+        hash.chunks(4).map(|b| LittleEndian::read_u32(b)).collect()
+    }
+
+    fn padding(length: usize) -> Vec<u8> {
+        padding::<LittleEndian>(length)
+    }
+
+    fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8> {
+        let mut m2: Md4;
+        unsafe {
+            m2 = mem::transmute(Md4_0_7::new(&state, len as u64));
+        }
+        m2.input(new_message);
+        m2.result().to_vec()
+    }
+}
+
+fn challenge_29_30<T: MacHelper>() -> Result<(), Error> {
+    let server = MacServer::<T>::new();
     let (original_message, mac) = server.get_message_with_mac();
     let new_message = b";admin=true";
 
     // Split the 20 bytes of `mac` into chunks of four
     // bytes and interpret each chunk as a u32.
-    let state: Vec<u32> = mac.chunks(4).map(|b| BigEndian::read_u32(b)).collect();
+    //let state: Vec<u32> = mac.chunks(4).map(|b| BigEndian::read_u32(b)).collect();
+    let state: Vec<u32> = T::hash_to_state(&mac);
 
     // We do not know the actual key length so we have to try different possibilities.
     for key_len in 0..200 {
         let secret_len = original_message.len() + key_len;
-        let padding = padding::<BigEndian>(secret_len);
-        let mut m2: Sha1;
-        unsafe {
-            m2 = mem::transmute(Sha1_0_20::new(&state, (secret_len + padding.len()) as u64));
-        }
-        m2.update(new_message);
-        let mac = m2.digest().bytes();
+        let padding = T::padding(secret_len);
+        let mac = T::get_forged_mac(&state, secret_len + padding.len(), new_message);
 
         let mut message = Vec::new();
         message.extend_from_slice(&original_message);
@@ -326,6 +356,10 @@ fn challenge_29() -> Result<(), Error> {
         }
     }
     bail!("No matching message found.");
+}
+
+fn challenge_29() -> Result<(), Error> {
+    challenge_29_30::<Sha1Helper>()
 }
 
 struct Md4_0_7 {
@@ -349,36 +383,8 @@ impl Md4_0_7 {
     }
 }
 
-// TODO Share code with challenge_29
 fn challenge_30() -> Result<(), Error> {
-    let server = Server30::new();
-    let (original_message, mac) = server.get_message_with_mac();
-    let new_message = b";admin=true";
-
-    // Split the 16 bytes of `mac` into chunks of four
-    // bytes and interpret each chunk as a u32.
-    let state: Vec<u32> = mac.chunks(4).map(|b| LittleEndian::read_u32(b)).collect();
-
-    // We do not know the actual key length so we have to try different possibilities.
-    for key_len in 0..200 {
-        let secret_len = original_message.len() + key_len;
-        let padding = padding::<LittleEndian>(secret_len);
-        let mut m2: Md4;
-        unsafe {
-            m2 = mem::transmute(Md4_0_7::new(&state, (secret_len + padding.len()) as u64));
-        }
-        m2.input(new_message);
-        let mac = m2.result().to_vec();
-
-        let mut message = Vec::new();
-        message.extend_from_slice(&original_message);
-        message.extend_from_slice(&padding);
-        message.extend_from_slice(new_message);
-        if server.verify_mac(&message, &mac) {
-            return Ok(());
-        }
-    }
-    bail!("No matching message found.");
+    challenge_29_30::<Md4Helper>()
 }
 
 fn challenge_31() -> Result<(), Error> {
