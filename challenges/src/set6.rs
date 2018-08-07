@@ -47,13 +47,11 @@ fn challenge_41() -> Result<(), Error> {
 
 fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
     let mut prefix = vec![1u8];
-    //prefix.extend_from_slice(&vec![255; 14]);
     let one = BigNum::from_u32(1);
     let k = 3;
     //The loop does not seem to be necessary. Can I prove why?
     loop {
         let unused_space = size as i32 - 1 - prefix.len() as i32 - suffix.len() as i32;
-        //println!("{}", unused_space);
         if unused_space < 0 {
             return None;
         }
@@ -66,10 +64,6 @@ fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
         let upper = (&fake_block + &one).lsh(8 * unused_space as usize);
         let r = (&upper - &one).root(k).0;
         let power = r.power(k);
-        //println!("{:?}", lower.to_vec());
-        //println!("{:?}", power.to_vec());
-        //println!("{:?}", upper.to_vec());
-        //println!("");
         if power >= lower {
             return Some(r);
         }

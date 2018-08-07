@@ -1,10 +1,3 @@
-//#![feature(box_syntax)]
-//#![feature(collections)]
-//#![feature(core)]
-//#![feature(custom_attribute)]
-//#![feature(slice_patterns)]
-
-//extern crate ascii;
 extern crate byteorder;
 
 extern crate aes;

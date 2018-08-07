@@ -215,7 +215,6 @@ fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> 
 
     for i in 0..suffix_len {
         let block = prefix_blocks + i / BLOCK_SIZE;
-        //let block_range = block*BLOCK_SIZE .. (block + 1)*BLOCK_SIZE;
         let left_shift = i % BLOCK_SIZE;
         for u in 0u8..=255 {
             input.push(u);
