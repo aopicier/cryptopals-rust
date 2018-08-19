@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+
 extern crate bignum;
 extern crate num_traits;
 extern crate rsa;
@@ -18,8 +20,8 @@ where
         let params = private.params;
         let y = params.g.mod_exp(&private.x, &params.p);
         DsaPublic {
-            params: params,
-            y: y,
+            params,
+            y,
         }
     }
 
@@ -42,6 +44,7 @@ where
         self.secret_key_from_k(m1, s1, &k)
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(op_ref))]
     pub fn verify_signature(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>) -> bool {
         let zero = T::zero();
         let p = &self.params.p;
@@ -128,7 +131,7 @@ where
     r = T::mod_math(&r, q);
     let mut s = &r * &T::invmod(&z, q).unwrap();
     s = T::mod_math(&s, q);
-    Signature { r: r, s: s }
+    Signature { r, s }
 }
 
 pub struct DsaParams<T> {

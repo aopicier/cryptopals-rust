@@ -25,6 +25,7 @@ pub enum ChallengeError {
     Skipped(&'static str),
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))] // False positive
 pub fn compare_eq<T>(x: T, y: T) -> Result<(), Error>
 where
     T: Eq + std::fmt::Debug,

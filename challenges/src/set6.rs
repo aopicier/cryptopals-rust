@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
+
 use dsa;
 use dsa::{rand_range_safe, DsaParams, DsaPrivate, DsaPublic, Signature};
 use rsa::Rsa;
@@ -303,7 +305,9 @@ fn challenge_46() -> Result<(), Error> {
     server.verify_solution(&cleartext, &ciphertext)
 }
 
+// We use the variable names from the paper
 #[allow(non_snake_case)]
+#[cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
 fn challenge_47_48(rsa_bits: usize) -> Result<(), Error> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();

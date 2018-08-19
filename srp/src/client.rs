@@ -105,6 +105,7 @@ pub struct FakeClientWithZeroKey {
     user_name: Vec<u8>,
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
 impl FakeClientWithZeroKey {
     pub fn new(user_name: Vec<u8>) -> Self {
         FakeClientWithZeroKey { user_name }

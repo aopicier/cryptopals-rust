@@ -8,6 +8,7 @@ pub struct Rsa<T> {
     e: T,
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
 impl<T: bignum::BigNumTrait> Rsa<T>
 where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,

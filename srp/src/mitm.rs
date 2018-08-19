@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(new_without_default))]
+
 use algo;
 use algo::{deserialize, serialize, LoginResult, SRP};
 use communication::Communicate;

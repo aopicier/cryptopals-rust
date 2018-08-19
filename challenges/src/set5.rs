@@ -190,6 +190,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
 fn start_srp_listener<T: ClientHandler>(
     mut server: T,
     port: u16,
@@ -223,7 +224,7 @@ fn start_mitm_srp_server(
     }))
 }
 
-fn shutdown_srp_server(port: u16, tx: Sender<u8>) -> Result<(), Error> {
+fn shutdown_srp_server(port: u16, tx: &Sender<u8>) -> Result<(), Error> {
     // Ugly hack for shutting down the server
     tx.send(1)?;
 
@@ -255,7 +256,7 @@ fn challenge_36() -> Result<(), Error> {
     connect_and_execute(port, |stream| client.register(stream))?;
     connect_and_execute(port, |stream| client.login(stream))?;
 
-    shutdown_srp_server(port, tx)?;
+    shutdown_srp_server(port, &tx)?;
 
     match join_handle.join() {
         Ok(result) => result,
@@ -277,7 +278,7 @@ fn challenge_37() -> Result<(), Error> {
     let fake_client = SrpFakeClient::new(user_name.to_vec());
     connect_and_execute(port, |stream| fake_client.login(stream))?;
 
-    shutdown_srp_server(port, tx)?;
+    shutdown_srp_server(port, &tx)?;
 
     match join_handle.join() {
         Ok(result) => result,
@@ -345,7 +346,7 @@ fn challenge_38() -> Result<(), Error> {
     connect_and_execute(port, |stream| impostor.login(stream))
         .context("impostor did not succeed")?;
 
-    shutdown_srp_server(port, tx)?;
+    shutdown_srp_server(port, &tx)?;
 
     match jh_server.join() {
         Ok(result) => result,

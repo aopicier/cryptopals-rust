@@ -56,13 +56,13 @@ impl Encrypter25 {
         &self.ciphertext
     }
 
-    pub fn edit(&self, offset: usize, newtext: Vec<u8>) -> Result<Vec<u8>, Error> {
+    pub fn edit(&self, offset: usize, newtext: &[u8]) -> Result<Vec<u8>, Error> {
         let mut cleartext = self.cleartext.clone();
         let end = offset + newtext.len();
         if end > cleartext.len() {
             bail!("input out of bounds")
         }
-        cleartext[offset..end].copy_from_slice(&newtext);
+        cleartext[offset..end].copy_from_slice(newtext);
         cleartext.encrypt(&self.key, None, MODE::CTR)
     }
 
@@ -79,7 +79,7 @@ fn challenge_25() -> Result<(), Error> {
 
     let encrypter = Encrypter25::new()?;
     let ciphertext = encrypter.get_ciphertext();
-    let keystream = encrypter.edit(0, vec![0; ciphertext.len()])?;
+    let keystream = encrypter.edit(0, &vec![0; ciphertext.len()])?;
     encrypter.verify_solution(&ciphertext.xor(&keystream))
 }
 
