@@ -338,9 +338,8 @@ impl BigNumTrait for BigInt {
     }
 
     fn gen_random(bits: usize) -> Self {
-        // BigInt::gen_bigint can probably return negative values!?
         let mut rng = rand::thread_rng();
-        BigInt::from_biguint(Sign::Plus, rng.gen_biguint(bits))
+        rng.gen_bigint(bits).abs()
     }
 
     fn invmod(&self, n: &Self) -> Option<Self> {
