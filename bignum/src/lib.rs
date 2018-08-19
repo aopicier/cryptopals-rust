@@ -325,16 +325,13 @@ impl BigNumTrait for BigUint {
         let mut exponent = exponent.clone();
 
         while exponent > zero {
-            // Accumulate current base if current exponent bit is 1
             if (&exponent & &one) == one {
                 result = &result * &base;
                 result = &result % modulus;
             }
-            // Get next base by squaring
             base = &base * &base;
             base = &base % modulus;
 
-            // Get next bit of exponent
             exponent = exponent >> 1;
         }
 
@@ -361,10 +358,8 @@ impl BigNumTrait for BigUint {
         let mut r = (n.clone(), self.clone());
         while r.1 != zero {
             let q = BigInt::from_biguint(Sign::Plus, &r.0 / &r.1);
-            //k = (k.1, k.0 - q*k.1);
             l = (l.1.clone(), &l.0 - &(&q * &l.1));
             r = (r.1.clone(), &r.0 % &r.1);
-            //assert_eq!(k.0 * n + l.0 * x, r.0);
         }
         if r.0 == one {
             Some(l.0.mod_math(&n.to_bigint().unwrap()).to_biguint().unwrap())
@@ -480,10 +475,8 @@ impl BigNumTrait for BigInt {
         let mut r = (n.clone(), self.clone());
         while r.1 != zero {
             let q = &r.0 / &r.1;
-            //k = (k.1, k.0 - q*k.1);
             l = (l.1.clone(), &l.0 - &(&q * &l.1));
             r = (r.1.clone(), &r.0 % &r.1);
-            //assert_eq!(k.0 * n + l.0 * x, r.0);
         }
         if r.0 == one {
             Some(l.0.mod_math(n))
@@ -672,7 +665,7 @@ where
         r
     }
 
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= x, and is_root indicates
+    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= self, and is_root indicates
     //whether we have equality.
     fn root(&self, k: usize) -> (Self, bool) {
         let one = Self::one();

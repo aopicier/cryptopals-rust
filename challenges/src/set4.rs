@@ -281,7 +281,7 @@ trait MacHelper {
     fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8>;
 }
 
-struct Sha1Helper {}
+struct Sha1Helper;
 
 impl MacHelper for Sha1Helper {
     fn compute_mac(message: &[u8], key: &[u8]) -> Vec<u8> {
@@ -302,11 +302,11 @@ impl MacHelper for Sha1Helper {
             m2 = mem::transmute(Sha1_0_20::new(&state, len as u64));
         }
         m2.update(new_message);
-        m2.digest().bytes().to_vec() // TODO
+        m2.digest().bytes().to_vec()
     }
 }
 
-struct Md4Helper {}
+struct Md4Helper;
 
 impl MacHelper for Md4Helper {
     fn compute_mac(message: &[u8], key: &[u8]) -> Vec<u8> {
