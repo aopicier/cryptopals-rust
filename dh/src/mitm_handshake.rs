@@ -3,7 +3,7 @@ use algo::{deserialize, secret_to_key, serialize};
 use communication::Communicate;
 
 use bignum::BigNumTrait;
-use bignum::NumBigUint as BigNum;
+use bignum::NumBigInt as BigNum;
 
 use failure::{err_msg, Error};
 use handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};

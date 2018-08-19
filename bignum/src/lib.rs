@@ -5,7 +5,7 @@ extern crate openssl;
 extern crate rand;
 
 use failure::{Error, ResultExt};
-use num::bigint::{BigInt, BigUint, RandBigInt, Sign, ToBigInt, ToBigUint};
+use num::bigint::{BigInt, RandBigInt, Sign, ToBigInt};
 use num::pow;
 use num::{One, Signed, Zero};
 use num_traits::Num;
@@ -17,7 +17,6 @@ pub use openssl::error;
 
 pub type OpensslBigNum = BigNumWrapper<BigNum>;
 pub type NumBigInt = BigNumWrapper<BigInt>;
-pub type NumBigUint = BigNumWrapper<BigUint>;
 
 #[derive(Eq, PartialEq, PartialOrd, Ord, Debug)]
 pub struct BigNumWrapper<T> {
@@ -55,14 +54,6 @@ impl Clone for BigNumWrapper<BigNum> {
 }
 
 impl Clone for BigNumWrapper<BigInt> {
-    fn clone(&self) -> Self {
-        BigNumWrapper {
-            num: self.num.clone(),
-        }
-    }
-}
-
-impl Clone for BigNumWrapper<BigUint> {
     fn clone(&self) -> Self {
         BigNumWrapper {
             num: self.num.clone(),
@@ -180,7 +171,6 @@ macro_rules! impl_numops {
 }
 
 impl_numops!(BigInt);
-impl_numops!(BigUint);
 impl_numops!(BigNum);
 
 impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
@@ -281,123 +271,6 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
     }
 }
 
-impl BigNumTrait for BigUint {
-    fn zero() -> Self {
-        Zero::zero()
-    }
-
-    fn one() -> Self {
-        One::one()
-    }
-
-    fn from_u32(u: u32) -> Self {
-        u.to_biguint().unwrap()
-    }
-
-    fn from_bytes_be(bytes: &[u8]) -> Self {
-        BigUint::from_bytes_be(bytes)
-    }
-
-    fn from_hex_str(bytes: &str) -> Result<Self, Error> {
-        BigUint::from_str_radix(bytes, 16)
-            .context("invalid hex string")
-            .map_err(|err| err.into())
-    }
-
-    fn from_dec_str(bytes: &str) -> Result<Self, Error> {
-        BigUint::from_str_radix(bytes, 10)
-            .context("invalid dec string")
-            .map_err(|err| err.into())
-    }
-
-    fn to_dec_str(&self) -> String {
-        self.to_str_radix(10)
-    }
-
-    fn to_bytes_be(&self) -> Vec<u8> {
-        self.to_bytes_be()
-    }
-
-    fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self {
-        let (zero, one): (BigUint, BigUint) = (Zero::zero(), One::one());
-        let mut result = one.clone();
-        let mut base = self % modulus;
-        let mut exponent = exponent.clone();
-
-        while exponent > zero {
-            if (&exponent & &one) == one {
-                result = &result * &base;
-                result = &result % modulus;
-            }
-            base = &base * &base;
-            base = &base % modulus;
-
-            exponent = exponent >> 1;
-        }
-
-        result
-    }
-
-    fn gen_below(bound: &Self) -> Self {
-        let mut rng = rand::thread_rng();
-        rng.gen_biguint_below(bound)
-    }
-
-    fn gen_prime(bits: usize) -> Self {
-        BigUint::from_bytes_be(&<BigNum as BigNumTrait>::gen_prime(bits).to_vec())
-    }
-
-    fn gen_random(bits: usize) -> Self {
-        let mut rng = rand::thread_rng();
-        rng.gen_biguint(bits)
-    }
-
-    fn invmod(&self, n: &Self) -> Option<Self> {
-        let (zero, one): (BigUint, BigUint) = (Zero::zero(), One::one());
-        let mut l: (BigInt, BigInt) = (Zero::zero(), One::one());
-        let mut r = (n.clone(), self.clone());
-        while r.1 != zero {
-            let q = BigInt::from_biguint(Sign::Plus, &r.0 / &r.1);
-            l = (l.1.clone(), &l.0 - &(&q * &l.1));
-            r = (r.1.clone(), &r.0 % &r.1);
-        }
-        if r.0 == one {
-            Some(l.0.mod_math(&n.to_bigint().unwrap()).to_biguint().unwrap())
-        } else {
-            None
-        }
-    }
-
-    fn power(&self, k: usize) -> Self {
-        pow(self.clone(), k)
-    }
-
-    fn clone(n: &Self) -> Self {
-        n.clone()
-    }
-
-    fn rsh(&self, k: usize) -> Self {
-        self >> k
-    }
-
-    fn lsh(&self, k: usize) -> Self {
-        self << k
-    }
-
-    fn bits(&self) -> usize {
-        self.bits()
-    }
-
-    fn bytes(&self) -> usize {
-        let bits = self.bits();
-        let mut result = bits / 8;
-        if bits % 8 != 0 {
-            result += 1;
-        }
-        result
-    }
-}
-
 impl BigNumTrait for BigInt {
     fn zero() -> Self {
         Zero::zero()
@@ -461,12 +334,13 @@ impl BigNumTrait for BigInt {
     }
 
     fn gen_prime(bits: usize) -> Self {
-        BigInt::from_biguint(Sign::Plus, BigUint::gen_prime(bits))
+        BigInt::from_bytes_be(Sign::Plus, &<BigNum as BigNumTrait>::gen_prime(bits).to_vec())
     }
 
     fn gen_random(bits: usize) -> Self {
         // BigInt::gen_bigint can probably return negative values!?
-        BigInt::from_biguint(Sign::Plus, BigUint::gen_random(bits))
+        let mut rng = rand::thread_rng();
+        BigInt::from_biguint(Sign::Plus, rng.gen_biguint(bits))
     }
 
     fn invmod(&self, n: &Self) -> Option<Self> {

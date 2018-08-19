@@ -1,5 +1,5 @@
 use algo::DH;
-use bignum::NumBigUint as BigNum;
+use bignum::NumBigInt as BigNum;
 use communication::Communicate;
 use failure::{err_msg, Error};
 
