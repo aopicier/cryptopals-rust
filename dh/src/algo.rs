@@ -39,8 +39,8 @@ impl<T: BigNumTrait> DH<T> {
         Self::new_with(p, g)
     }
 
-    pub fn new_with_parameters(p: Vec<u8>, g: Vec<u8>) -> Self {
-        Self::new_with(deserialize(&p), deserialize(&g))
+    pub fn new_with_parameters(p: &[u8], g: &[u8]) -> Self {
+        Self::new_with(deserialize(p), deserialize(g))
     }
 
     fn new_with(p: T, g: T) -> Self {

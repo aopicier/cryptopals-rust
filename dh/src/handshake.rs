@@ -25,7 +25,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshake {
         let g = stream
             .receive()?
             .ok_or_else(|| err_msg("did not receive g"))?;
-        let dh = DH::<BigNum>::new_with_parameters(p, g);
+        let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
         let A = stream
@@ -75,7 +75,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshakeAck {
             .ok_or_else(|| err_msg("did not receive g"))?;
         stream.send(&p)?;
         stream.send(&g)?;
-        let dh = DH::<BigNum>::new_with_parameters(p, g);
+        let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
         let A = stream
@@ -103,7 +103,7 @@ impl<T: Communicate> Handshake<T> for ClientHandshakeAck {
         let g = stream
             .receive()?
             .ok_or_else(|| err_msg("did not receive g"))?;
-        let dh = DH::<BigNum>::new_with_parameters(p, g);
+        let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let A = dh.public_key();
         stream.send(&A)?;
         let B = stream

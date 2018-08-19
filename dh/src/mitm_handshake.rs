@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
+
 use algo::{deserialize, secret_to_key, serialize};
 
 use communication::Communicate;
