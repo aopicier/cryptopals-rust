@@ -51,7 +51,7 @@ where
                 println!("Challenge {:02}: {}", challenge_number, e);
             } else {
                 println!("Challenge {:02}: An error occured: {}", challenge_number, e);
-                for cause in e.causes().skip(1) {
+                for cause in e.iter_causes() {
                     println!("{: <4}caused by: {}", "", cause);
                 }
                 let backtrace = e.backtrace().to_string();
