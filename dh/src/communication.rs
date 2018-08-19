@@ -23,8 +23,7 @@ pub trait CommunicateNew {
 
 pub trait CommunicateEncr: Communicate {
     fn receive_encr(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
-        self
-            .receive()?
+        self.receive()?
             .as_ref()
             .map(|message| decrypt(message, key))
             .invert()

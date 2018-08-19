@@ -1,4 +1,4 @@
-use algo::{secret_to_key, serialize, deserialize};
+use algo::{deserialize, secret_to_key, serialize};
 
 use communication::Communicate;
 
@@ -6,7 +6,7 @@ use bignum::BigNumTrait;
 use bignum::NumBigUint as BigNum;
 
 use failure::{err_msg, Error};
-use handshake::{ClientServerPair, ClientDeterminesParameters, ServerCanOverrideParameters};
+use handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
 
 pub trait MitmHandshake<T: Communicate> {
     fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error>;
@@ -54,16 +54,21 @@ impl<T: Communicate> MitmForClientServer<T> for MitmFakePublicKey {
 pub enum FakeGeneratorMode {
     One,
     P,
-    PMinusOne
+    PMinusOne,
 }
 
 #[allow(non_snake_case)]
-fn handshake_with_fake_generator<T: Communicate>(client_stream: &mut T, server_stream: &mut T, mode: &FakeGeneratorMode) -> Result<Vec<u8>, Error> {
+fn handshake_with_fake_generator<T: Communicate>(
+    client_stream: &mut T,
+    server_stream: &mut T,
+    mode: &FakeGeneratorMode,
+) -> Result<Vec<u8>, Error> {
     let p = client_stream
         .receive()?
         .ok_or_else(|| err_msg("did not receive p"))?;
     // Discard g
-    client_stream.receive()?
+    client_stream
+        .receive()?
         .ok_or_else(|| err_msg("did not receive g"))?;
 
     server_stream.send(&p)?;
@@ -76,7 +81,8 @@ fn handshake_with_fake_generator<T: Communicate>(client_stream: &mut T, server_s
     server_stream
         .receive()?
         .ok_or_else(|| err_msg("did not receive p"))?;
-    server_stream.receive()?
+    server_stream
+        .receive()?
         .ok_or_else(|| err_msg("did not receive g"))?;
 
     client_stream.send(&p)?;
@@ -100,11 +106,10 @@ fn handshake_with_fake_generator<T: Communicate>(client_stream: &mut T, server_s
 
 fn compute_fake_generator(mode: &FakeGeneratorMode, p: &[u8]) -> Vec<u8> {
     let _1 = BigNum::from_u32(1);
-    serialize(
-    &match mode {
+    serialize(&match mode {
         FakeGeneratorMode::One => _1,
         FakeGeneratorMode::P => deserialize(&p),
-        FakeGeneratorMode::PMinusOne => &deserialize(&p) - &_1 
+        FakeGeneratorMode::PMinusOne => &deserialize(&p) - &_1,
     })
 }
 
@@ -116,16 +121,16 @@ fn compute_secret(mode: &FakeGeneratorMode, A: &[u8], B: &[u8]) -> Vec<u8> {
         FakeGeneratorMode::One => _1,
         FakeGeneratorMode::P => _0,
         FakeGeneratorMode::PMinusOne => {
-            /* In this case, both client and server use the generator p - 1. 
-             * But p - 1 is equal to -1 modulo p. Therefore A = (g ^ a) % p 
+            /* In this case, both client and server use the generator p - 1.
+             * But p - 1 is equal to -1 modulo p. Therefore A = (g ^ a) % p
              * is either equal to 1 or to -1, depending on whether a is even or odd,
              * and analogously for B and b. The shared secret is equal to g ^ (a * b) % p.
              * By noting that the product a * b is even iff at least one of a or b is even
              * we can compute the shared secret from the public keys as follows. */
-            if A == &_1[..] || B == &_1[..] { 
+            if A == &_1[..] || B == &_1[..] {
                 _1
-            } else { 
-                A.to_vec() 
+            } else {
+                A.to_vec()
             }
         }
     }
@@ -146,9 +151,21 @@ macro_rules! generator {
             type Mitm = $handshake;
             type CS = ServerCanOverrideParameters;
         }
-    }
+    };
 }
 
-generator!(MitmHandshakeFakeGeneratorOne, MitmFakeGeneratorOne, FakeGeneratorMode::One);
-generator!(MitmHandshakeFakeGeneratorP, MitmFakeGeneratorP, FakeGeneratorMode::P);
-generator!(MitmHandshakeFakeGeneratorPMinusOne, MitmFakeGeneratorPMinusOne, FakeGeneratorMode::PMinusOne);
+generator!(
+    MitmHandshakeFakeGeneratorOne,
+    MitmFakeGeneratorOne,
+    FakeGeneratorMode::One
+);
+generator!(
+    MitmHandshakeFakeGeneratorP,
+    MitmFakeGeneratorP,
+    FakeGeneratorMode::P
+);
+generator!(
+    MitmHandshakeFakeGeneratorPMinusOne,
+    MitmFakeGeneratorPMinusOne,
+    FakeGeneratorMode::PMinusOne
+);

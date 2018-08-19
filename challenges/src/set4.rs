@@ -10,7 +10,7 @@ use serialize::from_base64_file;
 use serialize::from_hex;
 
 use mac::hmac_sha1;
-use mac::{mac_sha1, mac_md4};
+use mac::{mac_md4, mac_sha1};
 
 use hmac_client;
 use hmac_server;
@@ -26,10 +26,10 @@ use errors::*;
 use prefix_suffix_oracles::{Oracle, Oracle26};
 
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
+use md4::{Digest, Md4};
 use sha1::Sha1;
-use md4::{Md4, Digest};
-use std::mem;
 use std::marker::PhantomData;
+use std::mem;
 
 use block_buffer::BlockBuffer512;
 use simd::u32x4;
@@ -211,7 +211,9 @@ impl Sha1_0_20 {
     fn new(state: &[u32], len: u64) -> Self {
         assert_eq!(5, state.len());
         Sha1_0_20 {
-            _state: Sha1State { _state: [state[0], state[1], state[2], state[3], state[4]] },
+            _state: Sha1State {
+                _state: [state[0], state[1], state[2], state[3], state[4]],
+            },
             _len: len,
             _blocks: Blocks {
                 _len: 0,
@@ -223,7 +225,7 @@ impl Sha1_0_20 {
 
 struct MacServer<T: MacHelper> {
     key: Vec<u8>,
-    phantom: PhantomData<T>
+    phantom: PhantomData<T>,
 }
 
 impl<T: MacHelper> MacServer<T> {
@@ -231,7 +233,10 @@ impl<T: MacHelper> MacServer<T> {
         let mut rng = rand::thread_rng();
         let key_len = rng.gen_range(1, 200);
         let key: Vec<u8> = rng.gen_iter().take(key_len).collect();
-        Self { key, phantom: PhantomData }
+        Self {
+            key,
+            phantom: PhantomData,
+        }
     }
 
     pub fn get_message_with_mac(&self) -> (Vec<u8>, Vec<u8>) {
@@ -376,9 +381,11 @@ impl Md4_0_7 {
     fn new(state: &[u32], len: u64) -> Self {
         assert_eq!(4, state.len());
         Md4_0_7 {
-            _state: Md4State { _s: u32x4(state[0], state[1], state[2], state[3]) },
+            _state: Md4State {
+                _s: u32x4(state[0], state[1], state[2], state[3]),
+            },
             _length_bytes: len,
-            _buffer: BlockBuffer512::default()
+            _buffer: BlockBuffer512::default(),
         }
     }
 }

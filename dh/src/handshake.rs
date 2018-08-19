@@ -17,7 +17,7 @@ pub trait ClientServerPair<T: Communicate> {
 pub struct ServerHandshake;
 
 impl<T: Communicate> Handshake<T> for ServerHandshake {
-#[allow(non_snake_case)]
+    #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>, Error> {
         let p = stream
             .receive()?
@@ -38,7 +38,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshake {
 pub struct ClientHandshake;
 
 impl<T: Communicate> Handshake<T> for ClientHandshake {
-#[allow(non_snake_case)]
+    #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>, Error> {
         let dh = DH::<BigNum>::new();
         let (p, g) = dh.parameters();
@@ -65,7 +65,7 @@ impl<T: Communicate> ClientServerPair<T> for ClientDeterminesParameters {
 pub struct ServerHandshakeAck;
 
 impl<T: Communicate> Handshake<T> for ServerHandshakeAck {
-#[allow(non_snake_case)]
+    #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>, Error> {
         let p = stream
             .receive()?
@@ -89,7 +89,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshakeAck {
 pub struct ClientHandshakeAck;
 
 impl<T: Communicate> Handshake<T> for ClientHandshakeAck {
-#[allow(non_snake_case)]
+    #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>, Error> {
         {
             let dh = DH::<BigNum>::new();

@@ -6,10 +6,15 @@ use rand;
 use rand::Rng;
 
 use diffie_hellman::communication::Communicate;
+use diffie_hellman::handshake::{
+    ClientDeterminesParameters, ClientServerPair, Handshake, ServerCanOverrideParameters,
+};
+use diffie_hellman::mitm_handshake::{
+    MitmFakeGeneratorOne, MitmFakeGeneratorP, MitmFakeGeneratorPMinusOne, MitmFakePublicKey,
+    MitmForClientServer, MitmHandshake,
+};
 use diffie_hellman::mitm_session::MitmSession;
-use diffie_hellman::mitm_handshake::{MitmHandshake, MitmFakePublicKey, MitmForClientServer, MitmFakeGeneratorOne, MitmFakeGeneratorP, MitmFakeGeneratorPMinusOne};
 use diffie_hellman::session::Session;
-use diffie_hellman::handshake::{ClientServerPair, ClientDeterminesParameters, ServerCanOverrideParameters, Handshake};
 
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
@@ -40,7 +45,10 @@ struct InterceptedMessages {
     decrypted_server_messages: Vec<Vec<u8>>,
 }
 
-fn mitm_handle_client<M: MitmHandshake<TcpStream>>(client_stream: TcpStream, server_stream: TcpStream) -> Result<InterceptedMessages, Error> {
+fn mitm_handle_client<M: MitmHandshake<TcpStream>>(
+    client_stream: TcpStream,
+    server_stream: TcpStream,
+) -> Result<InterceptedMessages, Error> {
     let mut mitm = MitmSession::new::<M>(client_stream, server_stream)?;
     let mut decrypted_client_messages = Vec::new();
     let mut decrypted_server_messages = Vec::new();
@@ -66,10 +74,15 @@ fn mitm_handle_client<M: MitmHandshake<TcpStream>>(client_stream: TcpStream, ser
         }
     }
     mitm.server_stream().shutdown(Shutdown::Both)?;
-    Ok(InterceptedMessages { decrypted_client_messages, decrypted_server_messages })
+    Ok(InterceptedMessages {
+        decrypted_client_messages,
+        decrypted_server_messages,
+    })
 }
 
-fn run_dh_server<S: Handshake<TcpStream>>(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
+fn run_dh_server<S: Handshake<TcpStream>>(
+    port: u16,
+) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((stream, _)) => handle_client::<S>(stream),
@@ -115,8 +128,7 @@ fn challenge_34_35_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     let client_port: u16 = 8080;
     let message = b"This is a test";
 
-    let join_handle = 
-        run_dh_server::<P::Server>(server_port)?;
+    let join_handle = run_dh_server::<P::Server>(server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
@@ -133,17 +145,18 @@ fn challenge_34_35_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     }
 }
 
-fn challenge_34_35_mitm<Trio: MitmForClientServer<TcpStream>>() -> Result<(), Error> 
-where Trio::Mitm: 'static + Send {
+fn challenge_34_35_mitm<Trio: MitmForClientServer<TcpStream>>() -> Result<(), Error>
+where
+    Trio::Mitm: 'static + Send,
+{
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
     let message = b"This is a test".to_vec();
 
-    let jh_server = 
+    let jh_server =
         run_dh_server::<<Trio::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
 
-    let jh_mitm = 
-        run_dh_mitm::<Trio::Mitm>(client_port, server_port)?;
+    let jh_mitm = run_dh_mitm::<Trio::Mitm>(client_port, server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
@@ -161,13 +174,18 @@ where Trio::Mitm: 'static + Send {
 
     match jh_mitm.join() {
         Ok(result) => {
-            let InterceptedMessages {decrypted_client_messages, decrypted_server_messages } = result?;
+            let InterceptedMessages {
+                decrypted_client_messages,
+                decrypted_server_messages,
+            } = result?;
             compare_eq(1, decrypted_client_messages.len()).context("number of client messages")?;
             compare_eq(1, decrypted_server_messages.len()).context("number of client messages")?;
-            compare_eq(&message, &decrypted_client_messages[0]).context("decrypted client message")?;
-            compare_eq(&message, &decrypted_server_messages[0]).context("decrypted server message")?;
+            compare_eq(&message, &decrypted_client_messages[0])
+                .context("decrypted client message")?;
+            compare_eq(&message, &decrypted_server_messages[0])
+                .context("decrypted server message")?;
             Ok(())
-        },
+        }
         _ => bail!("tcp listener thread panicked"),
     }
 }

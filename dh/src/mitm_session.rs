@@ -44,16 +44,14 @@ impl<T: Communicate> MitmSession<T> {
     }
 
     pub fn decrypt_client(&self, message: &[u8]) -> Result<Option<Vec<u8>>, Error> {
-        self
-            .client_key
+        self.client_key
             .as_ref()
             .map(|key| decrypt(message, key))
             .invert()
     }
 
     pub fn decrypt_server(&self, message: &[u8]) -> Result<Option<Vec<u8>>, Error> {
-        self
-            .server_key
+        self.server_key
             .as_ref()
             .map(|key| decrypt(message, key))
             .invert()

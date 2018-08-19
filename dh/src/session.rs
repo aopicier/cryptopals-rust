@@ -29,4 +29,3 @@ impl<T: Communicate> Communicate for Session<T> {
         self.stream.receive_encr(&self.key)
     }
 }
-
