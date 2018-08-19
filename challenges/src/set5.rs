@@ -5,11 +5,11 @@ use std::thread;
 use rand;
 use rand::Rng;
 
-use diffie_hellman::client::ClientSession;
 use diffie_hellman::communication::Communicate;
-use diffie_hellman::mitm::MitmSession;
-use diffie_hellman::mitm::Mode;
-use diffie_hellman::server::ServerSession as DhServerSession;
+use diffie_hellman::mitm_session::MitmSession;
+use diffie_hellman::mitm_handshake::{MitmHandshake, MitmFakePublicKey, MitmForClientServer, MitmFakeGeneratorOne, MitmFakeGeneratorP, MitmFakeGeneratorPMinusOne};
+use diffie_hellman::session::Session;
+use diffie_hellman::handshake::{ClientServerPair, ClientDeterminesParameters, ServerCanOverrideParameters, Handshake};
 
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
@@ -27,59 +27,65 @@ use srp::server::SimplifiedServer as SrpSimplifiedServer;
 
 use errors::*;
 
-fn handle_client<T: Communicate>(stream: T) -> Result<(), Error> {
-    let mut server = DhServerSession::new(stream)?;
-
+fn handle_client<S: Handshake<TcpStream>>(stream: TcpStream) -> Result<(), Error> {
+    let mut server = Session::new::<S>(stream)?;
     while let Some(message) = server.receive()? {
         server.send(&message)?;
     }
     Ok(())
 }
 
-fn mitm_handle_client<T: Communicate>(client_stream: T, server_stream: T) -> Result<(), Error> {
-    let mut mitm = MitmSession::new(client_stream, server_stream, Mode::PublicKey)?;
+struct InterceptedMessages {
+    decrypted_client_messages: Vec<Vec<u8>>,
+    decrypted_server_messages: Vec<Vec<u8>>,
+}
+
+fn mitm_handle_client<M: MitmHandshake<TcpStream>>(client_stream: TcpStream, server_stream: TcpStream) -> Result<InterceptedMessages, Error> {
+    let mut mitm = MitmSession::new::<M>(client_stream, server_stream)?;
+    let mut decrypted_client_messages = Vec::new();
+    let mut decrypted_server_messages = Vec::new();
     loop {
         match mitm.receive_client()? {
             Some(message) => {
-                compare_eq(
-                    mitm.decrypt_client(message.clone())?,
-                    Some(b"This is a test".to_vec()),
-                )?;
+                if let Some(decrypted_message) = mitm.decrypt_client(&message)? {
+                    decrypted_client_messages.push(decrypted_message);
+                }
+
                 mitm.send_server(&message)?;
             }
             None => break,
         }
         match mitm.receive_server()? {
             Some(message) => {
-                compare_eq(
-                    mitm.decrypt_server(message.clone())?,
-                    Some(b"This is a test".to_vec()),
-                )?;
+                if let Some(decrypted_message) = mitm.decrypt_server(&message)? {
+                    decrypted_server_messages.push(decrypted_message);
+                }
                 mitm.send_client(&message)?;
             }
             None => break,
         }
     }
-    Ok(())
+    mitm.server_stream().shutdown(Shutdown::Both)?;
+    Ok(InterceptedMessages { decrypted_client_messages, decrypted_server_messages })
 }
 
-fn run_dh_server(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
+fn run_dh_server<S: Handshake<TcpStream>>(port: u16) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
-        Ok((stream, _)) => handle_client(stream),
+        Ok((stream, _)) => handle_client::<S>(stream),
         Err(_) => bail!("connection failed"),
     }))
 }
 
-fn run_dh_mitm(
+fn run_dh_mitm<M: MitmHandshake<TcpStream>>(
     client_port: u16,
     server_port: u16,
-) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
+) -> Result<thread::JoinHandle<Result<InterceptedMessages, Error>>, Error> {
     let listener = TcpListener::bind(("localhost", client_port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((client_stream, _)) => {
             let server_stream = TcpStream::connect(("localhost", server_port))?;
-            mitm_handle_client(client_stream, server_stream)
+            mitm_handle_client::<M>(client_stream, server_stream)
         }
         Err(_) => bail!("connection failed"),
     }))
@@ -91,21 +97,32 @@ fn challenge_33() -> Result<(), Error> {
 }
 
 fn challenge_34() -> Result<(), Error> {
-    challenge_34_echo()?;
-    challenge_34_mitm()?;
+    challenge_34_35_echo::<ClientDeterminesParameters>()?;
+    challenge_34_35_mitm::<MitmFakePublicKey>()?;
     Ok(())
 }
 
-fn challenge_34_echo() -> Result<(), Error> {
+fn challenge_35() -> Result<(), Error> {
+    challenge_34_35_echo::<ServerCanOverrideParameters>()?;
+    challenge_34_35_mitm::<MitmFakeGeneratorOne>()?;
+    challenge_34_35_mitm::<MitmFakeGeneratorP>()?;
+    challenge_34_35_mitm::<MitmFakeGeneratorPMinusOne>()?;
+    Ok(())
+}
+
+fn challenge_34_35_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
-    let join_handle = run_dh_server(server_port)?;
+    let message = b"This is a test";
+
+    let join_handle = 
+        run_dh_server::<P::Server>(server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
-    let mut client = ClientSession::new(stream)?;
-    let message = b"This is a test";
+    let mut client = Session::new::<P::Client>(stream)?;
+
     client.send(message)?;
     compare_eq(Some(message.to_vec()), client.receive()?)?;
 
@@ -116,31 +133,43 @@ fn challenge_34_echo() -> Result<(), Error> {
     }
 }
 
-fn challenge_34_mitm() -> Result<(), Error> {
+fn challenge_34_35_mitm<Trio: MitmForClientServer<TcpStream>>() -> Result<(), Error> 
+where Trio::Mitm: 'static + Send {
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
-    run_dh_server(server_port)?;
+    let message = b"This is a test".to_vec();
 
-    let join_handle = run_dh_mitm(client_port, server_port)?;
+    let jh_server = 
+        run_dh_server::<<Trio::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
+
+    let jh_mitm = 
+        run_dh_mitm::<Trio::Mitm>(client_port, server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
-    let mut client = ClientSession::new(stream)?;
-    // The message needs to match the hardcoded string in mitm_handle_client
-    let message = b"This is a test";
-    client.send(message)?;
-    compare_eq(Some(message.to_vec()), client.receive()?)?;
+    let mut client = Session::new::<<Trio::CS as ClientServerPair<TcpStream>>::Client>(stream)?;
+    client.send(&message)?;
+    compare_eq(Some(&message), client.receive()?.as_ref()).context("message received by client")?;
 
     client.stream().shutdown(Shutdown::Both)?;
-    match join_handle.join() {
-        Ok(result) => result,
+
+    match jh_server.join() {
+        Ok(result) => result.context("server error")?,
+        _ => bail!("tcp listener thread panicked"),
+    };
+
+    match jh_mitm.join() {
+        Ok(result) => {
+            let InterceptedMessages {decrypted_client_messages, decrypted_server_messages } = result?;
+            compare_eq(1, decrypted_client_messages.len()).context("number of client messages")?;
+            compare_eq(1, decrypted_server_messages.len()).context("number of client messages")?;
+            compare_eq(&message, &decrypted_client_messages[0]).context("decrypted client message")?;
+            compare_eq(&message, &decrypted_server_messages[0]).context("decrypted server message")?;
+            Ok(())
+        },
         _ => bail!("tcp listener thread panicked"),
     }
-}
-
-fn challenge_35() -> Result<(), Error> {
-    Err(ChallengeError::NotImplemented.into())
 }
 
 fn start_srp_listener<T: ClientHandler>(

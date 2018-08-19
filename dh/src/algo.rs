@@ -34,7 +34,7 @@ impl<T: BigNumTrait> DH<T> {
                      98da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb\
                      9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff";
 
-        let p = T::from_hex_str(p_hex).unwrap();
+        let p = T::from_hex_str(p_hex).unwrap(); // unwrap is ok
         let g = T::from_u32(2);
         Self::new_with(p, g)
     }

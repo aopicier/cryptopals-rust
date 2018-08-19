@@ -5,6 +5,7 @@ use aes;
 use aes::{Aes128, MODE};
 
 use byteorder::{ByteOrder, LittleEndian};
+use result::ResultOptionExt;
 
 use std::io::{Read, Write};
 
@@ -22,24 +23,27 @@ pub trait CommunicateNew {
 
 pub trait CommunicateEncr: Communicate {
     fn receive_encr(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
-        Ok(self
+        self
             .receive()?
-            .map(|message| decrypt(message, key).unwrap()))
+            .as_ref()
+            .map(|message| decrypt(message, key))
+            .invert()
     }
 
     fn send_encr(&mut self, message: &[u8], key: &[u8]) -> Result<(), Error> {
         let mut rng = rand::thread_rng();
         let iv: Vec<u8> = rng.gen_iter().take(aes::BLOCK_SIZE).collect();
-        let mut message_encr = message.encrypt(key, Some(&iv), MODE::CBC).unwrap();
+        let mut message_encr = message.encrypt(key, Some(&iv), MODE::CBC)?;
         message_encr.extend_from_slice(&iv);
         self.send(&message_encr)
     }
 }
 
-pub fn decrypt(mut message: Vec<u8>, key: &[u8]) -> Result<Vec<u8>, Error> {
-    let len = message.len();
-    let iv = message.split_off(len - aes::BLOCK_SIZE);
-    message.decrypt(key, Some(&iv), MODE::CBC)
+pub fn decrypt(message: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut msg = message.to_vec();
+    let len = msg.len();
+    let iv = msg.split_off(len - aes::BLOCK_SIZE);
+    msg.decrypt(key, Some(&iv), MODE::CBC)
 }
 
 fn message_length<T: Read>(stream: &mut T) -> Result<Option<usize>, Error> {
@@ -72,7 +76,9 @@ fn read_n_bytes<T: Read>(stream: &mut T, n: usize) -> Result<Option<Vec<u8>>, Er
 
 impl<T: Read + Write> Communicate for T {
     fn receive(&mut self) -> Result<Option<Vec<u8>>, Error> {
-        Ok(message_length(self)?.and_then(|length| read_n_bytes(self, length).unwrap()))
+        message_length(self)?
+            .and_then(|length| read_n_bytes(self, length).invert())
+            .invert()
     }
 
     fn send(&mut self, message: &[u8]) -> Result<(), Error> {
