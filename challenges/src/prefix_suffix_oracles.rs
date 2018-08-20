@@ -376,22 +376,20 @@ mod tests {
             let mode = if i == 0 { MODE::ECB } else { MODE::CTR };
             for _ in 0..64 {
                 for _ in 0..64 {
-                    {
-                        let oracle =
-                            TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode)
-                                .ok()
-                                .unwrap();
+                    let oracle =
+                        TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode)
+                        .ok()
+                        .unwrap();
 
-                        println!("{}", prefix.len());
-                        println!("{}", prefix_length(&oracle).unwrap());
-                        assert!(prefix.len() == prefix_length(&oracle).unwrap());
-                        assert!(suffix.len() == suffix_length(&oracle).unwrap());
-                    }
+                    assert!(prefix.len() == prefix_length(&oracle).unwrap());
+                    assert!(suffix.len() == suffix_length(&oracle).unwrap());
                     suffix.push(1);
                 }
                 suffix.clear();
                 prefix.push(0);
             }
+            suffix.clear();
+            prefix.clear();
         }
     }
 }
