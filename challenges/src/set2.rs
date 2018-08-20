@@ -154,34 +154,8 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error>
     Ok(n * BLOCK_SIZE + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
+pub fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     Ok(prefix_plus_suffix_length(oracle)? - prefix_length(oracle)?)
-}
-
-#[test]
-fn test_length_functions() {
-    let key = random_block();
-    let mut prefix = Vec::new();
-    let mut suffix = Vec::new();
-    for _ in 0..64 {
-        for _ in 0..64 {
-            {
-                let oracle = CommonPrefixSuffixOracle {
-                    key: key.clone(),
-                    prefix: prefix.clone(),
-                    suffix: suffix.clone(),
-                    mode: MODE::CTR,
-                };
-                println!("{}", prefix.len());
-                println!("{}", prefix_length(&oracle).unwrap());
-                assert!(prefix.len() == prefix_length(&oracle).unwrap());
-                //assert!(suffix.len() == suffix_length(&oracle).unwrap());
-            }
-            suffix.push(1);
-        }
-        suffix.clear();
-        prefix.push(0);
-    }
 }
 
 fn challenge_11() -> Result<(), Error> {

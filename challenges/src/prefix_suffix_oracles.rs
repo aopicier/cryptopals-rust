@@ -323,3 +323,75 @@ impl Oracle26 {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use aes::MODE;
+    use failure::Error;
+
+    use super::*;
+    use set2::{prefix_length, random_block, suffix_length};
+
+    struct TestOracle {
+        common: Common,
+    }
+
+    impl DeterministicOracle for TestOracle {}
+
+    impl Oracle for TestOracle {
+        fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
+            self.common.encrypt(u)
+        }
+
+        fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
+            self.common.verify_suffix(candidate)
+        }
+    }
+
+    impl TestOracle {
+        pub fn new(
+            key: Vec<u8>,
+            prefix: Vec<u8>,
+            suffix: Vec<u8>,
+            mode: MODE,
+        ) -> Result<Self, Error> {
+            assert!(mode == MODE::ECB || mode == MODE::CTR);
+            Ok(TestOracle {
+                common: Common {
+                    key,
+                    prefix,
+                    suffix,
+                    mode,
+                },
+            })
+        }
+    }
+
+    #[test]
+    fn test_length_functions() {
+        let key = random_block();
+        let mut prefix = Vec::new();
+        let mut suffix = Vec::new();
+        for i in 0..=1 {
+            let mode = if i == 0 { MODE::ECB } else { MODE::CTR };
+            for _ in 0..64 {
+                for _ in 0..64 {
+                    {
+                        let oracle =
+                            TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode)
+                                .ok()
+                                .unwrap();
+
+                        println!("{}", prefix.len());
+                        println!("{}", prefix_length(&oracle).unwrap());
+                        assert!(prefix.len() == prefix_length(&oracle).unwrap());
+                        assert!(suffix.len() == suffix_length(&oracle).unwrap());
+                    }
+                    suffix.push(1);
+                }
+                suffix.clear();
+                prefix.push(0);
+            }
+        }
+    }
+}
