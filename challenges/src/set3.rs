@@ -89,7 +89,6 @@ fn challenge_17() -> Result<(), Error> {
         for i in (0..BLOCK_SIZE).rev() {
             let padding = (BLOCK_SIZE - i) as u8;
             prev[i + 1..].xor_inplace(&[(padding - 1) ^ padding]);
-            //Awaits replacement for range_inclusive
             for u in 0u8..=255 {
                 prev[i] ^= u;
                 if server.is_padding_valid(&prev, block)?

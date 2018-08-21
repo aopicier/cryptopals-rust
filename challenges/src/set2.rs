@@ -59,11 +59,16 @@ fn challenge_10() -> Result<(), Error> {
 
 fn uses_ecb(oracle: &mut Oracle11) -> Result<bool, Error> {
     // Assumes that oracle prepends at most one block of jibber
-    // TODO: Can we relax this condition?
     let input = vec![0; 3 * BLOCK_SIZE];
     let ciphertext = oracle.encrypt(&input)?;
     let blocks: Vec<&[u8]> = ciphertext.chunks(BLOCK_SIZE).skip(1).take(2).collect();
     Ok(blocks[0] == blocks[1])
+}
+
+fn challenge_11() -> Result<(), Error> {
+    let mut oracle = Oracle11::new()?;
+    let uses_ecb = uses_ecb(&mut oracle)?;
+    oracle.verify_solution(uses_ecb)
 }
 
 fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
@@ -77,8 +82,7 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> {
     }
 
     let input = [0; BLOCK_SIZE];
-    //Would profit from range_inclusive
-    if let Some(index) = (1..BLOCK_SIZE + 1).find(|&i| {
+    if let Some(index) = (1..=BLOCK_SIZE).find(|&i| {
         if let Ok(ciphertext) = oracle.encrypt(&input[..i]) {
             initial != ciphertext.len()
         } else {
@@ -93,11 +97,12 @@ fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> {
     }
 }
 
-/* For an oracle prepending prefix and appending suffix to its input, this function returns
- * prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix.
- *
- * To determine this number, we pass two different cleartexts to the oracle and count the number
- * of identical blocks at the start of the corresponding ciphertexts. */
+// For an oracle prepending prefix and appending suffix to its input, this function returns
+// prefix.len()/BLOCK_SIZE, that is the number of blocks fully occupied by the prefix.
+//
+// To determine this number, we pass two different cleartexts to the oracle and count the number
+// of identical blocks at the start of the corresponding ciphertexts.
+
 fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     if let Some(result) = oracle
         .encrypt(&[0])?
@@ -155,12 +160,6 @@ pub fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error>
     Ok(prefix_plus_suffix_length(oracle)? - prefix_length(oracle)?)
 }
 
-fn challenge_11() -> Result<(), Error> {
-    let mut oracle = Oracle11::new()?;
-    let uses_ecb = uses_ecb(&mut oracle)?;
-    oracle.verify_solution(uses_ecb)
-}
-
 fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> {
     // The following input is chosen in such a way that the cleartext in oracle looks as follows:
     //
@@ -207,17 +206,18 @@ fn challenge_12() -> Result<(), Error> {
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
 
-pub fn decode_profile(u: &[u8], sep: u8) -> HashMap<&[u8], &[u8]> {
+pub fn decode_profile(u: &[u8], separator: u8) -> HashMap<&[u8], &[u8]> {
     let mut p = HashMap::new();
-    for pair in u.split(|&x| x == sep) {
+    for pair in u.split(|&x| x == separator) {
         let mut components = pair.split(|&x| x == b'=');
         p.insert(components.next().unwrap(), components.next().unwrap_or(&[]));
     }
     p
 }
 
-/* The following function works under the single assumption that the target value "user" (to be
-   replaced by "admin") is stored at the very end of the profile. */
+// The following function works under the single assumption that the target value "user" (to be
+// replaced by "admin") is stored at the very end of the profile.
+
 fn challenge_13() -> Result<(), Error> {
     let oracle = Oracle13::new()?;
 
