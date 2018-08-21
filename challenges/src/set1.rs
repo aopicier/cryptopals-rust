@@ -17,16 +17,6 @@ use std::path::Path;
 
 use errors::*;
 
-fn transposed_blocks(input: &[u8], size: usize) -> Vec<Vec<u8>> {
-    let mut transposed_blocks: Vec<Vec<u8>> = (0..size).map(|_| Vec::new()).collect();
-    for block in input.chunks(size) {
-        for (&u, bt) in block.iter().zip(transposed_blocks.iter_mut()) {
-            bt.push(u);
-        }
-    }
-    transposed_blocks
-}
-
 fn challenge_1() -> Result<(), Error> {
     let input_string = "49276d206b696c6c696e6720796f757220627261\
                         696e206c696b65206120706f69736f6e6f7573206\
@@ -47,16 +37,17 @@ fn challenge_2() -> Result<(), Error> {
     )
 }
 
-pub fn decrypt_single_xor(input: &[u8]) -> u8 {
+pub fn break_single_byte_xor(input: &[u8]) -> u8 {
+    // We consider arbitrary bytes here because of challenges 19 and 20.
     (0u8..=255)
         .into_iter()
         .min_by_key(|&u| compute_score(&input.xor(&[u])))
-        .unwrap()
+        .unwrap() // unwrap is ok
 }
 
 fn challenge_3() -> Result<(), Error> {
     let input = from_hex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")?;
-    let key = decrypt_single_xor(&input);
+    let key = break_single_byte_xor(&input);
     compare_eq(
         b"Cooking MC's like a pound of bacon".as_ref(),
         &input.xor(&[key]),
@@ -70,7 +61,8 @@ fn challenge_4() -> Result<(), Error> {
         .into_iter()
         .flat_map(|line: Vec<u8>| (0u8..128).map(move |u| line.xor(&[u])))
         .min_by_key(|cand| compute_score(cand))
-        .unwrap();
+        .unwrap(); // unwrap is ok
+
     compare_eq(b"Now that the party is jumping\n".as_ref(), &result)
 }
 
@@ -94,10 +86,10 @@ fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32, Error> {
 
     Ok(u.xor(v)
         .iter()
-        .fold(0u32, |a, &b| a + u32::from(nonzero_bits(b))))
+        .fold(0u32, |a, &b| a + u32::from(nonzero_bits_count(b))))
 }
 
-fn nonzero_bits(mut u: u8) -> u8 {
+fn nonzero_bits_count(mut u: u8) -> u8 {
     let mut res = 0u8;
     for _ in 0..8 {
         res += u % 2;
@@ -109,41 +101,69 @@ fn nonzero_bits(mut u: u8) -> u8 {
 #[test]
 fn test_hamming_distance() {
     assert_eq!(
-        hamming_distance(b"this is a test", b"wokka wokka!!!").unwrap(),
-        37
+        37,
+        hamming_distance(b"this is a test", b"wokka wokka!!!").unwrap() // unwrap is ok
     );
 }
 
-fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
-    let score = |keysize| {
-        input.chunks(2 * keysize).take(8).fold(0, |a, x| {
-            a + hamming_distance(&x[..keysize], &x[keysize..]).unwrap()
-        }) as f32
-            / keysize as f32
-    };
-    let mut scores: Vec<(usize, u32)> = (2..40).map(|size| (size, score(size) as u32)).collect();
-    scores.sort_by(|&(_, s), &(_, t)| s.cmp(&t));
-    scores.iter().take(10).map(|x| x.0).collect()
+// We use the first four blocks of `input` and sum the pairwise distances.
+fn compute_normalized_hamming_distance(input: &[u8], keysize: usize) -> f32 {
+    let chunks: Vec<&[u8]> = input.chunks(keysize).take(4).collect();
+    let mut distance = 0f32;
+    for i in 0..4 {
+        for j in i..4 {
+            distance += hamming_distance(chunks[i], chunks[j]).unwrap() as f32; // unwrap is ok
+        }
+    }
+
+    distance / keysize as f32
 }
 
-fn decrypt_xor(input: &[u8]) -> Vec<u8> {
-    let candidate_key = |size| {
-        transposed_blocks(input, size)
-            .iter()
-            .map(|b| decrypt_single_xor(b))
-            .collect::<Vec<u8>>()
-    };
+// Returns the three key sizes with the smallest normalized hamming distance.
+fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
+    let count = 3;
+    let mut distances: Vec<(usize, u32)> = (2..40)
+        .map(|keysize| {
+            (
+                keysize,
+                (100f32 * compute_normalized_hamming_distance(input, keysize)) as u32,
+            )
+        }).collect();
 
+    distances.sort_by(|&(_, s), &(_, t)| s.cmp(&t));
+    distances.iter().take(count).map(|x| x.0).collect()
+}
+
+fn transposed_blocks(input: &[u8], size: usize) -> Vec<Vec<u8>> {
+    let mut transposed_blocks: Vec<Vec<u8>> = (0..size).map(|_| Vec::new()).collect();
+    for block in input.chunks(size) {
+        for (&u, bt) in block.iter().zip(transposed_blocks.iter_mut()) {
+            bt.push(u);
+        }
+    }
+    transposed_blocks
+}
+
+fn break_multibyte_xor_for_keysize(input: &[u8], keysize: usize) -> Vec<u8> {
+    transposed_blocks(input, keysize)
+        .iter()
+        .map(|b| break_single_byte_xor(b))
+        .collect::<Vec<u8>>()
+}
+
+fn break_multibyte_xor(input: &[u8]) -> Vec<u8> {
+    // To pick the correct key from the different candidates
+    // we use our scoring function based on character frequencies.
     candidate_keysizes(input)
         .iter()
-        .map(|&size| candidate_key(size))
+        .map(|&size| break_multibyte_xor_for_keysize(input, size))
         .min_by_key(|key| compute_score(&input.xor(key)))
         .unwrap()
 }
 
 fn challenge_6() -> Result<(), Error> {
     let input = from_base64_file(Path::new("data/6.txt"))?;
-    let key = decrypt_xor(&input);
+    let key = break_multibyte_xor(&input);
     compare_eq(b"Terminator X: Bring the noise".as_ref(), &key)
 }
 
@@ -153,23 +173,31 @@ fn challenge_7() -> Result<(), Error> {
     let cleartext = ciphertext.decrypt(key, None, MODE::ECB)?;
 
     //Read reference cleartext
-    let path = Path::new("data/7.ref.txt");
-    let mut file = File::open(&path)?;
-    let mut cleartext_ref = String::new();
-    file.read_to_string(&mut cleartext_ref)?;
+    let cleartext_ref = read_file_to_string("data/7.ref.txt")?;
 
     compare_eq(cleartext_ref.as_bytes(), &cleartext)
 }
 
+pub fn read_file_to_string(file_path: &str) -> Result<String, Error> {
+    let path = Path::new(file_path);
+    let mut file = File::open(&path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    Ok(content)
+}
+
 fn challenge_8() -> Result<(), Error> {
-    //Find the line with a repeating 16 byte block (<=> with a repeating 32 hex-digits block)
     let path = Path::new("data/8.txt");
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
+
+    // Find the line with a repeating 16 byte block.
+    // The content of `file` is hex encoded. A byte block of length 16 therefore corresponds to a
+    // character block of length 32.
     let result = reader
         .lines()
         .map(|line| line.unwrap())
-        .find(|line| has_duplicates(line.as_bytes().chunks(2 * BLOCK_SIZE)));
+        .find(|line| contains_duplicates(line.as_bytes().chunks(2 * BLOCK_SIZE)));
 
     compare_eq(
         Some(
@@ -186,7 +214,7 @@ fn challenge_8() -> Result<(), Error> {
     )
 }
 
-fn has_duplicates<T>(i: T) -> bool
+fn contains_duplicates<T>(i: T) -> bool
 where
     T: Iterator,
     <T as Iterator>::Item: Ord,

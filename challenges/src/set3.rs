@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use aes::{unpad_inplace, Aes128, AesError, BLOCK_SIZE, MODE};
 use byteorder::{ByteOrder, NativeEndian};
 
-use set1::decrypt_single_xor;
+use set1::break_single_byte_xor;
 use set2::random_block;
 
 use mersenne;
@@ -179,7 +179,7 @@ fn challenge_19_20(exercise: Exercise) -> Result<(), Error> {
 
     let key = transposed_blocks
         .iter()
-        .map(|b| decrypt_single_xor(b))
+        .map(|b| break_single_byte_xor(b))
         .collect::<Vec<u8>>();
 
     encrypter.verify_solution(&key, size)

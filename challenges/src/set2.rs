@@ -1,7 +1,5 @@
 use std;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 
 use rand;
@@ -11,6 +9,8 @@ use aes::BLOCK_SIZE;
 use aes::{pad, padding_valid, Aes128, MODE};
 
 use serialize::from_base64_file;
+
+use set1::read_file_to_string;
 
 use xor::XOR;
 
@@ -52,10 +52,7 @@ fn challenge_10() -> Result<(), Error> {
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;
 
     //Read reference cleartext
-    let path = Path::new("data/10.ref.txt");
-    let mut file = File::open(&path)?;
-    let mut cleartext_ref = String::new();
-    file.read_to_string(&mut cleartext_ref)?;
+    let cleartext_ref = read_file_to_string("data/10.ref.txt")?;
 
     compare_eq(cleartext_ref.as_bytes(), &cleartext)
 }

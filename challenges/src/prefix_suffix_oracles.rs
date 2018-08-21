@@ -377,9 +377,7 @@ mod tests {
             for _ in 0..64 {
                 for _ in 0..64 {
                     let oracle =
-                        TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode)
-                        .ok()
-                        .unwrap();
+                        TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode).unwrap();
 
                     assert!(prefix.len() == prefix_length(&oracle).unwrap());
                     assert!(suffix.len() == suffix_length(&oracle).unwrap());
