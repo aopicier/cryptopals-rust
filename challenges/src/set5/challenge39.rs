@@ -1,5 +1,5 @@
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 
 use rsa::Rsa;
 
@@ -10,4 +10,3 @@ pub fn run() -> Result<(), Error> {
     let m = BigNumTrait::from_u32(42);
     compare_eq(&m, &rsa.decrypt(&rsa.encrypt(&m)))
 }
-

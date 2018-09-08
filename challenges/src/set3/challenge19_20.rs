@@ -1,7 +1,7 @@
 use errors::*;
-use std::path::PathBuf;
 use set1::break_single_byte_xor;
 use set2::random_block;
+use std::path::PathBuf;
 
 use aes::{Aes128, MODE};
 use serialize::from_base64_lines;

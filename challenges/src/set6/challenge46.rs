@@ -2,8 +2,8 @@ use errors::*;
 
 use rsa::Rsa;
 
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 use serialize::{from_base64, Serialize};
 
 struct Server46 {
@@ -65,4 +65,3 @@ pub fn run() -> Result<(), Error> {
     let cleartext = (n * &l).rsh(k);
     server.verify_solution(&cleartext, &ciphertext)
 }
-

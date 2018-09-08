@@ -1,8 +1,8 @@
-use std;
-use rand;
-use rand::Rng;
 use mersenne;
 use mersenne::MersenneTwister;
+use rand;
+use rand::Rng;
+use std;
 
 use errors::*;
 

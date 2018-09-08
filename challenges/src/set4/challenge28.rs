@@ -1,7 +1,7 @@
 use serialize::from_hex;
 
-use mac::mac_sha1;
 use errors::*;
+use mac::mac_sha1;
 
 pub fn run() -> Result<(), Error> {
     compare_eq(

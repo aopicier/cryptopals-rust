@@ -12,4 +12,3 @@ pub fn run() -> Result<(), Error> {
     let oracle = Oracle14::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
-

@@ -2,8 +2,8 @@ use errors::*;
 
 use rsa::Rsa;
 
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 
 pub fn run() -> Result<(), Error> {
     let bits = 512;
@@ -29,4 +29,3 @@ pub fn run() -> Result<(), Error> {
     let m2 = oracle(&c2).ok_or_else(|| err_msg("wrong input to oracle"))?;
     compare_eq(m, &(&m2 * &t) % rsa.n())
 }
-

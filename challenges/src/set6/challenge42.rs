@@ -67,4 +67,3 @@ pub fn run() -> Result<(), Error> {
     let fake_signature = find_signature(size, &suffix);
     compare_eq(true, verify_signature(&fake_signature.unwrap()))
 }
-

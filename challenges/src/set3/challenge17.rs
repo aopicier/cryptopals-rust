@@ -1,7 +1,7 @@
 use aes::{unpad_inplace, Aes128, AesError, BLOCK_SIZE, MODE};
+use errors::*;
 use rand;
 use rand::Rng;
-use errors::*;
 use serialize::from_base64;
 use xor::XOR;
 

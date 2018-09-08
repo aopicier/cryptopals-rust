@@ -2,8 +2,8 @@ use errors::*;
 
 use dsa::{DsaParams, DsaPublic, Signature};
 
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 
 use std::fs::File;
 use std::io::BufRead;
@@ -68,4 +68,3 @@ pub fn run() -> Result<(), Error> {
 
     Err(ChallengeError::ItemNotFound("signatures with equal r".to_owned()).into())
 }
-

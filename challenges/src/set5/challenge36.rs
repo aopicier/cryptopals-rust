@@ -83,4 +83,3 @@ pub fn run() -> Result<(), Error> {
         _ => bail!("tcp listener thread panicked"),
     }
 }
-

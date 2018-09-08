@@ -1,5 +1,5 @@
-use aes::BLOCK_SIZE;
 use aes::Aes128;
+use aes::BLOCK_SIZE;
 
 use helper::ceil_div;
 
@@ -8,8 +8,8 @@ use errors::*;
 use prefix_suffix_oracles::Oracle;
 use prefix_suffix_oracles::Oracle13;
 
-use set2::prefix_length;
 use set2::challenge12::prefix_plus_suffix_length;
+use set2::prefix_length;
 
 pub fn run() -> Result<(), Error> {
     let oracle = Oracle13::new()?;
@@ -31,4 +31,3 @@ pub fn run() -> Result<(), Error> {
 
     oracle.verify_solution(&ciphertext)
 }
-

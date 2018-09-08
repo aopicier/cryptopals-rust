@@ -221,4 +221,3 @@ impl Md4_0_7 {
 pub fn run30() -> Result<(), Error> {
     challenge_29_30::<Md4Helper>()
 }
-

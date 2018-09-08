@@ -4,7 +4,9 @@ use rand::Rng;
 use srp::client::SimplifiedClient as SrpSimplifiedClient;
 use srp::server::SimplifiedServer as SrpSimplifiedServer;
 
-use super::challenge36::{start_srp_listener, shutdown_srp_server, connect_and_execute, start_mitm_srp_server};
+use super::challenge36::{
+    connect_and_execute, shutdown_srp_server, start_mitm_srp_server, start_srp_listener,
+};
 
 use errors::*;
 
@@ -85,4 +87,3 @@ pub fn run() -> Result<(), Error> {
         _ => bail!("tcp listener thread panicked"),
     }
 }
-

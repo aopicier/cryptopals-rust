@@ -1,5 +1,5 @@
-use std;
 use byteorder::{ByteOrder, NativeEndian};
+use std;
 
 use rand;
 use rand::Rng;
@@ -45,4 +45,3 @@ pub fn run() -> Result<(), Error> {
         mersenne::crack_seed_from_nth(random_number, index, 0..(u32::from(std::u16::MAX))),
     )
 }
-

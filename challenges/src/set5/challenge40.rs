@@ -1,7 +1,7 @@
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
-use rsa::Rsa;
 use errors::*;
+use rsa::Rsa;
 
 pub fn run() -> Result<(), Error> {
     let bits = 512;
@@ -34,4 +34,3 @@ pub fn run() -> Result<(), Error> {
         % &(&(n1 * n2) * n3);
     compare_eq(&m, &c.root(3).0)
 }
-

@@ -1,5 +1,5 @@
-use errors::*;
 use self::challenge19_20::Exercise;
+use errors::*;
 
 mod challenge17;
 mod challenge18;

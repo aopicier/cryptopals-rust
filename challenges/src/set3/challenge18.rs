@@ -1,6 +1,6 @@
 use aes::{Aes128, MODE};
-use serialize::from_base64;
 use errors::*;
+use serialize::from_base64;
 
 pub fn run() -> Result<(), Error> {
     let ciphertext =

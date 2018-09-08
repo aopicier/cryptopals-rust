@@ -1,10 +1,10 @@
-use std;
 use aes::BLOCK_SIZE;
-use helper::ceil_div;
 use errors::*;
+use helper::ceil_div;
+use std;
 
-use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 use prefix_suffix_oracles::Oracle12;
+use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 
 fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
     Ok((oracle.encrypt(&[0])?.len() - oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
@@ -140,4 +140,3 @@ pub fn run() -> Result<(), Error> {
     let oracle = Oracle12::new()?;
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
-

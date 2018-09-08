@@ -10,4 +10,3 @@ pub fn run() -> Result<(), Error> {
         hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog"),
     )
 }
-

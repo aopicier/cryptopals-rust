@@ -1,5 +1,5 @@
-use aes::BLOCK_SIZE;
 use aes::Aes128;
+use aes::BLOCK_SIZE;
 
 use xor::XOR;
 

@@ -4,7 +4,7 @@ use srp::server::Server as SrpServer;
 
 use errors::*;
 
-use super::challenge36::{start_srp_listener, shutdown_srp_server, connect_and_execute};
+use super::challenge36::{connect_and_execute, shutdown_srp_server, start_srp_listener};
 
 pub fn run() -> Result<(), Error> {
     let port: u16 = 8080;
@@ -27,4 +27,3 @@ pub fn run() -> Result<(), Error> {
         _ => bail!("tcp listener thread panicked"),
     }
 }
-

@@ -3,8 +3,8 @@ use errors::*;
 use dsa;
 use dsa::{rand_range_safe, DsaParams, DsaPrivate, DsaPublic};
 
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 
 pub fn run() -> Result<(), Error> {
     let params = DsaParams::<BigNum>::generate();
@@ -29,4 +29,3 @@ pub fn run() -> Result<(), Error> {
     let m = rand_range_safe(&params.q);
     compare_eq(true, public_fake.verify_signature(&m, &signature))
 }
-

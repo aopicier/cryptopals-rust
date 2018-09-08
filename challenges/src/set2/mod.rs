@@ -4,7 +4,6 @@ use rand::Rng;
 use aes::BLOCK_SIZE;
 use errors::*;
 
-mod challenge9;
 mod challenge10;
 mod challenge11;
 mod challenge12;
@@ -12,6 +11,7 @@ mod challenge13;
 mod challenge14;
 mod challenge15;
 mod challenge16;
+mod challenge9;
 
 // TODO Move somewhere else
 pub fn random_block() -> Vec<u8> {
@@ -46,4 +46,3 @@ fn aes_128_cbc() {
             .unwrap()[..]
     );
 }
-

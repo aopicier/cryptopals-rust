@@ -24,4 +24,3 @@ pub fn run() -> Result<(), Error> {
 
     Ok(()) //TODO Add proper error handling
 }
-

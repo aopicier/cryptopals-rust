@@ -2,8 +2,8 @@ use errors::*;
 
 use dsa::{DsaParams, DsaPrivate, DsaPublic, Signature};
 
-use bignum::OpensslBigNum as BigNum;
 use bignum::BigNumTrait;
+use bignum::OpensslBigNum as BigNum;
 
 pub fn run() -> Result<(), Error> {
     let params = DsaParams::generate();
@@ -41,4 +41,3 @@ pub fn run() -> Result<(), Error> {
         private.map(|p| p.x),
     )
 }
-
