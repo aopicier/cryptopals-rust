@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rand;
 use rand::Rng;
 
@@ -9,7 +11,6 @@ use serialize::from_base64;
 use errors::*;
 use failure::Error;
 
-use set2::decode_profile;
 use set2::random_block;
 
 pub trait Oracle {
@@ -134,6 +135,15 @@ impl Oracle12 {
             },
         })
     }
+}
+
+fn decode_profile(u: &[u8], separator: u8) -> HashMap<&[u8], &[u8]> {
+    let mut p = HashMap::new();
+    for pair in u.split(|&x| x == separator) {
+        let mut components = pair.split(|&x| x == b'=');
+        p.insert(components.next().unwrap(), components.next().unwrap_or(&[]));
+    }
+    p
 }
 
 pub struct Oracle13 {
