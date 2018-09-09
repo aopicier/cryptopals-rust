@@ -12,8 +12,12 @@ use super::challenge12::prefix_plus_suffix_length;
 pub fn run() -> Result<(), Error> {
     let oracle = Oracle16::new()?;
 
+    // The following input is chosen in such a way that the last block of the cleartext
+    // in oracle consists entirely of padding bytes.
     let (chunks_count, fill_len) = chunks_count(prefix_plus_suffix_length(&oracle)?);
     let mut ciphertext = oracle.encrypt(&vec![0; fill_len])?;
+
+    // Sanity check
     compare_eq((chunks_count + 1) * BLOCK_SIZE, ciphertext.len())?;
 
     let target_last_block = b";admin=true".pad();
