@@ -1,15 +1,14 @@
 use std;
 use std::collections::HashMap;
-
+use errors::*;
+use serialize::from_hex;
 use xor::XOR;
 
-use serialize::from_hex;
-
-use errors::*;
-
-static REF_FREQS: [(u8, f32); 28] = [
-    (b' ', 12.17),
-    (b'.', 6.57),
+// Source:
+// Lee, E. Stewart. "Essays about Computer Security" (PDF). University of Cambridge Computer Laboratory. p. 181.
+static EXPECTED_FREQUENCIES: [(u8, f32); 28] = [
+    (b' ', 12.17), // Whitespace
+    (b'.', 6.57), // Others
     (b'a', 6.09),
     (b'b', 1.05),
     (b'c', 2.84),
@@ -38,25 +37,6 @@ static REF_FREQS: [(u8, f32); 28] = [
     (b'z', 0.03),
 ];
 
-pub fn compute_score(v: &[u8]) -> u32 {
-    if !v.is_ascii() {
-        return std::u32::MAX;
-    }
-
-    if v.iter().any(|&c| is_control(c) && c != b'\n') {
-        return std::u32::MAX;
-    }
-
-    let freqs = get_character_frequencies(v);
-
-    let length = v.len() as f32;
-    REF_FREQS.iter().fold(0f32, |a, &(c, score)| {
-        let ref_count = score / 100f32 * length;
-        let &obs_count = freqs.get(&c).unwrap_or(&0f32);
-        a + (ref_count - obs_count).powi(2)
-    }) as u32
-}
-
 fn is_control(u: u8) -> bool {
     u < 0x20 || u == 0x7F
 }
@@ -65,8 +45,8 @@ fn is_alphabetic(u: u8) -> bool {
     (u >= 0x41 && u <= 0x5A) || (u >= 0x61 && u <= 0x7A)
 }
 
-fn get_character_frequencies(v: &[u8]) -> HashMap<u8, f32> {
-    let mut freqs: HashMap<u8, f32> = HashMap::new();
+fn get_character_counts(v: &[u8]) -> HashMap<u8, f32> {
+    let mut counts: HashMap<u8, f32> = HashMap::new();
     for &c in v.iter() {
         if is_control(c) {
             continue;
@@ -79,10 +59,29 @@ fn get_character_frequencies(v: &[u8]) -> HashMap<u8, f32> {
             b'.'
         };
 
-        let freq = freqs.entry(key).or_insert(0f32);
-        *freq += 1f32;
+        let count = counts.entry(key).or_insert(0f32);
+        *count += 1f32;
     }
-    freqs
+    counts
+}
+
+pub fn compute_score(v: &[u8]) -> u32 {
+    if !v.is_ascii() {
+        return std::u32::MAX;
+    }
+
+    if v.iter().any(|&c| is_control(c) && c != b'\n') {
+        return std::u32::MAX;
+    }
+
+    let counts = get_character_counts(v);
+    let length = v.len() as f32;
+
+    EXPECTED_FREQUENCIES.iter().fold(0f32, |a, &(c, score)| {
+        let expected_count = score / 100f32 * length;
+        let &actual_count = counts.get(&c).unwrap_or(&0f32);
+        a + (expected_count - actual_count).powi(2)
+    }) as u32
 }
 
 pub fn break_single_byte_xor(input: &[u8]) -> u8 {

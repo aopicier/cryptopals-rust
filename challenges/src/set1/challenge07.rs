@@ -21,7 +21,8 @@ pub fn run() -> Result<(), Error> {
     let ciphertext = from_base64_file(Path::new("data/7.txt"))?;
     let cleartext = ciphertext.decrypt(key, None, MODE::ECB)?;
 
-    //Read reference cleartext
+    // Read reference cleartext from a file,
+    // it is too long to store it inline.
     let cleartext_ref = read_file_to_string("data/7.ref.txt")?;
 
     compare_eq(cleartext_ref.as_bytes(), &cleartext)
