@@ -72,23 +72,20 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize,
 // coincide with the constant we have chosen.
 
 pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
-    let n = full_prefix_blocks_count(oracle)?;
+    let offset = full_prefix_blocks_count(oracle)? * BLOCK_SIZE;
     let helper = |k: u8| -> Result<usize, Error> {
         let constant_block = vec![k; BLOCK_SIZE];
-
-        let mut prev = oracle.encrypt(&constant_block)?;
-
+        let initial = &oracle.encrypt(&constant_block)?[offset..(offset + BLOCK_SIZE)];
         for i in 0..BLOCK_SIZE {
             let cur = oracle.encrypt(&constant_block[i + 1..])?;
-            if prev.chunks(BLOCK_SIZE).nth(n) != cur.chunks(BLOCK_SIZE).nth(n) {
+            if cur.len() < offset + BLOCK_SIZE || initial != &cur[offset..(offset + BLOCK_SIZE)] {
                 return Ok(i);
             }
-            prev = cur;
         }
         Ok(BLOCK_SIZE)
     };
 
-    Ok(n * BLOCK_SIZE + std::cmp::min(helper(0)?, helper(1)?))
+    Ok(offset + std::cmp::min(helper(0)?, helper(1)?))
 }
 
 pub fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
@@ -123,7 +120,8 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
         let left_shift = i % BLOCK_SIZE;
         for u in 0u8..=255 {
             input.push(u);
-            if reference_ciphertexts[left_shift][block_index * BLOCK_SIZE..(block_index + 1) * BLOCK_SIZE]
+            if reference_ciphertexts[left_shift]
+                [block_index * BLOCK_SIZE..(block_index + 1) * BLOCK_SIZE]
                 == oracle.encrypt(&input[left_shift..])?
                     [block_index * BLOCK_SIZE..(block_index + 1) * BLOCK_SIZE]
             {
