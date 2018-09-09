@@ -32,19 +32,14 @@ impl Server17 {
             "MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93",
         ];
         let mut rng = rand::thread_rng();
-        let input_index = rng.gen_range(0, 10);
+        let input_index = rng.gen_range(0, inputs.len());
         let input = from_base64(inputs[input_index]).unwrap();
         let iv = random_block();
         let ciphertext = input.encrypt(&self.key, Some(&iv), MODE::CBC)?;
-        Ok((ciphertext, iv))
+        Ok((iv, ciphertext))
     }
 
     fn is_padding_valid(&self, iv: &[u8], ciphertext: &[u8]) -> Result<bool, Error> {
-        //match ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
-        //    Err(aes::Error(aes::ErrorKind::InvalidPadding, _)) => Ok(false),
-        //    Err(e) => Err(e.into()),
-        //    _ => Ok(true),
-        //}
         if let Err(error) = ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
             if let Some(&AesError::InvalidPadding) = error.downcast_ref::<AesError>() {
                 Ok(false)
@@ -66,7 +61,7 @@ impl Server17 {
 
 pub fn run() -> Result<(), Error> {
     let server = Server17::new();
-    let (ciphertext, iv) = server.get_session_token()?;
+    let (iv, ciphertext) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];
     let mut prev = iv.clone();
     for (block_index, block) in ciphertext.chunks(BLOCK_SIZE).enumerate() {
@@ -78,6 +73,11 @@ pub fn run() -> Result<(), Error> {
                 prev[i] ^= u;
                 if server.is_padding_valid(&prev, block)?
                     && (i < BLOCK_SIZE - 1 || {
+                        // The last byte of the block requires a special treatment because the padding could
+                        // accidentally be valid if we have for example flipped the last byte to the value 2
+                        // and the second to last byte of the cleartext also happens to be a 2. We therefore
+                        // change the second to last byte and test the padding again. If it is still
+                        // valid, we can be sure that the last byte has been flipped to the value 1.
                         prev[i - 1] ^= 1;
                         let result = server.is_padding_valid(&prev, block)?;
                         prev[i - 1] ^= 1;
