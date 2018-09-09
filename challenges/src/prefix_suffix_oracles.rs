@@ -340,7 +340,8 @@ mod tests {
     use failure::Error;
 
     use super::*;
-    use set2::{prefix_length, random_block, suffix_length};
+    use aes::random_block;
+    use set2::{prefix_length, suffix_length};
 
     struct TestOracle {
         common: Common,

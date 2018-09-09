@@ -9,7 +9,7 @@ mod challenge14;
 mod challenge15;
 mod challenge16;
 
-pub use self::challenge12::prefix_length;
+pub use self::challenge12::{prefix_length, suffix_length};
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
     challenges.push(challenge09::run);
