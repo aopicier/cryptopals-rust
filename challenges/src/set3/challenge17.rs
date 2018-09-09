@@ -5,7 +5,7 @@ use rand::Rng;
 use serialize::from_base64;
 use xor::XOR;
 
-use set2::random_block;
+use aes::random_block;
 
 struct Server17 {
     key: Vec<u8>,

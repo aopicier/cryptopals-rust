@@ -5,7 +5,7 @@ use rsa::Rsa;
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 
-use set2::random_block;
+use aes::random_block;
 
 fn find_signature(size: usize, suffix: &[u8]) -> Option<BigNum> {
     let mut prefix = vec![1u8];

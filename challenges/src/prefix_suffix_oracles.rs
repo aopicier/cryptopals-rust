@@ -11,7 +11,7 @@ use serialize::from_base64;
 use errors::*;
 use failure::Error;
 
-use set2::random_block;
+use aes::random_block;
 
 pub trait Oracle {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error>;

@@ -4,7 +4,7 @@ use aes::MODE;
 
 use xor::XOR;
 
-use set2::random_block;
+use aes::random_block;
 
 use errors::*;
 

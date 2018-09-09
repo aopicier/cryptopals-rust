@@ -1,9 +1,12 @@
 #[macro_use]
 extern crate failure;
+extern crate rand;
 extern crate openssl;
 extern crate xor;
 
+
 use openssl::symm::{decrypt, encrypt};
+use rand::Rng;
 use xor::XOR;
 
 pub const BLOCK_SIZE: usize = 16;
@@ -61,18 +64,18 @@ pub fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
     if u.is_empty() || u.len() % k as usize != 0 {
         return Ok(false);
     }
+
     let padding = u[u.len() - 1];
     if !(1 <= padding && padding <= k) {
         return Ok(false);
     }
+
     Ok(u[u.len() - padding as usize..]
         .iter()
         .all(|&b| b == padding))
 }
 
 trait Crypto {
-    //fn pad(&self, k: u8) -> Result<Vec<u8>, Error>;
-    //fn padding_valid(&self, k: u8) -> Result<bool, Error>;
     fn encrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
     fn decrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
     fn encrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
@@ -188,37 +191,7 @@ impl Aes128 for [u8] {
     }
 }
 
-#[test]
-fn test_padding_valid() {
-    //assert!("ICE ICE BABY\x04\x04\x04\x04".as_bytes().padding_valid(16) == true);
-    //assert!("ICE ICE BABY\x05\x05\x05\x05".as_bytes().padding_valid(16) == false);
-    //assert!("ICE ICE BABY\x03\x03\x03".as_bytes().padding_valid(16) == false);
-    //assert!("ICE ICE BABY\x01\x02\x03\x04".as_bytes().padding_valid(16) == false);
-    //assert!("ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C".as_bytes().padding_valid(12) == true);
-
-}
-
 impl Crypto for [u8] {
-    /*
-    fn pad(&self, k: u8) -> Result<Vec<u8>, Error> {
-        let mut u = self.to_vec();
-        pad_inplace(&mut u, k)?;
-        Ok(u)
-    }
-
-    fn padding_valid(&self, k: u8) -> Result<bool, Error> {
-        if k <= 1 { bail!("invalid parameter"); }
-        if self.is_empty() || self.len() % k as usize != 0 {
-            return Ok(false);
-        }
-        let padding = self[self.len() - 1];
-        if !(1 <= padding && padding <= k) {
-            return Ok(false);
-        }
-        Ok(self[self.len() - padding as usize..].iter().all(|&u| u == padding))
-    }
-    */
-
     fn encrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
         if self.len() != BLOCK_SIZE {
             bail!(format!("input does not consist of {} bytes", BLOCK_SIZE));
@@ -313,11 +286,40 @@ impl Crypto for [u8] {
     }
 }
 
-pub fn increment_counter(v: &mut [u8]) {
+fn increment_counter(v: &mut [u8]) {
     for b in v.iter_mut() {
         *b += 1;
         if *b != 0 {
             break;
         }
     }
+}
+
+pub fn random_block() -> Vec<u8> {
+    let mut rng = rand::thread_rng();
+    rng.gen_iter().take(BLOCK_SIZE).collect()
+}
+
+#[test]
+fn aes_128_cbc() {
+    let iv = [0; BLOCK_SIZE];
+    let key = b"YELLOW SUBMARINE";
+    let input = b"ABCDEFGHIJKLMNOP";
+    assert_eq!(
+        input.as_ref(),
+        &input
+            .encrypt(key, Some(&iv), MODE::CBC)
+            .unwrap()
+            .decrypt(key, Some(&iv), MODE::CBC)
+            .unwrap()[..]
+    );
+}
+
+#[test]
+fn test_padding_valid() {
+    assert!(padding_valid("ICE ICE BABY\x04\x04\x04\x04".as_bytes(), 16).unwrap() == true);
+    assert!(padding_valid("ICE ICE BABY\x05\x05\x05\x05".as_bytes(), 16).unwrap() == false);
+    assert!(padding_valid("ICE ICE BABY\x03\x03\x03".as_bytes(), 16).unwrap() == false);
+    assert!(padding_valid("ICE ICE BABY\x01\x02\x03\x04".as_bytes(), 16).unwrap() == false);
+    assert!(padding_valid("ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C".as_bytes(), 12).unwrap() == true);
 }

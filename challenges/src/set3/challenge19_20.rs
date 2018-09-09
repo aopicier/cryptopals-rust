@@ -1,6 +1,6 @@
 use errors::*;
 use set1::break_single_byte_xor;
-use set2::random_block;
+use aes::random_block;
 use std::path::PathBuf;
 
 use aes::{Aes128, MODE};

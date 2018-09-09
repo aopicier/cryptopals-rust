@@ -6,7 +6,7 @@ use xor::XOR;
 
 use serialize::from_base64_file;
 
-use set2::random_block;
+use aes::random_block;
 
 use errors::*;
 
