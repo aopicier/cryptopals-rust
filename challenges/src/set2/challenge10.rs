@@ -14,7 +14,8 @@ pub fn run() -> Result<(), Error> {
     let input = from_base64_file(Path::new("data/10.txt"))?;
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;
 
-    //Read reference cleartext
+    // Read reference cleartext from file, it is too long to store
+    // it inline.
     let cleartext_ref = read_file_to_string("data/10.ref.txt")?;
 
     compare_eq(cleartext_ref.as_bytes(), &cleartext)

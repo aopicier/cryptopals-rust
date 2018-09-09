@@ -4,7 +4,6 @@ extern crate rand;
 extern crate openssl;
 extern crate xor;
 
-
 use openssl::symm::{decrypt, encrypt};
 use rand::Rng;
 use xor::XOR;
@@ -298,6 +297,17 @@ fn increment_counter(v: &mut [u8]) {
 pub fn random_block() -> Vec<u8> {
     let mut rng = rand::thread_rng();
     rng.gen_iter().take(BLOCK_SIZE).collect()
+}
+
+// Returns a pair (chunks_count, fill_len), where chunks_count is the number of
+// chunks resulting from dividing a message of length len into chunks of size
+// BLOCK_SIZE. This count explicitly includes the last chunk, which may
+// be shorter than BLOCK_SIZE. The number fill_len is the difference between
+// chunks_count * BLOCK_SIZE and len.
+pub fn chunks_count(len: usize) -> (usize, usize) {
+    let q = (len + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    let r = q * BLOCK_SIZE - len;
+    (q, r)
 }
 
 #[test]

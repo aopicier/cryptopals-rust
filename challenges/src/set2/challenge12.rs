@@ -1,6 +1,5 @@
-use aes::BLOCK_SIZE;
+use aes::{BLOCK_SIZE, chunks_count};
 use errors::*;
-use helper::ceil_quotient;
 use std;
 
 use prefix_suffix_oracles::Oracle12;
@@ -21,6 +20,7 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> 
         if let Ok(ciphertext) = oracle.encrypt(&input[..i]) {
             initial != ciphertext.len()
         } else {
+            // Should never happen
             false
         }
     }) {
@@ -99,24 +99,25 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     //                ↓                ↓
     // <-- prefix --> 0 ... 0 || 0 ... 0 suffix[0] || suffix[1] ...
     //                ↑          ↑
-    //            prefix_len  prefix_blocks*BLOCK_SIZE
+    //            prefix_len  prefix_chunks_count*BLOCK_SIZE
     //
     // The resulting ciphertext is compared to oracle([input, u]). The u yielding a match is
     // equal to suffix[0].
 
     let prefix_len = prefix_length(oracle)?;
-    let (prefix_blocks, prefix_padding) = ceil_quotient(prefix_len, BLOCK_SIZE);
+
+    let (prefix_chunks_count, prefix_fill_len) = chunks_count(prefix_len);
     let suffix_len = suffix_length(oracle)?;
 
     let mut suffix = Vec::with_capacity(suffix_len);
 
-    let mut input = vec![0; prefix_padding + BLOCK_SIZE - 1];
+    let mut input = vec![0; prefix_fill_len + BLOCK_SIZE - 1];
     let reference_ciphertexts = (0..BLOCK_SIZE)
         .map(|left_shift| oracle.encrypt(&input[left_shift..]))
         .collect::<Result<Vec<Vec<u8>>, Error>>()?;
 
     for i in 0..suffix_len {
-        let block_index = prefix_blocks + i / BLOCK_SIZE;
+        let block_index = prefix_chunks_count + i / BLOCK_SIZE;
         let left_shift = i % BLOCK_SIZE;
         for u in 0u8..=255 {
             input.push(u);
