@@ -20,15 +20,22 @@ pub fn run() -> Result<(), Error> {
     let target_cleartext = b"admin".pad();
     let mut input = vec![0; prefix_fill_len];
     input.extend_from_slice(&target_cleartext);
-    let target_last_block = oracle
+
+    // Determine the ciphertext for target_cleartext
+    let target_last_block = &oracle
         .encrypt(&input)?
-        .split_off(prefix_chunks_count * BLOCK_SIZE);
+        .split_off(prefix_chunks_count * BLOCK_SIZE)[0..BLOCK_SIZE];
 
-    let (chunks, fill_len) = chunks_count(prefix_plus_suffix_length(&oracle)?);
+    // The following input is chosen in such a way that the cleartext in oracle looks as follows:
+    // email=\0 ... \0 || \0 ...\0&uid=10&role= || user <- padding ->
+    let (chunks_count, fill_len) = chunks_count(prefix_plus_suffix_length(&oracle)?);
     let mut ciphertext = oracle.encrypt(&vec![0; fill_len + "user".len()])?;
-    compare_eq((chunks + 1) * BLOCK_SIZE, ciphertext.len())?;
 
-    ciphertext[chunks * BLOCK_SIZE..].copy_from_slice(&target_last_block[0..BLOCK_SIZE]);
+    // Sanity check
+    compare_eq((chunks_count + 1) * BLOCK_SIZE, ciphertext.len())?;
+
+    // Replace last block with target_last_block
+    ciphertext[chunks_count * BLOCK_SIZE..].copy_from_slice(target_last_block);
 
     oracle.verify_solution(&ciphertext)
 }
