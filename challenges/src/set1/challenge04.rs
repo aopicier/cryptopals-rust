@@ -1,6 +1,6 @@
 use errors::*;
 use serialize::from_hex_lines;
-use set1::challenge3::compute_score;
+use super::challenge03::compute_score;
 use std::path::Path;
 use xor::XOR;
 

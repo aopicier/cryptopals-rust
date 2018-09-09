@@ -3,7 +3,7 @@ use std::path::Path;
 use xor::XOR;
 
 use errors::*;
-use set1::challenge3::{break_single_byte_xor, compute_score};
+use super::challenge03::{break_single_byte_xor, compute_score};
 
 fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32, Error> {
     if u.len() != v.len() {

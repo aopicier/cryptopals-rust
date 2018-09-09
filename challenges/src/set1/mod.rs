@@ -1,24 +1,24 @@
 use errors::*;
 
-mod challenge1;
-mod challenge2;
-mod challenge3;
-mod challenge4;
-mod challenge5;
-mod challenge6;
-mod challenge7;
-mod challenge8;
+mod challenge01;
+mod challenge02;
+mod challenge03;
+mod challenge04;
+mod challenge05;
+mod challenge06;
+mod challenge07;
+mod challenge08;
 
-pub use self::challenge3::break_single_byte_xor;
-pub use self::challenge7::read_file_to_string;
+pub use self::challenge03::break_single_byte_xor;
+pub use self::challenge07::read_file_to_string;
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
-    challenges.push(challenge1::run);
-    challenges.push(challenge2::run);
-    challenges.push(challenge3::run);
-    challenges.push(challenge4::run);
-    challenges.push(challenge5::run);
-    challenges.push(challenge6::run);
-    challenges.push(challenge7::run);
-    challenges.push(challenge8::run);
+    challenges.push(challenge01::run);
+    challenges.push(challenge02::run);
+    challenges.push(challenge03::run);
+    challenges.push(challenge04::run);
+    challenges.push(challenge05::run);
+    challenges.push(challenge06::run);
+    challenges.push(challenge07::run);
+    challenges.push(challenge08::run);
 }
