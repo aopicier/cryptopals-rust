@@ -1,5 +1,5 @@
 use errors::*;
-use set1::break_single_byte_xor;
+use set1::break_multibyte_xor_for_keysize;
 use aes::random_block;
 use std::path::PathBuf;
 
@@ -11,14 +11,14 @@ pub enum Exercise {
     _20,
 }
 
-struct Encrypter19_20 {
+struct Encrypter {
     key: Vec<u8>,
     exercise: Exercise,
 }
 
-impl Encrypter19_20 {
+impl Encrypter {
     pub fn new(exercise: Exercise) -> Self {
-        Encrypter19_20 {
+        Encrypter {
             key: random_block(),
             exercise,
         }
@@ -44,28 +44,15 @@ impl Encrypter19_20 {
         compare_eq(
             &vec![0; size].encrypt(&self.key, None, MODE::CTR)?[1..],
             &candidate_key[1..],
-        ) // encrypt or decrypt?
+        )
     }
 }
 
 pub fn run(exercise: Exercise) -> Result<(), Error> {
-    let encrypter = Encrypter19_20::new(exercise);
+    let encrypter = Encrypter::new(exercise);
     let ciphertexts = encrypter.get_ciphertexts()?;
-    let size = ciphertexts.iter().map(|c| c.len()).min().unwrap();
-    let mut transposed_blocks: Vec<Vec<u8>> = (0..size)
-        .map(|_| Vec::with_capacity(ciphertexts.len()))
-        .collect();
-
-    for ciphertext in ciphertexts {
-        for (&u, bt) in ciphertext[..size].iter().zip(transposed_blocks.iter_mut()) {
-            bt.push(u);
-        }
-    }
-
-    let key = transposed_blocks
-        .iter()
-        .map(|b| break_single_byte_xor(b))
-        .collect::<Vec<u8>>();
-
+    let size = ciphertexts.iter().map(|c| c.len()).min().unwrap(); // unwrap is ok
+    let ciphertext: Vec<u8> = ciphertexts.iter().flat_map(|ciphertext| &ciphertext[..size]).map(|&u| u).collect();
+    let key = break_multibyte_xor_for_keysize(&ciphertext, size);
     encrypter.verify_solution(&key, size)
 }

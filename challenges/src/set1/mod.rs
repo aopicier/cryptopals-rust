@@ -9,7 +9,7 @@ mod challenge06;
 mod challenge07;
 mod challenge08;
 
-pub use self::challenge03::break_single_byte_xor;
+pub use self::challenge06::break_multibyte_xor_for_keysize;
 pub use self::challenge07::read_file_to_string;
 
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {

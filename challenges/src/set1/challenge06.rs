@@ -70,7 +70,7 @@ fn transposed_blocks(input: &[u8], size: usize) -> Vec<Vec<u8>> {
     transposed_blocks
 }
 
-fn break_multibyte_xor_for_keysize(input: &[u8], keysize: usize) -> Vec<u8> {
+pub fn break_multibyte_xor_for_keysize(input: &[u8], keysize: usize) -> Vec<u8> {
     transposed_blocks(input, keysize)
         .iter()
         .map(|b| break_single_byte_xor(b))

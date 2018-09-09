@@ -7,11 +7,11 @@ use xor::XOR;
 
 use aes::random_block;
 
-struct Server17 {
+struct Server {
     key: Vec<u8>,
 }
 
-impl Server17 {
+impl Server {
     fn new() -> Self {
         Self {
             key: random_block(),
@@ -60,7 +60,7 @@ impl Server17 {
 }
 
 pub fn run() -> Result<(), Error> {
-    let server = Server17::new();
+    let server = Server::new();
     let (iv, ciphertext) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];
     let mut prev = iv.clone();
