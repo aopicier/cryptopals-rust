@@ -69,8 +69,8 @@ pub fn run() -> Result<(), Error> {
     let (ciphertext, iv) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];
     let mut prev = iv.clone();
-    for (block_count, block) in ciphertext.chunks(BLOCK_SIZE).enumerate() {
-        let block_offset = block_count * BLOCK_SIZE;
+    for (block_index, block) in ciphertext.chunks(BLOCK_SIZE).enumerate() {
+        let block_offset = block_index * BLOCK_SIZE;
         for i in (0..BLOCK_SIZE).rev() {
             let padding = (BLOCK_SIZE - i) as u8;
             prev[i + 1..].xor_inplace(&[(padding - 1) ^ padding]);

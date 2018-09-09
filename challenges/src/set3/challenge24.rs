@@ -10,7 +10,7 @@ use mersenne::MersenneTwister;
 use errors::*;
 use xor::XOR;
 
-use helper::ceil_div;
+use helper::ceil_quotient;
 
 pub fn run() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
@@ -32,7 +32,7 @@ pub fn run() -> Result<(), Error> {
         ciphertext.append(&mut c.xor(buffer));
     }
 
-    let (used_random_numbers_count, _) = ceil_div(ciphertext.len(), 4);
+    let (used_random_numbers_count, _) = ceil_quotient(ciphertext.len(), 4);
     let index = used_random_numbers_count - 2;
     // To recover the seed, we use the fact that the block ciphertext[4*index..4*(index+1)] was
     // encrypted with the index-th random number (counting as always from 0). As we also know the

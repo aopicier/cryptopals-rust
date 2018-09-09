@@ -1,20 +1,20 @@
 use aes::Aes128;
 use aes::BLOCK_SIZE;
 
-use xor::XOR;
+use helper::ceil_quotient;
 
-use helper::ceil_div;
+use xor::XOR;
 
 use errors::*;
 
 use prefix_suffix_oracles::{Oracle, Oracle16};
 
-use set2::challenge12::prefix_plus_suffix_length;
+use super::challenge12::prefix_plus_suffix_length;
 
 pub fn run() -> Result<(), Error> {
     let oracle = Oracle16::new()?;
 
-    let (blocks, padding) = ceil_div(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
+    let (blocks, padding) = ceil_quotient(prefix_plus_suffix_length(&oracle)?, BLOCK_SIZE);
     let mut ciphertext = oracle.encrypt(&vec![0; padding])?;
     compare_eq((blocks + 1) * BLOCK_SIZE, ciphertext.len())?;
 

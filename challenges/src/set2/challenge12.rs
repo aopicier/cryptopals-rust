@@ -1,6 +1,6 @@
 use aes::BLOCK_SIZE;
 use errors::*;
-use helper::ceil_div;
+use helper::ceil_quotient;
 use std;
 
 use prefix_suffix_oracles::Oracle12;
@@ -38,7 +38,7 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> 
 // To determine this number, we pass two different cleartexts to the oracle and count the number
 // of identical blocks at the start of the corresponding ciphertexts.
 
-fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
+fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
     if let Some(result) = oracle
         .encrypt(&[0])?
         .chunks(BLOCK_SIZE)
@@ -72,7 +72,7 @@ fn prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Erro
 // coincide with the constant we have chosen.
 
 pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
-    let n = prefix_blocks_count(oracle)?;
+    let n = full_prefix_blocks_count(oracle)?;
     let helper = |k: u8| -> Result<usize, Error> {
         let constant_block = vec![k; BLOCK_SIZE];
 
@@ -108,7 +108,7 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     // equal to suffix[0].
 
     let prefix_len = prefix_length(oracle)?;
-    let (prefix_blocks, prefix_padding) = ceil_div(prefix_len, BLOCK_SIZE);
+    let (prefix_blocks, prefix_padding) = ceil_quotient(prefix_len, BLOCK_SIZE);
     let suffix_len = suffix_length(oracle)?;
 
     let mut suffix = Vec::with_capacity(suffix_len);
@@ -119,13 +119,13 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
         .collect::<Result<Vec<Vec<u8>>, Error>>()?;
 
     for i in 0..suffix_len {
-        let block = prefix_blocks + i / BLOCK_SIZE;
+        let block_index = prefix_blocks + i / BLOCK_SIZE;
         let left_shift = i % BLOCK_SIZE;
         for u in 0u8..=255 {
             input.push(u);
-            if reference_ciphertexts[left_shift][block * BLOCK_SIZE..(block + 1) * BLOCK_SIZE]
+            if reference_ciphertexts[left_shift][block_index * BLOCK_SIZE..(block_index + 1) * BLOCK_SIZE]
                 == oracle.encrypt(&input[left_shift..])?
-                    [block * BLOCK_SIZE..(block + 1) * BLOCK_SIZE]
+                    [block_index * BLOCK_SIZE..(block_index + 1) * BLOCK_SIZE]
             {
                 suffix.push(u);
                 break;
