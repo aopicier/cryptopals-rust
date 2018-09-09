@@ -38,7 +38,7 @@ fn challenge_indices(challenges_count: usize) -> Result<Vec<usize>, String> {
     }
 
     let mut indices = Vec::new();
-    for arg in args.into_iter().skip(1) {
+    for arg in args.skip(1) {
         if let Ok(index) = arg.parse::<usize>() {
             if index >= 1 && index <= challenges_count {
                 indices.push(index);

@@ -112,7 +112,7 @@ fn inv_rs(mut u: u32, k: u32) -> u32 {
     assert!(k >= 1);
     let mut v = u;
     //Would profit from range_inclusive and std::u32::BITS
-    for _ in 0..32 / k + 1 {
+    for _ in 0..=32 / k {
         u >>= k;
         v ^= u;
     }

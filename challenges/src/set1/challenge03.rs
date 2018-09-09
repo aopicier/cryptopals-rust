@@ -88,7 +88,6 @@ fn get_character_frequencies(v: &[u8]) -> HashMap<u8, f32> {
 pub fn break_single_byte_xor(input: &[u8]) -> u8 {
     // We consider arbitrary bytes here because of challenges 19 and 20.
     (0u8..=255)
-        .into_iter()
         .min_by_key(|&u| compute_score(&input.xor(&[u])))
         .unwrap() // unwrap is ok
 }

@@ -25,7 +25,7 @@ pub fn run() -> Result<(), Error> {
 
     let zero = BigNum::zero();
     let one = BigNum::one();
-    let private = (0u32..(1 << 16) + 1)
+    let private = (0u32..=(1 << 16))
         .map(BigNumTrait::from_u32)
         .map(|k| public.secret_key_from_k(&m, &signature, &k))
         .filter(|x| x != &zero && x != &one)
