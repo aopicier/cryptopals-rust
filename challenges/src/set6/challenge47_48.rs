@@ -71,7 +71,7 @@ pub fn run(rsa_bits: usize) -> Result<(), Error> {
         let mut si;
         if i == 1 {
             // Step 2.a
-            si = n.ceil_div(&_3B).0;
+            si = n.ceil_quotient(&_3B);
             while !wrapped_oracle(&si) {
                 si = &si + &_1;
             }
@@ -84,10 +84,10 @@ pub fn run(rsa_bits: usize) -> Result<(), Error> {
         } else {
             // Step 2.c
             let (ref a, ref b) = M_prev[0];
-            let mut ri = (&_2 * &(&(b * &s_prev) - &_2B)).ceil_div(n).0;
+            let mut ri = (&_2 * &(&(b * &s_prev) - &_2B)).ceil_quotient(n);
             'outer: loop {
-                si = (&_2B + &(&ri * n)).ceil_div(b).0;
-                let U = (&_3B + &(&ri * n)).ceil_div(a).0;
+                si = (&_2B + &(&ri * n)).ceil_quotient(b);
+                let U = (&_3B + &(&ri * n)).ceil_quotient(a);
                 while si < U {
                     if wrapped_oracle(&si) {
                         break 'outer;
@@ -100,12 +100,12 @@ pub fn run(rsa_bits: usize) -> Result<(), Error> {
 
         let mut Mi = Vec::new();
         for &(ref a, ref b) in &M_prev {
-            let mut r = (&(&(a * &si) - &_3B) + &_1).ceil_div(n).0;
-            let U = (&(b * &si) - &_2B).floor_div(n).0;
+            let mut r = (&(&(a * &si) - &_3B) + &_1).ceil_quotient(n);
+            let U = (&(b * &si) - &_2B).floor_quotient(n);
             while r <= U {
                 Mi.push((
-                    cmp::max(a.clone(), (&_2B + &(&r * n)).ceil_div(&si).0),
-                    cmp::min(b.clone(), (&(&_3B - &_1) + &(&r * n)).floor_div(&si).0),
+                    cmp::max(a.clone(), (&_2B + &(&r * n)).ceil_quotient(&si)),
+                    cmp::min(b.clone(), (&(&_3B - &_1) + &(&r * n)).floor_quotient(&si)),
                 ));
                 r = &r + &_1;
             }

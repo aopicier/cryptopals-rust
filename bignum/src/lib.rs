@@ -313,7 +313,7 @@ impl BigNumTrait for BigInt {
         let (zero, one): (BigInt, BigInt) = (Zero::zero(), One::one());
         let two = &one + &one;
         let mut result = one.clone();
-        let mut base = self.mod_math(&modulus);
+        let mut base = self.remainder(&modulus);
         let mut exponent = exponent.clone();
 
         while exponent > zero {
@@ -352,7 +352,7 @@ impl BigNumTrait for BigInt {
             r = (r.1.clone(), &r.0 % &r.1);
         }
         if r.0 == one {
-            Some(l.0.mod_math(n))
+            Some(l.0.remainder(n))
         } else {
             None
         }
@@ -510,9 +510,18 @@ impl BigNumTrait for BigNum {
 }
 
 pub trait BigNumExt: Sized {
-    fn ceil_div(&self, k: &Self) -> (Self, Self);
-    fn floor_div(&self, k: &Self) -> (Self, Self);
-    fn mod_math(&self, n: &Self) -> Self;
+    // Returns the ceil of the quotient self/k.
+    fn ceil_quotient(&self, k: &Self) -> Self;
+
+    // Returns the floor of the quotient self/k.
+    fn floor_quotient(&self, k: &Self) -> Self;
+
+    // Returns the mathematical remainder of self divided by k.
+    fn remainder(&self, n: &Self) -> Self;
+
+    /* Returns a pair (r, is_root), where
+     * - r is the biggest integer with r^k <= self, and
+     * - is_root indicates whether we have equality. */
     fn root(&self, k: usize) -> (Self, bool);
 }
 
@@ -520,27 +529,30 @@ impl<T: BigNumTrait> BigNumExt for T
 where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
-    fn ceil_div(&self, k: &T) -> (T, T) {
-        let q = &(&(self + k) - &T::one()) / k;
-        let r = &(&q * k) - self;
-        (q, r)
+    fn ceil_quotient(&self, k: &Self) -> Self {
+        assert!(k > &Self::zero());
+        &(&(self + k) - &Self::one()) / k
     }
 
-    fn floor_div(&self, k: &T) -> (T, T) {
-        (self / k, self % k)
+    fn floor_quotient(&self, k: &Self) -> Self {
+        assert!(k > &Self::zero());
+        self / k
     }
 
-    fn mod_math(&self, n: &T) -> T {
-        let mut r = self % n;
+    fn remainder(&self, k: &Self) -> Self {
+        assert!(k > &Self::zero());
+
+        let mut r = self % k;
         if r < Self::zero() {
-            r = &r + n;
+            r = &r + k;
         }
         r
     }
 
-    //Returns a pair (r, is_root), where r is the biggest integer with r^k <= self, and is_root indicates
-    //whether we have equality.
     fn root(&self, k: usize) -> (Self, bool) {
+        assert!(self > &Self::zero(), "base is not positive");
+        assert!(k > 0, "exponent is not positive");
+
         let one = Self::one();
         let mut a = Self::clone(&one);
         let mut b = Self::clone(&self);

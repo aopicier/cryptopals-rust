@@ -28,7 +28,7 @@ where
     pub fn secret_key_from_k(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>, k: &T) -> T {
         let q = &self.params.q;
         let x = &(&(s * k) - m) * &r.invmod(q).unwrap();
-        x.mod_math(q)
+        x.remainder(q)
     }
 
     pub fn secret_key_from_two_signatures_with_same_k(
@@ -40,7 +40,7 @@ where
     ) -> T {
         assert_eq!(s1.r, s2.r);
         let q = &self.params.q;
-        let k = &(m1 - m2).mod_math(q) * &T::invmod(&T::mod_math(&(&s1.s - &s2.s), q), q).unwrap();
+        let k = &(m1 - m2).remainder(q) * &T::invmod(&T::remainder(&(&s1.s - &s2.s), q), q).unwrap();
         self.secret_key_from_k(m1, s1, &k)
     }
 
@@ -54,11 +54,11 @@ where
             return false;
         }
         let w = T::invmod(s, q).unwrap();
-        let u1 = T::mod_math(&(m * &w), q);
-        let u2 = T::mod_math(&(r * &w), q);
+        let u1 = T::remainder(&(m * &w), q);
+        let u2 = T::remainder(&(r * &w), q);
         let v1 = g.mod_exp(&u1, p);
         let v2 = self.y.mod_exp(&u2, p);
-        let v = T::mod_math(&T::mod_math(&(&v1 * &v2), p), q);
+        let v = T::remainder(&T::remainder(&(&v1 * &v2), p), q);
         &v == r
     }
 }
@@ -94,12 +94,12 @@ where
                 continue;
             }
             r = g.mod_exp(&k, p);
-            r = r.mod_math(q);
+            r = r.remainder(q);
             if r == zero {
                 continue;
             }
             s = &k.invmod(q).unwrap() * &(m + &(&r * &self.x));
-            s = s.mod_math(q);
+            s = s.remainder(q);
             if s == zero {
                 continue;
             }
@@ -128,9 +128,9 @@ where
     let q = &public.params.q;
     let z = rand_range_safe(q);
     let mut r = T::mod_exp(&public.y, &z, p);
-    r = T::mod_math(&r, q);
+    r = T::remainder(&r, q);
     let mut s = &r * &T::invmod(&z, q).unwrap();
-    s = T::mod_math(&s, q);
+    s = T::remainder(&s, q);
     Signature { r, s }
 }
 
