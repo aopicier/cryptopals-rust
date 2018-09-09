@@ -5,6 +5,18 @@ use std;
 use prefix_suffix_oracles::Oracle12;
 use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 
+fn block_size<T: Oracle>(oracle: &T) -> Result<usize, Error> {
+    let mut input = Vec::new();
+    let initial_len = oracle.encrypt(&input)?.len();
+    loop {
+        input.push(0);
+        let len = oracle.encrypt(&input)?.len();
+        if initial_len != len {
+            return Ok(len - initial_len);
+        }
+    }
+}
+
 fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
     Ok((oracle.encrypt(&[0])?.len() - oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
 }
@@ -88,8 +100,10 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error>
     Ok(offset + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-pub fn suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
-    Ok(prefix_plus_suffix_length(oracle)? - prefix_length(oracle)?)
+pub fn prefix_and_suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<(usize, usize), Error> {
+    let prefix_len = prefix_length(oracle)?;
+    let suffix_len = prefix_plus_suffix_length(oracle)? - prefix_len;
+    Ok((prefix_len, suffix_len))
 }
 
 pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> {
@@ -104,10 +118,11 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     // The resulting ciphertext is compared to oracle([input, u]). The u yielding a match is
     // equal to suffix[0].
 
-    let prefix_len = prefix_length(oracle)?;
+    ensure!(block_size(oracle)? == BLOCK_SIZE, "oracle does not use expected block size");
+    // TODO Add ECB check
 
+    let (prefix_len, suffix_len) = prefix_and_suffix_length(oracle)?;
     let (prefix_chunks_count, prefix_fill_len) = chunks_count(prefix_len);
-    let suffix_len = suffix_length(oracle)?;
 
     let mut suffix = Vec::with_capacity(suffix_len);
 

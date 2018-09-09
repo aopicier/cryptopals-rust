@@ -341,7 +341,7 @@ mod tests {
 
     use super::*;
     use aes::random_block;
-    use set2::{prefix_length, suffix_length};
+    use set2::prefix_and_suffix_length;
 
     struct TestOracle {
         common: Common,
@@ -390,8 +390,10 @@ mod tests {
                     let oracle =
                         TestOracle::new(key.clone(), prefix.clone(), suffix.clone(), mode).unwrap();
 
-                    assert!(prefix.len() == prefix_length(&oracle).unwrap());
-                    assert!(suffix.len() == suffix_length(&oracle).unwrap());
+                    let (prefix_len, suffix_len) = prefix_and_suffix_length(&oracle).unwrap();
+
+                    assert_eq!(prefix.len(), prefix_len);
+                    assert_eq!(suffix.len(), suffix_len);
                     suffix.push(1);
                 }
                 suffix.clear();
