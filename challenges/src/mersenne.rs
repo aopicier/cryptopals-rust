@@ -1,4 +1,3 @@
-use std::ops::Range;
 pub const STATE_SIZE: usize = 624;
 
 // The following code is a direct translation of the pseudocode found on Wikipedia
@@ -111,7 +110,7 @@ fn temper(mut y: u32) -> u32 {
 fn inv_rs(mut u: u32, k: u32) -> u32 {
     assert!(k >= 1);
     let mut v = u;
-    //Would profit from range_inclusive and std::u32::BITS
+    //Would profit from std::u32::BITS
     for _ in 0..=32 / k {
         u >>= k;
         v ^= u;
@@ -134,14 +133,4 @@ pub fn untemper(u: u32) -> u32 {
         inv_lsa(inv_lsa(inv_rs(u, 18), 15, 0xefc6_0000), 7, 0x9d2c_5680),
         11,
     )
-}
-
-pub fn crack_seed_from_nth(u: u32, n: usize, range: Range<u32>) -> Option<u32> {
-    //Unfortunately we use brute force here. Is there an analytic attack?
-    for candidate in range {
-        if u == MersenneTwister::initialize(candidate).nth(n).unwrap() {
-            return Some(candidate);
-        }
-    }
-    None
 }
