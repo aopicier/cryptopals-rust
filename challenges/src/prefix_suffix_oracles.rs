@@ -15,7 +15,6 @@ use aes::random_block;
 
 pub trait Oracle {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error>;
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error>;
 }
 
 // Marker trait for oracles where repeated calls to
@@ -50,10 +49,6 @@ impl Oracle for Common {
             }
             _ => cleartext.encrypt(key, None, mode),
         }
-    }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        compare_eq(&self.suffix[..], candidate)
     }
 }
 
@@ -109,10 +104,6 @@ impl Oracle for Oracle12 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         self.common.encrypt(u)
     }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        self.common.verify_suffix(candidate)
-    }
 }
 
 impl Oracle12 {
@@ -134,6 +125,10 @@ impl Oracle12 {
                 mode: MODE::ECB,
             },
         })
+    }
+
+    pub fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
+        compare_eq(&self.common.suffix[..], candidate)
     }
 }
 
@@ -159,10 +154,6 @@ impl Oracle for Oracle13 {
         }
 
         self.common.encrypt(u)
-    }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        self.common.verify_suffix(candidate)
     }
 }
 
@@ -204,10 +195,6 @@ impl Oracle for Oracle14 {
     fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
         self.common.encrypt(u)
     }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        self.common.verify_suffix(candidate)
-    }
 }
 
 impl Oracle14 {
@@ -233,6 +220,10 @@ impl Oracle14 {
             },
         })
     }
+
+    pub fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
+        compare_eq(&self.common.suffix[..], candidate)
+    }
 }
 
 pub struct Oracle16 {
@@ -246,10 +237,6 @@ impl Oracle for Oracle16 {
         }
 
         self.common.encrypt(u)
-    }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        self.common.verify_suffix(candidate)
     }
 }
 
@@ -300,10 +287,6 @@ impl Oracle for Oracle26 {
 
         self.common.encrypt(u)
     }
-
-    fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-        self.common.verify_suffix(candidate)
-    }
 }
 
 impl Oracle26 {
@@ -352,10 +335,6 @@ mod tests {
     impl Oracle for TestOracle {
         fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
             self.common.encrypt(u)
-        }
-
-        fn verify_suffix(&self, candidate: &[u8]) -> Result<(), Error> {
-            self.common.verify_suffix(candidate)
         }
     }
 

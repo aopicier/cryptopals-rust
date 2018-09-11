@@ -1,6 +1,5 @@
 use errors::*;
 
-use prefix_suffix_oracles::Oracle;
 use prefix_suffix_oracles::Oracle14;
 
 use super::challenge12::decrypt_suffix;
