@@ -10,18 +10,18 @@ use aes::random_block;
 
 use errors::*;
 
-struct Encrypter25 {
+struct Encrypter {
     cleartext: Vec<u8>,
     key: Vec<u8>,
     ciphertext: Vec<u8>,
 }
 
-impl Encrypter25 {
+impl Encrypter {
     pub fn new() -> Result<Self, Error> {
         let cleartext = from_base64_file(Path::new("data/25.txt"))?;
         let key = random_block();
         let ciphertext = cleartext.encrypt(&key, None, MODE::CTR)?;
-        Ok(Encrypter25 {
+        Ok(Encrypter {
             cleartext,
             key,
             ciphertext,
@@ -53,7 +53,7 @@ pub fn run() -> Result<(), Error> {
     // known plaintext. We simply use the edit function to set the entire cleartext to 0 so that
     // the ciphertext is even equal to the keystream.
 
-    let encrypter = Encrypter25::new()?;
+    let encrypter = Encrypter::new()?;
     let ciphertext = encrypter.get_ciphertext();
     let keystream = encrypter.edit(0, &vec![0; ciphertext.len()])?;
     encrypter.verify_solution(&ciphertext.xor(&keystream))

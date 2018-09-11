@@ -8,15 +8,15 @@ use aes::random_block;
 
 use errors::*;
 
-struct Sender27 {
+struct Sender {
     key: Vec<u8>,
 }
 
-struct Receiver27 {
+struct Receiver {
     key: Vec<u8>,
 }
 
-impl Sender27 {
+impl Sender {
     pub fn encrypt(&self, input: &[u8]) -> Result<Vec<u8>, Error> {
         // Exclude ';' and '='
         if input
@@ -36,7 +36,7 @@ impl Sender27 {
     }
 }
 
-impl Receiver27 {
+impl Receiver {
     pub fn try_decrypt(&self, ciphertext: &[u8]) -> Result<(), Error> {
         let cleartext = ciphertext.decrypt(&self.key, Some(&self.key), MODE::CBC)?;
         if !cleartext.is_ascii() {
@@ -51,12 +51,12 @@ impl Receiver27 {
     }
 }
 
-fn get_sender_and_receiver_with_shared_key() -> (Sender27, Receiver27) {
+fn get_sender_and_receiver_with_shared_key() -> (Sender, Receiver) {
     let secret_key = random_block();
-    let sender = Sender27 {
+    let sender = Sender {
         key: secret_key.clone(),
     };
-    let receiver = Receiver27 {
+    let receiver = Receiver {
         key: secret_key.clone(),
     };
     (sender, receiver)
