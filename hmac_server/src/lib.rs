@@ -1,7 +1,6 @@
 extern crate mac;
 extern crate serialize;
 
-extern crate hyper;
 extern crate iron;
 extern crate params;
 
@@ -13,7 +12,7 @@ use std::{thread, time};
 
 use iron::prelude::*;
 use iron::status;
-use params::Params;
+use params::{Params, Value};
 
 use mac::hmac_sha1;
 use serialize::from_hex;
@@ -32,51 +31,49 @@ fn insecure_compare(u: &[u8], v: &[u8]) -> bool {
     true
 }
 
-fn file_hmac_sha1(key: &[u8], file: &str) -> Option<Vec<u8>> {
+fn compute_hmac(key: &[u8], file: &str) -> Option<Vec<u8>> {
     let path = Path::new("/home/ph/Development/matasano/matasano/src/").join(file);
 
-    let file = match File::open(&path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Failed to load file from {:?}", path);
-            return None;
-        }
-    };
+    let file = File::open(&path).ok()?;
     let mut reader = BufReader::new(file);
     let mut content = Vec::new();
     reader.read_to_end(&mut content).ok().unwrap();
     Some(hmac_sha1(key, &content))
 }
 
-fn verify_signature(req: &mut Request, key: &[u8]) -> IronResult<Response> {
-    let params = req.get_ref::<Params>().unwrap();
+fn parse_body<'a>(req: &'a mut Request) -> Option<((&'a str, &'a str))> {
+    let params = req.get_ref::<Params>().ok()?;
+
     let file = match params.find(&["file"]) {
-        //None => return Err(CustomError::new("missing file parameter")),
-        Some(&params::Value::String(ref file)) => file.clone(), // clone() is critical
-        //_ => return Err(CustomError::new("file parameter was not a single string"))
-        _ => return Ok(Response::with(status::InternalServerError)),
+        Some(&Value::String(ref file)) => file,
+        _ => return None
     };
+
     let signature = match params.find(&["signature"]) {
-        //None => return Err(CustomError::new("missing signature parameter")),
-        Some(&params::Value::String(ref signature)) => signature.clone(), // clone() is critical
-        //_ => return Err(CustomError::new("signature parameter was not a single string"))
-        _ => return Ok(Response::with(status::InternalServerError)),
+        Some(&Value::String(ref signature)) => signature,
+        _ => return None
     };
 
-    let computed_hmac = match file_hmac_sha1(key, &file) {
-        Some(hmac) => hmac,
-        None => return Ok(Response::with(status::InternalServerError)),
-    };
-
-    if insecure_compare(&computed_hmac, &from_hex(&signature).unwrap()) {
-        Ok(Response::with(status::Ok))
-    } else {
-        Ok(Response::with(status::InternalServerError))
-    }
+    Some((file, signature))
 }
 
-pub fn start(key: Vec<u8>) -> hyper::server::Listening {
-    Iron::new(move |req: &mut Request| verify_signature(req, &key))
+fn verify_signature(file: &str, signature: &str, key: &[u8]) -> Option<bool> {
+    let computed_hmac = compute_hmac(key, &file)?;
+    Some(insecure_compare(&computed_hmac, &from_hex(&signature).ok()?))
+}
+
+fn handle_request(req: &mut Request, key: &[u8]) -> IronResult<Response> {
+    if let Some((file, signature)) = parse_body(req) {
+        if verify_signature(file, signature, key) == Some(true) {
+            return Ok(Response::with(status::Ok))
+        }
+    }
+
+    Ok(Response::with(status::InternalServerError))
+}
+
+pub fn start(key: Vec<u8>) -> iron::Listening {
+    Iron::new(move |req: &mut Request| handle_request(req, &key))
         .http("localhost:3000")
         .unwrap()
 }
