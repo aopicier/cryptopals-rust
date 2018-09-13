@@ -79,7 +79,6 @@ pub fn run() -> Result<(), Error> {
             }
         }
         mac[i] = u_max;
-        println!("{}", u_max);
     }
 
     if !try_signature(&mac)? {
