@@ -1,6 +1,7 @@
 extern crate mac;
 extern crate serialize;
 
+extern crate failure;
 extern crate iron;
 extern crate params;
 
@@ -9,6 +10,8 @@ use std::io::BufReader;
 use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
+
+use failure::Error;
 
 use iron::prelude::*;
 use iron::status;
@@ -72,8 +75,8 @@ fn handle_request(req: &mut Request, key: &[u8]) -> IronResult<Response> {
     Ok(Response::with(status::InternalServerError))
 }
 
-pub fn start(key: Vec<u8>) -> iron::Listening {
+pub fn start(key: Vec<u8>) -> Result<iron::Listening, Error> {
     Iron::new(move |req: &mut Request| handle_request(req, &key))
         .http("localhost:3000")
-        .unwrap()
+        .map_err(|err| err.into())
 }

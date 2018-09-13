@@ -4,6 +4,7 @@ version = "0.0.1"
 authors = ["ph"]
 
 [dependencies]
+failure = "0.1"
 iron = "0.6"
 params = "0.8"
 
