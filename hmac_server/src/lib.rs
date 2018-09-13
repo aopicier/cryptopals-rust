@@ -35,7 +35,7 @@ fn insecure_compare(u: &[u8], v: &[u8]) -> bool {
 }
 
 fn compute_hmac(key: &[u8], file: &str) -> Option<Vec<u8>> {
-    let path = Path::new("/home/ph/Development/matasano/matasano/src/").join(file);
+    let path = Path::new("data/").join(file);
 
     let file = File::open(&path).ok()?;
     let mut reader = BufReader::new(file);
