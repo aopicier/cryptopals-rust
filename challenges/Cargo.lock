@@ -250,6 +250,7 @@ dependencies = [
 name = "hmac_client"
 version = "0.1.0"
 dependencies = [
+ "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.10.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "serialize 0.1.0",
 ]
@@ -258,6 +259,7 @@ dependencies = [
 name = "hmac_server"
 version = "0.0.1"
 dependencies = [
+ "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "mac 0.1.0",
  "params 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",

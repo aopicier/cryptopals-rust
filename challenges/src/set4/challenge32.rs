@@ -16,11 +16,9 @@ pub fn run() -> Result<(), Error> {
     let mut rng = rand::thread_rng();
     let key: Vec<u8> = rng.gen_iter().take(20).collect();
 
-    let mut server = hmac_server::start(key);
-
-    hmac_client::run();
-
+    let mut server = hmac_server::start(key)?;
+    let result = hmac_client::run();
     server.close().context("failed to close connection")?;
 
-    Ok(()) //TODO Add proper error handling
+    result
 }

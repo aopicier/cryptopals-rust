@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Philipp Hartwig <ph@phhart.de>"]
 
 [dependencies]
+failure = "0.1"
 hyper = "0.10"
 
 [dependencies.serialize]
