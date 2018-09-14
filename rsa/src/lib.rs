@@ -13,16 +13,27 @@ impl<T: bignum::BigNumTrait> Rsa<T>
 where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
-    pub fn generate(bits: usize) -> Self {
-        let p = T::gen_prime(bits);
-        let q = T::gen_prime(bits);
+    pub fn generate(mut bits: usize) -> Self {
+        // Make sure that p and q are bigger than 7.
+        if bits <= 3 {
+            bits = 4;
+        }
+
+        let p = T::gen_safe_prime(bits);
+        let q = T::gen_safe_prime(bits);
         let n = &p * &q;
         let one = T::one();
         let pn = &p - &one;
         let qn = &q - &one;
         let et = &pn * &qn;
         let e = T::from_u32(3);
-        let d = e.invmod(&et).unwrap(); // Only works if e does not divide et
+
+        // We know that et is not divisible by 3 because
+        // p and q are safe primes bigger than 7. (For a safe prime p
+        // bigger than 7, (p - 1)/2 is a prime bigger than 3. Therefore
+        // p - 1 is not divisible by 3.)
+        let d = e.invmod(&et).unwrap(); // unwrap is ok
+
         Rsa { n, d, e }
     }
 

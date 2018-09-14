@@ -34,7 +34,7 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn to_dec_str(&self) -> String;
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self;
     fn gen_below(bound: &Self) -> Self;
-    fn gen_prime(bits: usize) -> Self;
+    fn gen_safe_prime(bits: usize) -> Self;
     fn gen_random(bits: usize) -> Self;
     fn invmod(&self, n: &Self) -> Option<Self>;
     fn power(&self, k: usize) -> Self;
@@ -222,9 +222,9 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
         }
     }
 
-    fn gen_prime(bits: usize) -> Self {
+    fn gen_safe_prime(bits: usize) -> Self {
         BigNumWrapper {
-            num: T::gen_prime(bits),
+            num: T::gen_safe_prime(bits),
         }
     }
 
@@ -333,8 +333,8 @@ impl BigNumTrait for BigInt {
         rng.gen_bigint_range(&Zero::zero(), bound)
     }
 
-    fn gen_prime(bits: usize) -> Self {
-        BigInt::from_bytes_be(Sign::Plus, &<BigNum as BigNumTrait>::gen_prime(bits).to_vec())
+    fn gen_safe_prime(bits: usize) -> Self {
+        BigInt::from_bytes_be(Sign::Plus, &<BigNum as BigNumTrait>::gen_safe_prime(bits).to_vec())
     }
 
     fn gen_random(bits: usize) -> Self {
@@ -444,7 +444,7 @@ impl BigNumTrait for BigNum {
         result
     }
 
-    fn gen_prime(bits: usize) -> Self {
+    fn gen_safe_prime(bits: usize) -> Self {
         let mut result = BigNum::new().unwrap();
         result
             .generate_prime(bits as i32, true, None, None)
