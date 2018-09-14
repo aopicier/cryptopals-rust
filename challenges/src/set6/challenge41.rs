@@ -5,27 +5,60 @@ use rsa::Rsa;
 use bignum::BigNumTrait;
 use bignum::OpensslBigNum as BigNum;
 
-pub fn run() -> Result<(), Error> {
-    let bits = 512;
-    let rsa = Rsa::<BigNum>::generate(bits);
+const BITS:usize = 512;
 
-    let m = BigNumTrait::gen_random(bits - 1);
-    let c = rsa.encrypt(&m);
+struct Server {
+    rsa: Rsa<BigNum>,
+    cleartext: BigNum,
+    ciphertext: BigNum,
+}
 
-    let oracle = |x: &BigNum| -> Option<BigNum> {
-        if *x == c {
+impl Server {
+    fn new() -> Self {
+        let rsa = Rsa::<BigNum>::generate(BITS);
+        let cleartext = BigNumTrait::gen_random(BITS - 1);
+        let ciphertext = rsa.encrypt(&cleartext);
+        Server { rsa, cleartext, ciphertext }
+    }
+
+    fn n(&self) -> &BigNum {
+        &self.rsa.n()
+    }
+
+    fn get_ciphertext(&self) -> &BigNum {
+        &self.ciphertext
+    }
+
+    fn encrypt(&self, cleartext: &BigNum) -> BigNum {
+        self.rsa.encrypt(cleartext)
+    }
+
+    fn decrypt(&self, ciphertext: &BigNum) -> Option<BigNum> {
+        // Reject ciphertext itself
+        if ciphertext == &self.ciphertext {
             return None;
         }
-        Some(rsa.decrypt(x))
-    };
+        Some(self.rsa.decrypt(ciphertext))
+    }
 
-    let s = BigNum::gen_random(bits - 1);
-    //TODO We should check that s > 1 and that s and rsa.n() have no common divisors
-    let t = s
-        .invmod(rsa.n())
-        .ok_or_else(|| err_msg("s and n are not coprime"))?;
+    fn verify_solution(&self, candidate: &BigNum) -> Result<(), Error> {
+        compare_eq(&self.cleartext, candidate)
+    }
+}
 
-    let c2 = &(&c * &rsa.encrypt(&s)) % rsa.n();
-    let m2 = oracle(&c2).ok_or_else(|| err_msg("wrong input to oracle"))?;
-    compare_eq(m, &(&m2 * &t) % rsa.n())
+pub fn run() -> Result<(), Error> {
+    let server = Server::new();
+    let ciphertext = server.get_ciphertext();
+
+    let n = server.n();
+    let s = &BigNum::from_u32(2);
+    let t = &s.invmod(n).unwrap(); // unwrap is ok
+
+    let altered_ciphertext = &(ciphertext * &server.encrypt(s)) % n;
+    let altered_cleartext = server
+        .decrypt(&altered_ciphertext)
+        .ok_or_else(|| err_msg("wrong input to oracle"))?;
+
+    let cleartext = &(&altered_cleartext * t) % n;
+    server.verify_solution(&cleartext)
 }
