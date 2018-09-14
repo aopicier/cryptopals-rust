@@ -164,7 +164,7 @@ impl MacHelper for Md4Helper {
     }
 }
 
-fn challenge_29_30<T: MacHelper>() -> Result<(), Error> {
+fn run_29_30<T: MacHelper>() -> Result<(), Error> {
     let server = MacServer::<T>::new();
     let (original_message, mac) = server.get_message_with_mac();
     let new_message = b";admin=true";
@@ -192,7 +192,7 @@ fn challenge_29_30<T: MacHelper>() -> Result<(), Error> {
 }
 
 pub fn run29() -> Result<(), Error> {
-    challenge_29_30::<Sha1Helper>()
+    run_29_30::<Sha1Helper>()
 }
 
 struct Md4_0_7 {
@@ -219,5 +219,5 @@ impl Md4_0_7 {
 }
 
 pub fn run30() -> Result<(), Error> {
-    challenge_29_30::<Md4Helper>()
+    run_29_30::<Md4Helper>()
 }

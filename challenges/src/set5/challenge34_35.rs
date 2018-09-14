@@ -62,7 +62,7 @@ fn mitm_handle_client<M: MitmHandshake<TcpStream>>(
     })
 }
 
-fn run_dh_server<S: Handshake<TcpStream>>(
+fn start_server<S: Handshake<TcpStream>>(
     port: u16,
 ) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
     let listener = TcpListener::bind(("localhost", port))?;
@@ -72,7 +72,7 @@ fn run_dh_server<S: Handshake<TcpStream>>(
     }))
 }
 
-fn run_dh_mitm<M: MitmHandshake<TcpStream>>(
+fn start_mitm<M: MitmHandshake<TcpStream>>(
     client_port: u16,
     server_port: u16,
 ) -> Result<thread::JoinHandle<Result<InterceptedMessages, Error>>, Error> {
@@ -86,26 +86,12 @@ fn run_dh_mitm<M: MitmHandshake<TcpStream>>(
     }))
 }
 
-pub fn run34() -> Result<(), Error> {
-    challenge_34_35_echo::<ClientDeterminesParameters>()?;
-    challenge_34_35_mitm::<MitmFakePublicKey>()?;
-    Ok(())
-}
-
-pub fn run35() -> Result<(), Error> {
-    challenge_34_35_echo::<ServerCanOverrideParameters>()?;
-    challenge_34_35_mitm::<MitmFakeGeneratorOne>()?;
-    challenge_34_35_mitm::<MitmFakeGeneratorP>()?;
-    challenge_34_35_mitm::<MitmFakeGeneratorPMinusOne>()?;
-    Ok(())
-}
-
-fn challenge_34_35_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
+fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
     let message = b"This is a test";
 
-    let join_handle = run_dh_server::<P::Server>(server_port)?;
+    let join_handle = start_server::<P::Server>(server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
@@ -122,23 +108,23 @@ fn challenge_34_35_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     }
 }
 
-fn challenge_34_35_mitm<Trio: MitmForClientServer<TcpStream>>() -> Result<(), Error>
+fn run_mitm<T: MitmForClientServer<TcpStream>>() -> Result<(), Error>
 where
-    Trio::Mitm: 'static + Send,
+    T::Mitm: 'static + Send,
 {
     let server_port: u16 = 8080;
     let client_port: u16 = 8081;
     let message = b"This is a test".to_vec();
 
     let jh_server =
-        run_dh_server::<<Trio::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
+        start_server::<<T::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
 
-    let jh_mitm = run_dh_mitm::<Trio::Mitm>(client_port, server_port)?;
+    let jh_mitm = start_mitm::<T::Mitm>(client_port, server_port)?;
 
     let stream =
         TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
 
-    let mut client = Session::new::<<Trio::CS as ClientServerPair<TcpStream>>::Client>(stream)?;
+    let mut client = Session::new::<<T::CS as ClientServerPair<TcpStream>>::Client>(stream)?;
     client.send(&message)?;
     compare_eq(Some(&message), client.receive()?.as_ref()).context("message received by client")?;
 
@@ -156,7 +142,7 @@ where
                 decrypted_server_messages,
             } = result?;
             compare_eq(1, decrypted_client_messages.len()).context("number of client messages")?;
-            compare_eq(1, decrypted_server_messages.len()).context("number of client messages")?;
+            compare_eq(1, decrypted_server_messages.len()).context("number of server messages")?;
             compare_eq(&message, &decrypted_client_messages[0])
                 .context("decrypted client message")?;
             compare_eq(&message, &decrypted_server_messages[0])
@@ -165,4 +151,18 @@ where
         }
         _ => bail!("tcp listener thread panicked"),
     }
+}
+
+pub fn run34() -> Result<(), Error> {
+    run_echo::<ClientDeterminesParameters>()?;
+    run_mitm::<MitmFakePublicKey>()?;
+    Ok(())
+}
+
+pub fn run35() -> Result<(), Error> {
+    run_echo::<ServerCanOverrideParameters>()?;
+    run_mitm::<MitmFakeGeneratorOne>()?;
+    run_mitm::<MitmFakeGeneratorP>()?;
+    run_mitm::<MitmFakeGeneratorPMinusOne>()?;
+    Ok(())
 }

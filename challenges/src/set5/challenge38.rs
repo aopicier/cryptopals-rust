@@ -1,11 +1,16 @@
 use rand;
 use rand::Rng;
 
-use srp::client::SimplifiedClient as SrpSimplifiedClient;
-use srp::server::SimplifiedServer as SrpSimplifiedServer;
+use std::net::TcpListener;
+use std::thread;
+
+use srp::client::SimplifiedClient;
+use srp::server::SimplifiedServer;
+use srp::mitm::Mitm;
+use srp::mitm::PasswordOracle;
 
 use super::challenge36::{
-    connect_and_execute, shutdown_srp_server, start_mitm_srp_server, start_srp_listener,
+    connect_and_execute, shutdown_server, start_server,
 };
 
 use errors::*;
@@ -13,15 +18,28 @@ use errors::*;
 fn create_client_with_random_password(
     user_name: &[u8],
     dictionary: &[Vec<u8>],
-) -> SrpSimplifiedClient {
+) -> SimplifiedClient {
     let mut rng = rand::thread_rng();
     let index = rng.gen_range(0, dictionary.len());
     let password = &dictionary[index];
-    SrpSimplifiedClient::new(user_name.to_vec(), password.to_vec())
+    SimplifiedClient::new(user_name.to_vec(), password.to_vec())
 }
+
+fn start_mitm_server(
+    port: u16,
+) -> Result<thread::JoinHandle<Result<PasswordOracle, Error>>, Error> {
+    let mitm = Mitm::new();
+    let listener = TcpListener::bind(("localhost", port))?;
+    Ok(thread::spawn(move || match listener.accept() {
+        Ok((mut stream, _)) => Ok(mitm.handle_client(&mut stream)?),
+        Err(_) => bail!("connection failed"),
+    }))
+}
+
 
 pub fn run() -> Result<(), Error> {
     // Dictionary of the 25 most popular passwords
+    // Source: https://en.wikipedia.org/wiki/List_of_the_most_common_passwords
     let dictionary = &[
         b"123456".to_vec(),
         b"password".to_vec(),
@@ -52,7 +70,7 @@ pub fn run() -> Result<(), Error> {
 
     let port: u16 = 8080;
     let port_mitm: u16 = 8081;
-    let (tx, jh_server) = start_srp_listener(SrpSimplifiedServer::new(), port)?;
+    let (tx, jh_server) = start_server(SimplifiedServer::new(), port)?;
 
     let user_name = b"foo";
     let client = create_client_with_random_password(user_name, dictionary);
@@ -61,7 +79,7 @@ pub fn run() -> Result<(), Error> {
     connect_and_execute(port, |stream| client.register(stream))?;
     connect_and_execute(port, |stream| client.login(stream))?;
 
-    let jh_mitm = start_mitm_srp_server(port_mitm)?;
+    let jh_mitm = start_mitm_server(port_mitm)?;
 
     // Accidentally connect with the MITM server
     connect_and_execute(port_mitm, |stream| client.login(stream))?;
@@ -76,11 +94,11 @@ pub fn run() -> Result<(), Error> {
         .find(|pw| password_oracle.is_password(pw))
         .ok_or_else(|| err_msg("could not determine password"))?;
 
-    let impostor = SrpSimplifiedClient::new(user_name.to_vec(), password.to_vec());
+    let impostor = SimplifiedClient::new(user_name.to_vec(), password.to_vec());
     connect_and_execute(port, |stream| impostor.login(stream))
         .context("impostor did not succeed")?;
 
-    shutdown_srp_server(port, &tx)?;
+    shutdown_server(port, &tx)?;
 
     match jh_server.join() {
         Ok(result) => result,
