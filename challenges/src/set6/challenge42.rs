@@ -128,8 +128,8 @@ fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
      * Interpret
      * 01 || 00 || hash
      * as a big-endian number x. The length of x in bytes is 2 + hash.len() and we have
-     * x <= 2^(8*(2 + hash.len())). Let l = len - 2 - hash.len() be the number
-     * of bytes we can fill arbitrarily. Then the numbers of the form (F) above
+     * x <= 2^(8*(2 + hash.len())). Let l = 8(len - 2 - hash.len()) be the number
+     * of bits we can fill arbitrarily. Then the numbers of the form (F) above
      * (in big-endian) are precisely the natural numbers between
      * x2^l and (x + 1)2^l - 1. As 8*(2 + hash.len()) is small compared to l, we
      * know by the general observations above that floor( crt((x + 1)k - 1) )
@@ -146,9 +146,9 @@ fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
         v.extend_from_slice(hash);
         v
     });
-    let l = len - 2 - hash.len() as usize;
+    let l = 8 * (len - 2 - hash.len()) as usize;
     let _1 = BigNum::from_u32(1);
-    let r = (&(&x + &_1).lsh(8 * l) - &_1).root(3).0;
+    let r = (&(&x + &_1).lsh(l) - &_1).root(3).0;
     r.to_bytes_be()
 }
 
