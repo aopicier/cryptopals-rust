@@ -334,7 +334,10 @@ impl BigNumTrait for BigInt {
     }
 
     fn gen_safe_prime(bits: usize) -> Self {
-        BigInt::from_bytes_be(Sign::Plus, &<BigNum as BigNumTrait>::gen_safe_prime(bits).to_vec())
+        BigInt::from_bytes_be(
+            Sign::Plus,
+            &<BigNum as BigNumTrait>::gen_safe_prime(bits).to_vec(),
+        )
     }
 
     fn gen_random(bits: usize) -> Self {

@@ -5,7 +5,7 @@ use std;
 
 use errors::*;
 
-pub fn crack_seed_from_nth(u: u32, n: usize, candidates: impl Iterator<Item=u32>) -> Option<u32> {
+pub fn crack_seed_from_nth(u: u32, n: usize, candidates: impl Iterator<Item = u32>) -> Option<u32> {
     // Unfortunately we use brute force here. Is there an analytic attack?
     for candidate in candidates {
         if u == MersenneTwister::initialize(candidate).nth(n).unwrap() {

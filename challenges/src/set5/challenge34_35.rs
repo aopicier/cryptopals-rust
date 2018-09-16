@@ -116,8 +116,7 @@ where
     let client_port: u16 = 8081;
     let message = b"This is a test".to_vec();
 
-    let jh_server =
-        start_server::<<T::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
+    let jh_server = start_server::<<T::CS as ClientServerPair<TcpStream>>::Server>(server_port)?;
 
     let jh_mitm = start_mitm::<T::Mitm>(client_port, server_port)?;
 

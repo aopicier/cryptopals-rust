@@ -106,7 +106,10 @@ fn password_reset_token() -> Result<(), Error> {
     let token = get_token_from_seed(now);
     compare_eq(true, is_product_of_mersenne_seeded_with_time(token)?)?;
 
-    compare_eq(false, is_product_of_mersenne_seeded_with_time([0; TOKEN_SIZE])?)?;
+    compare_eq(
+        false,
+        is_product_of_mersenne_seeded_with_time([0; TOKEN_SIZE])?,
+    )?;
     Ok(())
 }
 

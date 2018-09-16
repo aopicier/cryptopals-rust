@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate failure;
-extern crate rand;
 extern crate openssl;
+extern crate rand;
 extern crate xor;
 
 use openssl::symm::{decrypt, encrypt};
@@ -331,5 +331,11 @@ fn test_padding_valid() {
     assert!(padding_valid("ICE ICE BABY\x05\x05\x05\x05".as_bytes(), 16).unwrap() == false);
     assert!(padding_valid("ICE ICE BABY\x03\x03\x03".as_bytes(), 16).unwrap() == false);
     assert!(padding_valid("ICE ICE BABY\x01\x02\x03\x04".as_bytes(), 16).unwrap() == false);
-    assert!(padding_valid("ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C".as_bytes(), 12).unwrap() == true);
+    assert!(
+        padding_valid(
+            "ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C".as_bytes(),
+            12
+        ).unwrap()
+            == true
+    );
 }

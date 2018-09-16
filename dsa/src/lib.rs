@@ -17,10 +17,7 @@ where
     pub fn generate(private: &'a DsaPrivate<T>) -> Self {
         let params = private.params;
         let y = params.g.mod_exp(&private.x, &params.p);
-        DsaPublic {
-            params,
-            y,
-        }
+        DsaPublic { params, y }
     }
 
     pub fn secret_key_from_k(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>, k: &T) -> T {
@@ -38,7 +35,8 @@ where
     ) -> T {
         assert_eq!(s1.r, s2.r);
         let q = &self.params.q;
-        let k = &(m1 - m2).remainder(q) * &T::invmod(&T::remainder(&(&s1.s - &s2.s), q), q).unwrap();
+        let k =
+            &(m1 - m2).remainder(q) * &T::invmod(&T::remainder(&(&s1.s - &s2.s), q), q).unwrap();
         self.secret_key_from_k(m1, s1, &k)
     }
 

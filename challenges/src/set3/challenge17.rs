@@ -72,17 +72,18 @@ pub fn run() -> Result<(), Error> {
             for u in 0u8..=255 {
                 prev[i] ^= u;
                 if server.is_padding_valid(&prev, block)?
-                    && (i < BLOCK_SIZE - 1 || {
-                        // The last byte of the block requires a special treatment because the padding could
-                        // accidentally be valid if we have for example flipped the last byte to the value 2
-                        // and the second to last byte of the cleartext also happens to be a 2. We therefore
-                        // change the second to last byte and test the padding again. If it is still
-                        // valid, we can be sure that the last byte has been flipped to the value 1.
-                        prev[i - 1] ^= 1;
-                        let result = server.is_padding_valid(&prev, block)?;
-                        prev[i - 1] ^= 1;
-                        result
-                    }) {
+                    && (i < BLOCK_SIZE - 1
+                        || {
+                            // The last byte of the block requires a special treatment because the padding could
+                            // accidentally be valid if we have for example flipped the last byte to the value 2
+                            // and the second to last byte of the cleartext also happens to be a 2. We therefore
+                            // change the second to last byte and test the padding again. If it is still
+                            // valid, we can be sure that the last byte has been flipped to the value 1.
+                            prev[i - 1] ^= 1;
+                            let result = server.is_padding_valid(&prev, block)?;
+                            prev[i - 1] ^= 1;
+                            result
+                        }) {
                     cleartext[block_offset + i] = padding ^ u;
                     break;
                 }

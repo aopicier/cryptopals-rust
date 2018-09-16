@@ -5,13 +5,11 @@ use std::net::TcpListener;
 use std::thread;
 
 use srp::client::SimplifiedClient;
-use srp::server::SimplifiedServer;
 use srp::mitm::Mitm;
 use srp::mitm::PasswordOracle;
+use srp::server::SimplifiedServer;
 
-use super::challenge36::{
-    connect_and_execute, shutdown_server, start_server,
-};
+use super::challenge36::{connect_and_execute, shutdown_server, start_server};
 
 use errors::*;
 
@@ -35,7 +33,6 @@ fn start_mitm_server(
         Err(_) => bail!("connection failed"),
     }))
 }
-
 
 pub fn run() -> Result<(), Error> {
     // Dictionary of the 25 most popular passwords

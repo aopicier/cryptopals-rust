@@ -3,17 +3,16 @@ use bignum::{BigNumExt, BigNumTrait};
 use errors::*;
 use rsa::Rsa;
 
-
 const BITS: usize = 512;
 
 struct Server {
-    secret: BigNum
+    secret: BigNum,
 }
 
 impl Server {
     fn new() -> Self {
         Server {
-            secret: BigNum::gen_random(BITS - 1)
+            secret: BigNum::gen_random(BITS - 1),
         }
     }
 

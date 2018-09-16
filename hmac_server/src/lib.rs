@@ -49,12 +49,12 @@ fn parse_body<'a>(req: &'a mut Request) -> Option<((&'a str, &'a str))> {
 
     let file = match params.find(&["file"]) {
         Some(&Value::String(ref file)) => file,
-        _ => return None
+        _ => return None,
     };
 
     let signature = match params.find(&["signature"]) {
         Some(&Value::String(ref signature)) => signature,
-        _ => return None
+        _ => return None,
     };
 
     Some((file, signature))
@@ -62,13 +62,16 @@ fn parse_body<'a>(req: &'a mut Request) -> Option<((&'a str, &'a str))> {
 
 fn verify_signature(file: &str, signature: &str, key: &[u8]) -> Option<bool> {
     let computed_hmac = compute_hmac(key, &file)?;
-    Some(insecure_compare(&computed_hmac, &from_hex(&signature).ok()?))
+    Some(insecure_compare(
+        &computed_hmac,
+        &from_hex(&signature).ok()?,
+    ))
 }
 
 fn handle_request(req: &mut Request, key: &[u8]) -> IronResult<Response> {
     if let Some((file, signature)) = parse_body(req) {
         if verify_signature(file, signature, key) == Some(true) {
-            return Ok(Response::with(status::Ok))
+            return Ok(Response::with(status::Ok));
         }
     }
 

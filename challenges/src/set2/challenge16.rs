@@ -1,5 +1,5 @@
 use aes::Aes128;
-use aes::{BLOCK_SIZE, chunks_count};
+use aes::{chunks_count, BLOCK_SIZE};
 
 use xor::XOR;
 
@@ -25,7 +25,8 @@ pub fn run() -> Result<(), Error> {
     let attack_bitflip = target_last_block.xor(&current_last_block);
 
     // Flip the next to last block
-    ciphertext[(chunks_count - 1) * BLOCK_SIZE..chunks_count * BLOCK_SIZE].xor_inplace(&attack_bitflip);
+    ciphertext[(chunks_count - 1) * BLOCK_SIZE..chunks_count * BLOCK_SIZE]
+        .xor_inplace(&attack_bitflip);
 
     oracle.verify_solution(&ciphertext)
 }

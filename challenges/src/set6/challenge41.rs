@@ -5,7 +5,7 @@ use rsa::Rsa;
 use bignum::BigNumTrait;
 use bignum::OpensslBigNum as BigNum;
 
-const BITS:usize = 512;
+const BITS: usize = 512;
 
 struct Server {
     rsa: Rsa<BigNum>,
@@ -18,7 +18,11 @@ impl Server {
         let rsa = Rsa::<BigNum>::generate(BITS);
         let cleartext = BigNumTrait::gen_random(BITS - 1);
         let ciphertext = rsa.encrypt(&cleartext);
-        Server { rsa, cleartext, ciphertext }
+        Server {
+            rsa,
+            cleartext,
+            ciphertext,
+        }
     }
 
     fn n(&self) -> &BigNum {

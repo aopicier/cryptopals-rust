@@ -10,7 +10,7 @@ use sha1;
 const BITS: usize = 1024;
 
 struct Server {
-    rsa: Rsa<BigNum>
+    rsa: Rsa<BigNum>,
 }
 
 fn get_hash(message: &[u8]) -> Vec<u8> {
@@ -21,7 +21,9 @@ fn get_hash(message: &[u8]) -> Vec<u8> {
 
 impl Server {
     fn new() -> Self {
-        Server { rsa: Rsa::generate(BITS) }
+        Server {
+            rsa: Rsa::generate(BITS),
+        }
     }
 
     fn n(&self) -> &BigNum {
@@ -80,42 +82,43 @@ impl Server {
         }
         plaintext.push(0);
         plaintext.extend_from_slice(&hash);
-        self.rsa.decrypt(&BigNum::from_bytes_be(&plaintext)).to_bytes_be()
+        self.rsa
+            .decrypt(&BigNum::from_bytes_be(&plaintext))
+            .to_bytes_be()
     }
 }
 
-
- /* We first prove a general observation concerning third roots of natural numbers.
-  * Let k = 2^l be a positive natural number which is a power of two.
-  * Let x be some positive natural number.
-  *
-  * Denote by crt the cube root function on positive real numbers. Assume that
-  * (1) floor( crt((x + 1)k - 1) ) < crt(xk).
-  * As y - 1 < floor(y) for any real number r, we have
-  * crt((x + 1)k - 1) < crt(xk) + 1.
-  * Taking  the third power yields
-  * (x + 1)k - 1 < xk + 3*crt(xk) + 3*crt(xk)^2 + 1,
-  * which simplifies to
-  * (2) k < 3*crt(xk) + 3*crt(xk)^2 + 2.
-  *
-  * We now determine an upper bound for the right hand side of (2).
-  * As crt(xk) >= 1, we have
-  * 3*crt(xk) + 3*crt(xk)^2 + 2 <= 3*crt(xk)^2 + 3*crt(xk)^2 + 2*crt(xk)^2 = 8*crt(xk)^2.
-  * Denote by y a natural number such that x <= 2^y. Then
-  * 8*crt(xk)^2 <= 2^(2(l + y)/3 + 3).
-  *
-  * Combining this bound with (2) yields
-  * 2^l <= 2^(2(l + y)/3 + 3), or (l - 9)/2 <= y.
-  *
-  * Reversing the implication, we find that if y < (l - 9)/2, then (1) cannot hold, i.e.
-  * (3) floor( crt((x + 1)k - 1) ) >= crt(xk).
-  *
-  * Finally, note that (3) is equivalent to the existence of a natural number r with
-  * xk <= r^3 <= (x + 1)k - 1, as floor( crt((x + 1)k - 1) ) is the biggest natural number
-  * r with r^3 <= (x + 1)k - 1.
-  *
-  * Summarizing: If x <= 2^y for some natural number y < (l - 9)/2, then there is a natural
-  * number r with x2^l <= r^3 <= (x + 1)2^l - 1. */
+/* We first prove a general observation concerning third roots of natural numbers.
+ * Let k = 2^l be a positive natural number which is a power of two.
+ * Let x be some positive natural number.
+ *
+ * Denote by crt the cube root function on positive real numbers. Assume that
+ * (1) floor( crt((x + 1)k - 1) ) < crt(xk).
+ * As y - 1 < floor(y) for any real number r, we have
+ * crt((x + 1)k - 1) < crt(xk) + 1.
+ * Taking  the third power yields
+ * (x + 1)k - 1 < xk + 3*crt(xk) + 3*crt(xk)^2 + 1,
+ * which simplifies to
+ * (2) k < 3*crt(xk) + 3*crt(xk)^2 + 2.
+ *
+ * We now determine an upper bound for the right hand side of (2).
+ * As crt(xk) >= 1, we have
+ * 3*crt(xk) + 3*crt(xk)^2 + 2 <= 3*crt(xk)^2 + 3*crt(xk)^2 + 2*crt(xk)^2 = 8*crt(xk)^2.
+ * Denote by y a natural number such that x <= 2^y. Then
+ * 8*crt(xk)^2 <= 2^(2(l + y)/3 + 3).
+ *
+ * Combining this bound with (2) yields
+ * 2^l <= 2^(2(l + y)/3 + 3), or (l - 9)/2 <= y.
+ *
+ * Reversing the implication, we find that if y < (l - 9)/2, then (1) cannot hold, i.e.
+ * (3) floor( crt((x + 1)k - 1) ) >= crt(xk).
+ *
+ * Finally, note that (3) is equivalent to the existence of a natural number r with
+ * xk <= r^3 <= (x + 1)k - 1, as floor( crt((x + 1)k - 1) ) is the biggest natural number
+ * r with r^3 <= (x + 1)k - 1.
+ *
+ * Summarizing: If x <= 2^y for some natural number y < (l - 9)/2, then there is a natural
+ * number r with x2^l <= r^3 <= (x + 1)2^l - 1. */
 
 fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
     let hash = &get_hash(message);

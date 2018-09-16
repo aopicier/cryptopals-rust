@@ -1,6 +1,6 @@
+use aes::random_block;
 use errors::*;
 use set1::break_multibyte_xor_for_keysize;
-use aes::random_block;
 use std::path::PathBuf;
 
 use aes::{Aes128, MODE};
@@ -52,7 +52,11 @@ pub fn run(exercise: Exercise) -> Result<(), Error> {
     let encrypter = Encrypter::new(exercise);
     let ciphertexts = encrypter.get_ciphertexts()?;
     let size = ciphertexts.iter().map(|c| c.len()).min().unwrap(); // unwrap is ok
-    let ciphertext: Vec<u8> = ciphertexts.iter().flat_map(|ciphertext| &ciphertext[..size]).cloned().collect();
+    let ciphertext: Vec<u8> = ciphertexts
+        .iter()
+        .flat_map(|ciphertext| &ciphertext[..size])
+        .cloned()
+        .collect();
     let key = break_multibyte_xor_for_keysize(&ciphertext, size);
     encrypter.verify_solution(&key, size)
 }

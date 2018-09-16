@@ -1,4 +1,4 @@
-use aes::{BLOCK_SIZE, chunks_count};
+use aes::{chunks_count, BLOCK_SIZE};
 use errors::*;
 use std;
 
@@ -100,7 +100,9 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error>
     Ok(offset + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-pub fn prefix_and_suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<(usize, usize), Error> {
+pub fn prefix_and_suffix_length<T: DeterministicOracle>(
+    oracle: &T,
+) -> Result<(usize, usize), Error> {
     let prefix_len = prefix_length(oracle)?;
     let suffix_len = prefix_plus_suffix_length(oracle)? - prefix_len;
     Ok((prefix_len, suffix_len))
@@ -118,7 +120,10 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     // The resulting ciphertext is compared to oracle([input, u]). The u yielding a match is
     // equal to suffix[0].
 
-    ensure!(block_size(oracle)? == BLOCK_SIZE, "oracle does not use expected block size");
+    ensure!(
+        block_size(oracle)? == BLOCK_SIZE,
+        "oracle does not use expected block size"
+    );
     // TODO Add ECB check
 
     let (prefix_len, suffix_len) = prefix_and_suffix_length(oracle)?;

@@ -1,14 +1,14 @@
-use std;
-use std::collections::HashMap;
 use errors::*;
 use serialize::from_hex;
+use std;
+use std::collections::HashMap;
 use xor::XOR;
 
 // Source:
 // Lee, E. Stewart. "Essays about Computer Security" (PDF). University of Cambridge Computer Laboratory. p. 181.
 static EXPECTED_FREQUENCIES: [(u8, f32); 28] = [
     (b' ', 12.17), // Whitespace
-    (b'.', 6.57), // Others
+    (b'.', 6.57),  // Others
     (b'a', 6.09),
     (b'b', 1.05),
     (b'c', 2.84),

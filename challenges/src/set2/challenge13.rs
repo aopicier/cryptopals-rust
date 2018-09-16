@@ -1,5 +1,5 @@
 use aes::Aes128;
-use aes::{BLOCK_SIZE, chunks_count};
+use aes::{chunks_count, BLOCK_SIZE};
 
 use errors::*;
 

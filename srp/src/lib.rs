@@ -1,5 +1,8 @@
-#![cfg_attr(feature="cargo-clippy", feature(tool_lints))]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::just_underscores_and_digits))]
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(clippy::just_underscores_and_digits)
+)]
 
 extern crate bignum;
 extern crate byteorder;

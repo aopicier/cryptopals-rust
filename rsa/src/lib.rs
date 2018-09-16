@@ -1,4 +1,4 @@
-#![cfg_attr(feature="cargo-clippy", feature(tool_lints))]
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
 extern crate bignum;
 extern crate num_traits;
 use num_traits::NumOps;
