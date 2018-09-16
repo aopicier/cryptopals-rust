@@ -3,6 +3,10 @@
     feature = "cargo-clippy",
     allow(clippy::just_underscores_and_digits)
 )]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(clippy::many_single_char_names)
+)]
 
 extern crate bignum;
 extern crate byteorder;
