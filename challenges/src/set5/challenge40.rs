@@ -73,7 +73,7 @@ pub fn run() -> Result<(), Error> {
     let z2 = &(&(c2 * x2) * y2);
     let z3 = &(&(c3 * x3) * y3);
 
-    let c = &(&(z1 + z2) + &z3) % &(&(n1 * n2) * n3);
+    let c = &(&(z1 + z2) + z3) % &(&(n1 * n2) * n3);
 
     server.verify_solution(&c.root(3).0)
 }

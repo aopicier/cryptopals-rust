@@ -20,7 +20,7 @@ fn get_ciphertext(seed: u32) -> Vec<u8> {
         v.extend_from_slice(&[b'A'; 14]);
         v
     };
-    let mt = MersenneTwister::initialize(u32::from(seed));
+    let mt = MersenneTwister::initialize(seed);
 
     let mut ciphertext = Vec::new();
     let buffer = &mut [0u8; 4];
@@ -80,7 +80,7 @@ fn get_token_from_seed(seed: u32) -> [u8; TOKEN_SIZE] {
 // We use seconds since the epoch to represent time as an u32
 fn get_current_time_as_u32() -> Result<u32, Error> {
     let seconds_since_epoch = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
-    if seconds_since_epoch > std::u32::MAX as u64 {
+    if seconds_since_epoch > u64::from(std::u32::MAX) {
         bail!("Hello dear people of the year 2038.");
     }
 
