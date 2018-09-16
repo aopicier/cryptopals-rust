@@ -530,17 +530,17 @@ where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
     fn ceil_quotient(&self, k: &Self) -> Self {
-        assert!(k > &Self::zero());
+        assert!(*k > Self::zero());
         &(&(self + k) - &Self::one()) / k
     }
 
     fn floor_quotient(&self, k: &Self) -> Self {
-        assert!(k > &Self::zero());
+        assert!(*k > Self::zero());
         self / k
     }
 
     fn remainder(&self, k: &Self) -> Self {
-        assert!(k > &Self::zero());
+        assert!(*k > Self::zero());
 
         let mut r = self % k;
         if r < Self::zero() {
@@ -550,7 +550,7 @@ where
     }
 
     fn root(&self, k: usize) -> (Self, bool) {
-        assert!(self > &Self::zero(), "base is not positive");
+        assert!(*self > Self::zero(), "base is not positive");
         assert!(k > 0, "exponent is not positive");
 
         let one = Self::one();
