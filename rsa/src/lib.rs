@@ -24,6 +24,7 @@ where
             bits = 4;
         }
 
+        // TODO Should not use the same size for p and q
         let p = T::gen_safe_prime(bits);
         let q = T::gen_safe_prime(bits);
         let n = &p * &q;
@@ -37,7 +38,7 @@ where
         // p and q are safe primes bigger than 7. (For a safe prime p
         // bigger than 7, (p - 1)/2 is a prime bigger than 3. Therefore
         // p - 1 is not divisible by 3.)
-        let d = e.invmod(&et).unwrap(); // unwrap is ok
+        let d = e.invmod(&et).expect("primes were not safe");
 
         Rsa { n, d, e }
     }

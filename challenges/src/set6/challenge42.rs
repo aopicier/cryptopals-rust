@@ -88,59 +88,59 @@ impl Server {
     }
 }
 
-/* We first prove a general observation concerning third roots of natural numbers.
- * Let k = 2^l be a positive natural number which is a power of two.
- * Let x be some positive natural number.
- *
- * Denote by crt the cube root function on positive real numbers. Assume that
- * (1) floor( crt((x + 1)k - 1) ) < crt(xk).
- * As y - 1 < floor(y) for any real number r, we have
- * crt((x + 1)k - 1) < crt(xk) + 1.
- * Taking  the third power yields
- * (x + 1)k - 1 < xk + 3*crt(xk) + 3*crt(xk)^2 + 1,
- * which simplifies to
- * (2) k < 3*crt(xk) + 3*crt(xk)^2 + 2.
- *
- * We now determine an upper bound for the right hand side of (2).
- * As crt(xk) >= 1, we have
- * 3*crt(xk) + 3*crt(xk)^2 + 2 <= 3*crt(xk)^2 + 3*crt(xk)^2 + 2*crt(xk)^2 = 8*crt(xk)^2.
- * Denote by y a natural number such that x <= 2^y. Then
- * 8*crt(xk)^2 <= 2^(2(l + y)/3 + 3).
- *
- * Combining this bound with (2) yields
- * 2^l <= 2^(2(l + y)/3 + 3), or (l - 9)/2 <= y.
- *
- * Reversing the implication, we find that if y < (l - 9)/2, then (1) cannot hold, i.e.
- * (3) floor( crt((x + 1)k - 1) ) >= crt(xk).
- *
- * Finally, note that (3) is equivalent to the existence of a natural number r with
- * xk <= r^3 <= (x + 1)k - 1, as floor( crt((x + 1)k - 1) ) is the biggest natural number
- * r with r^3 <= (x + 1)k - 1.
- *
- * Summarizing: If x <= 2^y for some natural number y < (l - 9)/2, then there is a natural
- * number r with x2^l <= r^3 <= (x + 1)2^l - 1. */
+// We first prove a general observation concerning third roots of natural numbers.
+// Let k = 2^l be a positive natural number which is a power of two.
+// Let x be some positive natural number.
+//
+// Denote by crt the cube root function on positive real numbers. Assume that
+// (*) floor( crt((x + 1)k - 1) ) < crt(xk).
+// As y - 1 < floor(y) for any real number r, we have
+// crt((x + 1)k - 1) < crt(xk) + 1.
+// Taking  the third power yields
+// (x + 1)k - 1 < xk + 3*crt(xk) + 3*crt(xk)^2 + 1,
+// which simplifies to
+// (**) k < 3*crt(xk) + 3*crt(xk)^2 + 2.
+//
+// We now determine an upper bound for the right hand side of (**).
+// As crt(xk) >= 1, we have
+// 3*crt(xk) + 3*crt(xk)^2 + 2 <= 3*crt(xk)^2 + 3*crt(xk)^2 + 2*crt(xk)^2 = 8*crt(xk)^2.
+// Denote by y a natural number such that x <= 2^y. Then
+// 8*crt(xk)^2 <= 2^(2(l + y)/3 + 3).
+//
+// Combining this bound with (**) yields
+// 2^l <= 2^(2(l + y)/3 + 3), which is equivalent to
+// (l - 9)/2 <= y.
+//
+// Reversing the implication, we find that if y < (l - 9)/2, then (*) cannot hold, i.e.
+// (***) floor( crt((x + 1)k - 1) ) >= crt(xk).
+//
+// Finally, note that (***) is equivalent to the existence of a natural number r with
+// xk <= r^3 <= (x + 1)k - 1, as floor( crt((x + 1)k - 1) ) is the biggest natural number
+// r with r^3 <= (x + 1)k - 1.
+//
+// Summarizing: If x and l are positive natural numbers and x <= 2^y for some natural number y < (l - 9)/2,
+// then there is a natural number r with x2^l <= r^3 <= (x + 1)2^l - 1.
 
 fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
     let hash = &get_hash(message);
 
-    /* Search for a plaintext of length `len` of the form
-     * (F) 01 || ff || ff || ... || ff || 00 || hash || *
-     * which has a third root in the natural numbers.
-     *
-     * In fact we can always achieve this without any ff bytes in the prefix.
-     * Interpret
-     * 01 || 00 || hash
-     * as a big-endian number x. The length of x in bytes is 2 + hash.len() and we have
-     * x <= 2^(8*(2 + hash.len())). Let l = 8(len - 2 - hash.len()) be the number
-     * of bits we can fill arbitrarily. Then the numbers of the form (F) above
-     * (in big-endian) are precisely the natural numbers between
-     * x2^l and (x + 1)2^l - 1. As 8*(2 + hash.len()) is small compared to l, we
-     * know by the general observations above that floor( crt((x + 1)k - 1) )
-     * is a signature which will fool the server.
-     *
-     * Note that we can just as easily forge a signature with several ff bytes in the prefix
-     * as long as 8*(2 + hash.len() + number of ff bytes) < (l - 9)/2.
-     * */
+    // Search for a plaintext of length `len` of the form
+    // (F) 01 || ff || ff || ... || ff || 00 || hash || *
+    // which has a third root in the natural numbers.
+    //
+    // In fact we can always achieve this without any ff bytes in the prefix.
+    // Interpret
+    // 01 || 00 || hash
+    // as a big-endian number x. The length of x in bytes is 2 + hash.len() and we have
+    // x <= 2^(8*(2 + hash.len())). Let l = 8(len - 2 - hash.len()) be the number
+    // of bits we can fill arbitrarily. Then the numbers of the form (F) above
+    // (in big-endian) are precisely the natural numbers between
+    // x2^l and (x + 1)2^l - 1. As 8*(2 + hash.len()) is small compared to l, we
+    // know by the general observations above that floor( crt((x + 1)k - 1) )
+    // is a signature which will fool the server.
+    //
+    // Note that we can just as easily forge a signature with several ff bytes in the prefix
+    // as long as 8*(2 + hash.len() + number of ff bytes) < (l - 9)/2.
 
     let x = BigNum::from_bytes_be(&{
         let mut v = Vec::with_capacity(2 + hash.len());

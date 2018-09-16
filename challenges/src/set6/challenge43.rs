@@ -23,12 +23,12 @@ pub fn run() -> Result<(), Error> {
         s: BigNum::from_dec_str("857042759984254168557880549501802188789837994940")?,
     };
 
-    let zero = BigNum::zero();
-    let one = BigNum::one();
+    let _0 = BigNum::zero();
+    let _1 = BigNum::one();
     let private = (0u32..=(1 << 16))
         .map(BigNumTrait::from_u32)
         .map(|k| public.secret_key_from_k(&m, &signature, &k))
-        .filter(|x| x != &zero && x != &one)
+        .filter(|x| x != &_0 && x != &_1)
         .map(|x| DsaPrivate { params: &params, x })
         .find(|private| DsaPublic::generate(private).y == public.y);
 

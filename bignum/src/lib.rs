@@ -34,8 +34,13 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn to_dec_str(&self) -> String;
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self;
     fn gen_below(bound: &Self) -> Self;
+
+    // bits is only a lower bound for the size
     fn gen_safe_prime(bits: usize) -> Self;
+
+    // bits is equal to the size
     fn gen_random(bits: usize) -> Self;
+
     fn invmod(&self, n: &Self) -> Option<Self>;
     fn power(&self, k: usize) -> Self;
     fn clone(x: &Self) -> Self;
@@ -383,11 +388,7 @@ impl BigNumTrait for BigInt {
 
     fn bytes(&self) -> usize {
         let bits = self.bits();
-        let mut result = bits / 8;
-        if bits % 8 != 0 {
-            result += 1;
-        }
-        result
+        (bits + 7) / 8
     }
 }
 
