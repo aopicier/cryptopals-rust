@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+#![cfg_attr(feature="cargo-clippy", feature(tool_lints))]
 
 extern crate bignum;
 extern crate num_traits;
@@ -44,7 +44,7 @@ where
         self.secret_key_from_k(m1, s1, &k)
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(op_ref))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::op_ref))]
     pub fn verify_signature(&self, m: &T, &Signature { ref r, ref s }: &Signature<T>) -> bool {
         let zero = T::zero();
         let p = &self.params.p;

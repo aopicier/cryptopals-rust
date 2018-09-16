@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
 use errors::*;
 
 mod challenge41;

@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(new_without_default))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
 
 extern crate rand;
 extern crate serialize;
@@ -95,7 +95,6 @@ pub struct ClientHandshake<'a> {
     state: HandshakeState<'a>,
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
 impl<'a> ClientHandshake<'a> {
     pub fn new(srp: &'a SRP) -> Self {
         ClientHandshake {

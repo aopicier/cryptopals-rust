@@ -29,7 +29,6 @@ use std::cmp;
 
 // We use the variable names from the paper
 #[allow(non_snake_case)]
-#[cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
 pub fn run(rsa_bits: usize) -> Result<(), Error> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();

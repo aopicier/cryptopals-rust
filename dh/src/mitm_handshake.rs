@@ -104,7 +104,6 @@ fn handshake_with_fake_generator<T: Communicate>(
     Ok(key)
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
 fn compute_fake_generator(mode: &FakeGeneratorMode, p: &[u8]) -> Vec<u8> {
     let _1 = BigNum::from_u32(1);
     serialize(&match mode {
@@ -115,7 +114,6 @@ fn compute_fake_generator(mode: &FakeGeneratorMode, p: &[u8]) -> Vec<u8> {
 }
 
 #[allow(non_snake_case)]
-#[cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
 fn compute_secret(mode: &FakeGeneratorMode, A: &[u8], B: &[u8]) -> Vec<u8> {
     let _0 = serialize(&BigNum::from_u32(0));
     let _1 = serialize(&BigNum::from_u32(1));
