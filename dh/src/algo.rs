@@ -1,8 +1,5 @@
-extern crate num;
-extern crate rand;
-extern crate serialize;
-
 use bignum::BigNumTrait;
+use digest::Digest;
 use sha1::Sha1;
 
 pub struct DH<T: BigNumTrait> {
@@ -12,9 +9,7 @@ pub struct DH<T: BigNumTrait> {
 }
 
 pub fn secret_to_key(s: &[u8]) -> Vec<u8> {
-    let mut m = Sha1::new();
-    m.update(s);
-    m.digest().bytes()[0..16].to_vec()
+    Sha1::digest(s)[0..16].to_vec()
 }
 
 pub fn serialize<T: BigNumTrait>(x: &T) -> Vec<u8> {
