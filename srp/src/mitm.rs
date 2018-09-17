@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
-
 use algo;
 use algo::{deserialize, serialize, LoginResult, SRP};
 use communication::Communicate;
@@ -40,22 +38,25 @@ impl PasswordOracle {
     }
 }
 
-pub struct Mitm {
-    params: SRP,
-}
-
 // An attacker posing as the server and sending the following parameters
 // to the client:
 // 1) salt = &[]
 // 2) B = g
 // 3) u = g
-impl Mitm {
-    pub fn new() -> Self {
+
+pub struct Mitm {
+    params: SRP,
+}
+
+impl Default for Mitm {
+    fn default() -> Self {
         Mitm {
             params: SRP::new_with_k(0),
         }
     }
 
+}
+impl Mitm {
     pub fn handle_client<T: Communicate>(&self, stream: &mut T) -> Result<PasswordOracle, Error> {
         let _ = stream.receive()?.ok_or_else(|| err_msg("user name"))?;
         let A: BigNum = deserialize(&stream.receive()?.ok_or_else(|| err_msg("A"))?);

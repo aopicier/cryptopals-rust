@@ -54,7 +54,7 @@ pub fn connect_and_execute(
 
 pub fn run() -> Result<(), Error> {
     let port: u16 = 8080;
-    let (tx, join_handle) = start_server(Server::new(), port)?;
+    let (tx, join_handle) = start_server(Server::default(), port)?;
 
     let user_name = b"foo";
     let password = b"baz";

@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
-
 extern crate rand;
 extern crate serialize;
 
@@ -31,6 +29,12 @@ pub fn serialize<T: BigNumTrait>(x: &T) -> Vec<u8> {
 
 pub fn deserialize<T: BigNumTrait>(x: &[u8]) -> T {
     T::from_bytes_be(x)
+}
+
+impl Default for SRP {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SRP {

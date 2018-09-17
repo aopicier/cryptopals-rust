@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
-
 use algo::{
     deserialize, serialize, DefaultUComputer, LoginResult, ServerHandshake, UComputer, SRP,
 };
@@ -88,10 +86,10 @@ pub struct Server {
     base: ServerBase<DefaultUComputer>,
 }
 
-impl Server {
-    pub fn new() -> Self {
+impl Default for Server {
+    fn default() -> Self {
         Server {
-            base: ServerBase::new(SRP::new()),
+            base: ServerBase::new(SRP::default()),
         }
     }
 }
@@ -106,8 +104,8 @@ pub struct SimplifiedServer {
     base: ServerBase<SimplifiedUComputer>,
 }
 
-impl SimplifiedServer {
-    pub fn new() -> Self {
+impl Default for SimplifiedServer {
+    fn default() -> Self {
         SimplifiedServer {
             base: ServerBase::new(SRP::new_with_k(0)),
         }

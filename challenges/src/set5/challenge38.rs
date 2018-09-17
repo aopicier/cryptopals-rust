@@ -26,7 +26,7 @@ fn create_client_with_random_password(
 fn start_mitm_server(
     port: u16,
 ) -> Result<thread::JoinHandle<Result<PasswordOracle, Error>>, Error> {
-    let mitm = Mitm::new();
+    let mitm = Mitm::default();
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((mut stream, _)) => Ok(mitm.handle_client(&mut stream)?),
@@ -67,7 +67,7 @@ pub fn run() -> Result<(), Error> {
 
     let port: u16 = 8080;
     let port_mitm: u16 = 8081;
-    let (tx, jh_server) = start_server(SimplifiedServer::new(), port)?;
+    let (tx, jh_server) = start_server(SimplifiedServer::default(), port)?;
 
     let user_name = b"foo";
     let client = create_client_with_random_password(user_name, dictionary);
