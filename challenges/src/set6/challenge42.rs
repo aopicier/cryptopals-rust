@@ -5,7 +5,7 @@ use rsa::Rsa;
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 
-use sha1::{Sha1, Digest};
+use sha1::{Digest, Sha1};
 
 const BITS: usize = 1024;
 

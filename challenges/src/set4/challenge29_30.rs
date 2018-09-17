@@ -32,7 +32,7 @@ impl Sha1_0_7_0 {
         Sha1_0_7_0 {
             _state: [state[0], state[1], state[2], state[3], state[4]],
             _len: len,
-            _buffer: BlockBuffer512::default()
+            _buffer: BlockBuffer512::default(),
         }
     }
 }
