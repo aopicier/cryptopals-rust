@@ -6,14 +6,14 @@ use bignum::BigNumTrait;
 use bignum::OpensslBigNum as BigNum;
 use serialize::{from_base64, Serialize};
 
-struct Server46 {
+struct Server {
     rsa: Rsa<BigNum>,
 }
 
-impl Server46 {
+impl Server {
     fn new() -> Self {
         let rsa = Rsa::generate(1024);
-        Server46 { rsa }
+        Server { rsa }
     }
 
     fn n(&self) -> &BigNum {
@@ -65,10 +65,12 @@ impl Server46 {
 pub fn run() -> Result<(), Error> {
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
-    let server = Server46::new();
+
+    let server = Server::new();
     let _2_enc = server._2_encrypted();
     let n = server.n();
     let k = n.bits() as usize;
+
     let ciphertext = server.get_ciphertext()?;
     let mut c = ciphertext.clone();
     let mut l = BigNum::one();

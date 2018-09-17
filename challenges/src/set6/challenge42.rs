@@ -13,7 +13,7 @@ struct Server {
     rsa: Rsa<BigNum>,
 }
 
-fn get_hash(message: &[u8]) -> Vec<u8> {
+fn compute_hash(message: &[u8]) -> Vec<u8> {
     let mut sha1 = Sha1::default();
     sha1.input(message);
     sha1.result().to_vec()
@@ -63,7 +63,7 @@ impl Server {
         }
         i += 1;
 
-        let hash = get_hash(message);
+        let hash = compute_hash(message);
         if i + hash.len() > plaintext.len() {
             return false;
         }
@@ -73,7 +73,7 @@ impl Server {
 
     // Not really required for the exercise
     fn sign_message(&self, message: &[u8]) -> Vec<u8> {
-        let hash = get_hash(message);
+        let hash = compute_hash(message);
         let len = self.rsa.n().bytes() - 1;
         let mut plaintext = Vec::with_capacity(len);
         plaintext.push(1);
@@ -122,7 +122,7 @@ impl Server {
 // then there is a natural number r with x2^l <= r^3 <= (x + 1)2^l - 1.
 
 fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
-    let hash = &get_hash(message);
+    let hash = &compute_hash(message);
 
     // Search for a plaintext of length `len` of the form
     // (F) 01 || ff || ff || ... || ff || 00 || hash || *

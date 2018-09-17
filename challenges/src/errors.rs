@@ -10,7 +10,7 @@ pub enum ChallengeError {
         actual
     )]
     ComparisonFailed {
-        // TODO Can this be made generic?
+        // Can this be made generic?
         expected: String,
         actual: String,
     },
