@@ -84,7 +84,7 @@ pub fn compute_private_key_from_reused_k(
 }
 
 pub fn run() -> Result<(), Error> {
-    let params = DsaParams::new();
+    let params = DsaParams::default();
     let signed_hashes = read_hashes_and_signatures_from_file()?;
 
     for (i, sh1) in signed_hashes.iter().enumerate() {

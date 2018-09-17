@@ -24,7 +24,7 @@ pub fn run() -> Result<(), Error> {
     {
         let message = random_block();
         let m = BigNum::from_bytes_be(&compute_sha1(&message));
-        let dsa = Dsa::new();
+        let dsa = Dsa::generate();
         let (signature, k) = dsa.sign_insecure(&message);
         compare_eq(true, dsa.verify_signature(&message, &signature))?;
 
@@ -33,7 +33,7 @@ pub fn run() -> Result<(), Error> {
     }
 
     // Now to the actual exercise
-    let params = DsaParams::new();
+    let params = DsaParams::default();
 
     let y = BigNum::from_hex_str(
         "84ad4719d044495496a3201c8ff484feb45b962e7302e56a392aee4\

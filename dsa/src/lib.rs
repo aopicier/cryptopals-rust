@@ -3,7 +3,6 @@
     feature = "cargo-clippy",
     allow(clippy::many_single_char_names)
 )]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
 
 extern crate bignum;
 extern crate digest;
@@ -25,12 +24,12 @@ where
     T: bignum::BigNumTrait + bignum::BigNumExt,
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
-    pub fn new() -> Self {
-        let params = DsaParams::new();
-        Self::new_with_params(params)
+    pub fn generate() -> Self {
+        let params = DsaParams::default();
+        Self::generate_with_params(params)
     }
 
-    pub fn new_with_params(params: DsaParams<T>) -> Self {
+    pub fn generate_with_params(params: DsaParams<T>) -> Self {
         let x = gen_range(&T::from_u32(2), &params.q);
         let y = Self::compute_public_key(&params, &x);
         Dsa { params, x, y }
@@ -125,6 +124,12 @@ pub struct DsaParams<T> {
     pub p: T,
     pub q: T,
     pub g: T,
+}
+
+impl<T: bignum::BigNumTrait> Default for DsaParams<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T: bignum::BigNumTrait> DsaParams<T> {
