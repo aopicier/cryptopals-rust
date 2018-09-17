@@ -172,9 +172,11 @@ name = "dsa"
 version = "0.1.0"
 dependencies = [
  "bignum 0.1.0",
+ "digest 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.9.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "rsa 0.1.0",
+ "sha-1 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

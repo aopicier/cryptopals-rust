@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Philipp Hartwig <ph@phhart.de>"]
 
 [dependencies]
+digest = "0.7"
 num-traits = "0.1"
 openssl = "0.9"
+sha-1 = "0.7"
 
 [dependencies.bignum]
 path = "../bignum"

@@ -31,6 +31,7 @@ pub trait BigNumTrait: Sized + Ord + std::fmt::Debug {
     fn to_bytes_be(&self) -> Vec<u8>;
     fn from_hex_str(bytes: &str) -> Result<Self, Error>;
     fn from_dec_str(bytes: &str) -> Result<Self, Error>;
+    fn to_hex_str(&self) -> String;
     fn to_dec_str(&self) -> String;
     fn mod_exp(&self, exponent: &Self, modulus: &Self) -> Self;
     fn gen_below(bound: &Self) -> Self;
@@ -211,6 +212,10 @@ impl<T: BigNumTrait> BigNumTrait for BigNumWrapper<T> {
         BigNumTrait::from_dec_str(bytes).map(|x| BigNumWrapper { num: x })
     }
 
+    fn to_hex_str(&self) -> String {
+        self.num.to_hex_str()
+    }
+
     fn to_dec_str(&self) -> String {
         self.num.to_dec_str()
     }
@@ -303,6 +308,10 @@ impl BigNumTrait for BigInt {
         BigInt::from_str_radix(bytes, 10)
             .context("invalid dec string")
             .map_err(|err| err.into())
+    }
+
+    fn to_hex_str(&self) -> String {
+        self.to_str_radix(16)
     }
 
     fn to_dec_str(&self) -> String {
@@ -419,6 +428,10 @@ impl BigNumTrait for BigNum {
         BigNum::from_dec_str(bytes)
             .context("invalid dec string")
             .map_err(|err| err.into())
+    }
+
+    fn to_hex_str(&self) -> String {
+        BigNumRef::to_hex_str(self).unwrap().to_ascii_lowercase()
     }
 
     fn to_dec_str(&self) -> String {

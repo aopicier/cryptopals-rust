@@ -1,31 +1,28 @@
 use errors::*;
 
-use dsa;
-use dsa::{rand_range_safe, DsaParams, DsaPrivate, DsaPublic};
+use dsa::{gen_range, DsaParams, Dsa, Signature};
 
-use bignum::BigNumTrait;
+use bignum::{BigNumExt, BigNumTrait};
 use bignum::OpensslBigNum as BigNum;
 
+pub fn fake_signature(params: &DsaParams<BigNum>, y: &BigNum) -> Signature<BigNum> {
+    let p = &params.p;
+    let q = &params.q;
+    let z = gen_range(&BigNum::from_u32(2), q);
+    let r = y.mod_exp(&z, p).remainder(q);
+    let s = (&r * &z.invmod(q).unwrap()).remainder(q);
+    Signature { r, s }
+}
+
 pub fn run() -> Result<(), Error> {
-    let params = DsaParams::<BigNum>::generate();
-    let private = DsaPrivate::generate(&params);
-    let public = DsaPublic::generate(&private);
     // It is not possible to fake a signature for g = 0 with our verification routine because r
     // would have to be 0. We therefore skip this part of the exercise.
-    let params_fake = DsaParams {
-        p: params.p.clone(),
-        q: params.q.clone(),
-        g: BigNum::one(),
-    };
-    //let private_fake = DsaPrivate { params: &params_fake, x: clone(&private.x) };
-    let public_fake = DsaPublic {
-        params: &params_fake,
-        y: public.y.clone(),
-    };
+    let params = DsaParams::new_with_g(BigNum::one());
+    let dsa = Dsa::new_with_params(params);
 
-    let signature = dsa::fake_signature(&public_fake);
+    let signature = fake_signature(dsa.params(), dsa.public_key());
 
-    //Arbitrary message
-    let m = rand_range_safe(&params.q);
-    compare_eq(true, public_fake.verify_signature(&m, &signature))
+    compare_eq(true, dsa.verify_signature(&b"Hello, world"[..], &signature))?;
+    compare_eq(true, dsa.verify_signature(&b"Goodbye, world"[..], &signature))?;
+    Ok(())
 }
