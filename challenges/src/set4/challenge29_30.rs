@@ -20,33 +20,19 @@ use simd::u32x4;
 // We therfore include a copy of the Sha1 type here. We can then create
 // an instance of our type with the desired state and transmute it to Sha1.
 
-struct Sha1_0_20 {
-    _state: Sha1State,
-    _blocks: Blocks,
-    _len: u64,
-}
-
-struct Blocks {
-    _len: u32,
-    _block: [u8; 64],
-}
-
-struct Sha1State {
+struct Sha1_0_7_0 {
     _state: [u32; 5],
+    _len: u64,
+    _buffer: BlockBuffer512,
 }
 
-impl Sha1_0_20 {
+impl Sha1_0_7_0 {
     fn new(state: &[u32], len: u64) -> Self {
         assert_eq!(5, state.len());
-        Sha1_0_20 {
-            _state: Sha1State {
-                _state: [state[0], state[1], state[2], state[3], state[4]],
-            },
+        Sha1_0_7_0 {
+            _state: [state[0], state[1], state[2], state[3], state[4]],
             _len: len,
-            _blocks: Blocks {
-                _len: 0,
-                _block: [0; 64],
-            },
+            _buffer: BlockBuffer512::default()
         }
     }
 }
@@ -132,10 +118,10 @@ impl MacHelper for Sha1Helper {
     fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8> {
         let mut m2: Sha1;
         unsafe {
-            m2 = mem::transmute(Sha1_0_20::new(&state, len as u64));
+            m2 = mem::transmute(Sha1_0_7_0::new(&state, len as u64));
         }
-        m2.update(new_message);
-        m2.digest().bytes().to_vec()
+        m2.input(new_message);
+        m2.result().to_vec()
     }
 }
 
@@ -157,7 +143,7 @@ impl MacHelper for Md4Helper {
     fn get_forged_mac(state: &[u32], len: usize, new_message: &[u8]) -> Vec<u8> {
         let mut m2: Md4;
         unsafe {
-            m2 = mem::transmute(Md4_0_7::new(&state, len as u64));
+            m2 = mem::transmute(Md4_0_7_0::new(&state, len as u64));
         }
         m2.input(new_message);
         m2.result().to_vec()
@@ -195,7 +181,7 @@ pub fn run29() -> Result<(), Error> {
     run_29_30::<Sha1Helper>()
 }
 
-struct Md4_0_7 {
+struct Md4_0_7_0 {
     _length_bytes: u64,
     _buffer: BlockBuffer512,
     _state: Md4State,
@@ -205,10 +191,10 @@ struct Md4State {
     _s: u32x4,
 }
 
-impl Md4_0_7 {
+impl Md4_0_7_0 {
     fn new(state: &[u32], len: u64) -> Self {
         assert_eq!(4, state.len());
-        Md4_0_7 {
+        Md4_0_7_0 {
             _state: Md4State {
                 _s: u32x4(state[0], state[1], state[2], state[3]),
             },

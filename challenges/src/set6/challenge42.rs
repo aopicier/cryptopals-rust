@@ -5,7 +5,7 @@ use rsa::Rsa;
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 
-use sha1;
+use sha1::{Sha1, Digest};
 
 const BITS: usize = 1024;
 
@@ -14,9 +14,9 @@ struct Server {
 }
 
 fn get_hash(message: &[u8]) -> Vec<u8> {
-    let mut sha1 = sha1::Sha1::new();
-    sha1.update(message);
-    sha1.digest().bytes().to_vec()
+    let mut sha1 = Sha1::default();
+    sha1.input(message);
+    sha1.result().to_vec()
 }
 
 impl Server {

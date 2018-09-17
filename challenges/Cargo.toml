@@ -16,7 +16,7 @@ fake-simd = "0.1"
 md4 = "0.7.0"
 num = "0.1"
 rand = "0.3"
-sha1 = "0.2"
+sha-1 = "0.7.0"
 
 [dependencies.aes]
 path = "../aes"
