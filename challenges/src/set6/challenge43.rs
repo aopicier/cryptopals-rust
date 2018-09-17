@@ -70,7 +70,6 @@ So be friendly, a matter of life and death, just like a etch-a-sketch
     // exercise.
     compare_eq(
         "0954edd5e0afe5542a4adf012611a91912a3ec16",
-        compute_sha1(private_key_hex.as_bytes())
-        .to_hex()
-        .as_ref())
+        compute_sha1(private_key_hex.as_bytes()).to_hex().as_ref(),
+    )
 }

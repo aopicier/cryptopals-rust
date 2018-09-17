@@ -16,7 +16,7 @@ use super::challenge43::compute_private_key_from_k;
 
 pub struct SignedHash {
     m: BigNum,
-    signature: Signature<BigNum>
+    signature: Signature<BigNum>,
 }
 
 fn read_hashes_and_signatures_from_file() -> Result<Vec<SignedHash>, Error> {
@@ -44,8 +44,9 @@ fn read_hashes_and_signatures_from_file() -> Result<Vec<SignedHash>, Error> {
                 m: m.unwrap(), // unwrap is ok
                 signature: Signature {
                     r: r.unwrap(), // unwrap is ok
-                    s: s.unwrap() // unwrap is ok
-                }});
+                    s: s.unwrap(), // unwrap is ok
+                },
+            });
 
             m = None;
             r = None;
@@ -58,8 +59,14 @@ fn read_hashes_and_signatures_from_file() -> Result<Vec<SignedHash>, Error> {
 
 pub fn compute_private_key_from_reused_k(
     params: &DsaParams<BigNum>,
-    &SignedHash { m: ref m1, signature: ref s1 }: &SignedHash,
-    &SignedHash { m: ref m2, signature: ref s2 }: &SignedHash
+    &SignedHash {
+        m: ref m1,
+        signature: ref s1,
+    }: &SignedHash,
+    &SignedHash {
+        m: ref m2,
+        signature: ref s2,
+    }: &SignedHash,
 ) -> Result<BigNum, Error> {
     if s1.r != s2.r {
         bail!("Provided signatures do not have the same r.");
@@ -93,9 +100,8 @@ pub fn run() -> Result<(), Error> {
             // exercise.
             return compare_eq(
                 "ca8f6f7c66fa362d40760d135b763eb8527d3d52",
-                compute_sha1(private_key_hex.as_bytes())
-                .to_hex()
-                .as_ref());
+                compute_sha1(private_key_hex.as_bytes()).to_hex().as_ref(),
+            );
         }
     }
 

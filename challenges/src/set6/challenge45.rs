@@ -1,9 +1,9 @@
 use errors::*;
 
-use dsa::{gen_range, DsaParams, Dsa, Signature};
+use dsa::{gen_range, Dsa, DsaParams, Signature};
 
-use bignum::{BigNumExt, BigNumTrait};
 use bignum::OpensslBigNum as BigNum;
+use bignum::{BigNumExt, BigNumTrait};
 
 pub fn fake_signature(params: &DsaParams<BigNum>, y: &BigNum) -> Signature<BigNum> {
     let p = &params.p;
@@ -23,6 +23,9 @@ pub fn run() -> Result<(), Error> {
     let signature = fake_signature(dsa.params(), dsa.public_key());
 
     compare_eq(true, dsa.verify_signature(&b"Hello, world"[..], &signature))?;
-    compare_eq(true, dsa.verify_signature(&b"Goodbye, world"[..], &signature))?;
+    compare_eq(
+        true,
+        dsa.verify_signature(&b"Goodbye, world"[..], &signature),
+    )?;
     Ok(())
 }
