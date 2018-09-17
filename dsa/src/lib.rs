@@ -3,6 +3,7 @@
     feature = "cargo-clippy",
     allow(clippy::many_single_char_names)
 )]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::new_without_default))]
 
 extern crate bignum;
 extern crate digest;
