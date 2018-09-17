@@ -10,6 +10,48 @@ use rand::Rng;
 
 use std::cmp;
 
+struct Server {
+    rsa: Rsa<BigNum>,
+}
+
+// We do not need an oracle which checks for full PKCS#1v1.5 conformance.
+// It suffices that the oracle tells us whether the cleartext is of the form
+// 00 || 02 || another k - 2 bytes,
+// where k is the number of bytes in the RSA modulus.
+impl Server {
+    fn new(rsa_bits: usize) -> Self {
+        let rsa = Rsa::generate(rsa_bits);
+        Server { rsa }
+    }
+
+    fn n(&self) -> &BigNum {
+        self.rsa.n()
+    }
+
+    fn oracle(&self, ciphertext: &BigNum) -> bool {
+        let cleartext = self.rsa.decrypt(ciphertext);
+        cleartext.rsh(8 * (self.rsa.n().bytes() - 2)) == BigNum::from_u32(2)
+    }
+
+    fn get_ciphertext(&self) -> BigNum {
+        let k = self.rsa.n().bytes() as usize;
+        let cleartext = b"kick it, CC";
+        let cleartext_len = cleartext.len();
+        assert!(cleartext_len <= k - 11);
+        let mut padded_cleartext = vec![2u8];
+        let mut rng = rand::thread_rng();
+        padded_cleartext.extend((0..(k - 3 - cleartext_len)).map(|_| rng.gen_range(1, 256) as u8));
+        padded_cleartext.push(0);
+        padded_cleartext.extend_from_slice(cleartext);
+        let m: BigNum = BigNumTrait::from_bytes_be(&padded_cleartext);
+        self.rsa.encrypt(&m)
+    }
+
+    fn encrypt(&self, cleartext: &BigNum) -> BigNum {
+        self.rsa.encrypt(cleartext)
+    }
+}
+
 // We use the variable names from the paper
 #[allow(non_snake_case)]
 pub fn run(rsa_bits: usize) -> Result<(), Error> {
@@ -18,36 +60,24 @@ pub fn run(rsa_bits: usize) -> Result<(), Error> {
     let _2 = BigNum::from_u32(2);
     let _3 = BigNum::from_u32(3);
 
-    let rsa = Rsa::<BigNum>::generate(rsa_bits);
-    let n = rsa.n();
+    let server = Server::new(rsa_bits);
+    let n = server.n();
     let k = n.bytes() as usize;
     let B = _1.lsh(8 * (k - 2));
     let _2B = &_2 * &B;
     let _3B = &_3 * &B;
 
-    let oracle = |ciphertext: &BigNum| -> bool {
-        let cleartext = rsa.decrypt(ciphertext);
-        cleartext.rsh(8 * (k - 2)) == _2
-    };
-
-    let cleartext = b"kick it, CC";
-    let cleartext_len = cleartext.len();
-    assert!(cleartext_len <= k - 11);
-    let mut padded_cleartext = vec![2u8];
-    let mut rng = rand::thread_rng();
-    padded_cleartext.extend((0..(k - 3 - cleartext_len)).map(|_| rng.gen_range(1, 256) as u8));
-    padded_cleartext.push(0);
-    padded_cleartext.extend_from_slice(cleartext);
-    let m: BigNum = BigNumTrait::from_bytes_be(&padded_cleartext);
-    let c = rsa.encrypt(&m);
+    let c = server.get_ciphertext();
 
     // We are only ever going to use `oracle` in the following way
-    let wrapped_oracle = |s: &BigNum| -> bool { oracle(&(&c * &rsa.encrypt(s))) };
+    let wrapped_oracle = |s: &BigNum| -> bool { server.oracle(&(&c * &server.encrypt(s))) };
 
     let mut M_prev = vec![(_2B.clone(), &_3B - &_1)];
     let mut s_prev = _1.clone();
     let mut i = 1;
 
+    // We know that the cleartext corresponding to our ciphertext is PKCS conforming, so we can skip
+    // Step 1 of the paper.
     loop {
         // Step 2
         let mut si;
@@ -96,7 +126,8 @@ pub fn run(rsa_bits: usize) -> Result<(), Error> {
         Mi.sort();
         Mi.dedup();
         if Mi.len() == 1 && Mi[0].0 == Mi[0].1 {
-            return compare_eq(&m, &Mi[0].0);
+            // Verify that our cleartext encrypts to the ciphertext
+            return compare_eq(&c, &server.encrypt(&Mi[0].0));
         }
         i += 1;
         s_prev = si;
