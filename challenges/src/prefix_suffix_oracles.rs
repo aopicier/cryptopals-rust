@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::cell::Cell;
 
 use rand;
 use rand::Rng;
@@ -54,8 +55,20 @@ impl Oracle for Common {
 
 pub struct Oracle11 {
     common: Common,
-    already_called: bool,
+    already_called: Cell<bool>,
 }
+
+impl Oracle for Oracle11 {
+    fn encrypt(&self, u: &[u8]) -> Result<Vec<u8>, Error> {
+        if self.already_called.get() {
+            bail!("Method has already been called. Please generate a fresh oracle.");
+        }
+
+        self.already_called.set(true);
+        self.common.encrypt(u)
+    }
+}
+
 
 impl Oracle11 {
     pub fn new() -> Result<Self, Error> {
@@ -76,17 +89,8 @@ impl Oracle11 {
                 suffix,
                 mode,
             },
-            already_called: false,
+            already_called: Cell::new(false),
         })
-    }
-
-    pub fn encrypt(&mut self, u: &[u8]) -> Result<Vec<u8>, Error> {
-        if self.already_called {
-            bail!("Method has already been called. Please generate a fresh oracle.");
-        }
-
-        self.already_called = true;
-        self.common.encrypt(u)
     }
 
     pub fn verify_solution(&self, uses_ecb: bool) -> Result<(), Error> {
