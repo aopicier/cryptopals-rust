@@ -51,13 +51,7 @@ pub fn unpad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn pad(u: &[u8], k: u8) -> Result<Vec<u8>, Error> {
-    let mut v = u.to_vec();
-    pad_inplace(&mut v, k)?;
-    Ok(v)
-}
-
-pub fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
+fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
     ensure!(k >= 2, "invalid parameter");
 
     if u.is_empty() || u.len() % k as usize != 0 {
@@ -74,65 +68,22 @@ pub fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
         .all(|&b| b == padding))
 }
 
-trait Crypto {
-    fn encrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn encrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn encrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_cbc_blocks(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn aes128_ctr(&self, key: &Self) -> Result<Vec<u8>, Error>;
-}
-
 pub trait Aes128 {
     fn pad(&self) -> Vec<u8>;
     fn padding_valid(&self) -> bool;
-    fn encrypt_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
     fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error>;
     fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error>;
-    fn decrypt_cbc_blocks(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
 }
 
 impl Aes128 for [u8] {
     fn pad(&self) -> Vec<u8> {
-        pad(self, BLOCK_SIZE as u8).unwrap()
+        let mut v = self.to_vec();
+        pad_inplace(&mut v, BLOCK_SIZE as u8).unwrap(); // unwrap is ok
+        v
     }
 
     fn padding_valid(&self) -> bool {
         padding_valid(self, BLOCK_SIZE as u8).unwrap()
-    }
-
-    fn encrypt_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        ensure!(
-            self.len() == BLOCK_SIZE,
-            format!("input does not consist of {} bytes", BLOCK_SIZE)
-        );
-
-        let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
-            .map_err(|_| AesError::EncryptionFailed {
-                block: self.to_vec(),
-            })?;
-
-        ciphertext.truncate(BLOCK_SIZE);
-        Ok(ciphertext)
-    }
-
-    fn decrypt_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        ensure!(
-            self.len() == BLOCK_SIZE,
-            format!("input does not consist of {} bytes", BLOCK_SIZE)
-        );
-
-        let dummy_padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
-        let mut u = self.to_vec();
-        u.extend_from_slice(&dummy_padding);
-        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
-            AesError::DecryptionFailed {
-                block: self.to_vec(),
-            }.into()
-        })
     }
 
     fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error> {
@@ -172,30 +123,27 @@ impl Aes128 for [u8] {
             }
         }
     }
-
-    fn decrypt_cbc_blocks(&self, key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-        ensure!(
-            self.len() % BLOCK_SIZE == 0,
-            format!("input length not a multiple of {}", BLOCK_SIZE)
-        );
-
-        let mut cleartext = Vec::new();
-        let mut prev = iv;
-        for block in self.chunks(BLOCK_SIZE) {
-            let cur = block.decrypt_aes128_block(key)?.xor(prev);
-            cleartext.extend_from_slice(&cur);
-            prev = block;
-        }
-        Ok(cleartext)
-    }
 }
 
-impl Crypto for [u8] {
-    fn encrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        if self.len() != BLOCK_SIZE {
-            bail!(format!("input does not consist of {} bytes", BLOCK_SIZE));
-        }
+trait Aes128Internal {
+    fn encrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
+    fn decrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
+    fn encrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
+    fn decrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
+    fn encrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
+    fn decrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
+    fn decrypt_aes128_cbc_blocks(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
+    fn aes128_ctr(&self, key: &Self) -> Result<Vec<u8>, Error>;
+}
 
+impl Aes128Internal for [u8] {
+    fn encrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
+        ensure!(
+            self.len() == BLOCK_SIZE,
+            format!("input does not consist of {} bytes", BLOCK_SIZE)
+        );
+
+        // The OpenSSL call pads the cleartext before encrypting.
         let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
             .map_err(|_| AesError::EncryptionFailed {
                 block: self.to_vec(),
@@ -206,13 +154,15 @@ impl Crypto for [u8] {
     }
 
     fn decrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        if self.len() != BLOCK_SIZE {
-            bail!(format!("input does not consist of {} bytes", BLOCK_SIZE));
-        }
+        ensure!(
+            self.len() == BLOCK_SIZE,
+            format!("input does not consist of {} bytes", BLOCK_SIZE)
+        );
 
-        let dummy_padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
+        // The OpenSSL call expects a padded cleartext.
+        let padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
         let mut u = self.to_vec();
-        u.extend_from_slice(&dummy_padding);
+        u.extend_from_slice(&padding);
         decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
             AesError::DecryptionFailed {
                 block: self.to_vec(),
