@@ -90,17 +90,17 @@ impl Aes128 for [u8] {
         match mode {
             MODE::ECB => {
                 ensure!(iv.is_none(), "iv not supported for ECB mode");
-                self.encrypt_aes128_ecb(key)
+                encrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
                 ensure!(iv.is_some(), "iv required for CBC mode");
-                self.encrypt_aes128_cbc(key, iv.unwrap())
+                encrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
                 ensure!(iv.is_none(), "iv not supported for CTR mode");
-                self.aes128_ctr(key)
+                aes128_ctr(&self, key)
             }
         }
     }
@@ -109,130 +109,119 @@ impl Aes128 for [u8] {
         match mode {
             MODE::ECB => {
                 ensure!(iv.is_none(), "iv not supported for ECB mode");
-                self.decrypt_aes128_ecb(key)
+                decrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
                 ensure!(iv.is_some(), "iv required for CBC mode");
-                self.decrypt_aes128_cbc(key, iv.unwrap())
+                decrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
                 ensure!(iv.is_none(), "iv not supported for CTR mode");
-                self.aes128_ctr(key)
+                aes128_ctr(&self, key)
             }
         }
     }
 }
 
-trait Aes128Internal {
-    fn encrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_block(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn encrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_ecb(&self, key: &Self) -> Result<Vec<u8>, Error>;
-    fn encrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_cbc(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn decrypt_aes128_cbc_blocks(&self, key: &Self, iv: &Self) -> Result<Vec<u8>, Error>;
-    fn aes128_ctr(&self, key: &Self) -> Result<Vec<u8>, Error>;
+fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    ensure!(
+        input.len() == BLOCK_SIZE,
+        format!("input does not consist of {} bytes", BLOCK_SIZE)
+    );
+
+    // The OpenSSL call pads the cleartext before encrypting.
+    let mut ciphertext =
+        encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, input).map_err(|_| {
+            AesError::EncryptionFailed {
+                block: input.to_vec(),
+            }
+        })?;
+
+    ciphertext.truncate(BLOCK_SIZE);
+    Ok(ciphertext)
 }
 
-impl Aes128Internal for [u8] {
-    fn encrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        ensure!(
-            self.len() == BLOCK_SIZE,
-            format!("input does not consist of {} bytes", BLOCK_SIZE)
-        );
+fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    ensure!(
+        input.len() == BLOCK_SIZE,
+        format!("input does not consist of {} bytes", BLOCK_SIZE)
+    );
 
-        // The OpenSSL call pads the cleartext before encrypting.
-        let mut ciphertext = encrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, self)
-            .map_err(|_| AesError::EncryptionFailed {
-                block: self.to_vec(),
-            })?;
+    // The OpenSSL call expects a padded cleartext.
+    let padding = encrypt_aes128_block(&[BLOCK_SIZE as u8; BLOCK_SIZE], key)?;
+    let mut u = input.to_vec();
+    u.extend_from_slice(&padding);
+    decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
+        AesError::DecryptionFailed {
+            block: input.to_vec(),
+        }.into()
+    })
+}
 
-        ciphertext.truncate(BLOCK_SIZE);
-        Ok(ciphertext)
+fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    let u = input.pad();
+    let mut ciphertext = Vec::new();
+    for block in u.chunks(BLOCK_SIZE) {
+        ciphertext.extend_from_slice(&encrypt_aes128_block(block, key)?);
+    }
+    Ok(ciphertext)
+}
+
+fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    if input.len() % BLOCK_SIZE != 0 {
+        bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
     }
 
-    fn decrypt_aes128_block(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        ensure!(
-            self.len() == BLOCK_SIZE,
-            format!("input does not consist of {} bytes", BLOCK_SIZE)
-        );
+    let mut cleartext = Vec::new();
+    for block in input.chunks(BLOCK_SIZE) {
+        cleartext.extend_from_slice(&decrypt_aes128_block(block, key)?);
+    }
+    unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
+    Ok(cleartext)
+}
 
-        // The OpenSSL call expects a padded cleartext.
-        let padding = vec![BLOCK_SIZE as u8; BLOCK_SIZE].encrypt_aes128_block(key)?;
-        let mut u = self.to_vec();
-        u.extend_from_slice(&padding);
-        decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
-            AesError::DecryptionFailed {
-                block: self.to_vec(),
-            }.into()
-        })
+fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
+    let u = input.pad();
+    let mut ciphertext = Vec::new();
+    let mut cur = iv.to_vec();
+    for block in u.chunks(BLOCK_SIZE) {
+        cur = encrypt_aes128_block(&block.xor(&cur), key)?;
+        ciphertext.extend_from_slice(&cur);
+    }
+    Ok(ciphertext)
+}
+
+fn decrypt_aes128_cbc_blocks(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
+    if input.len() % BLOCK_SIZE != 0 {
+        bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
     }
 
-    fn encrypt_aes128_ecb(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        let u = self.pad();
-        let mut ciphertext = Vec::new();
-        for block in u.chunks(BLOCK_SIZE) {
-            ciphertext.extend_from_slice(&block.encrypt_aes128_block(key)?);
-        }
-        Ok(ciphertext)
+    let mut cleartext = Vec::new();
+    let mut prev = iv;
+    for block in input.chunks(BLOCK_SIZE) {
+        let cur = decrypt_aes128_block(block, key)?.xor(prev);
+        cleartext.extend_from_slice(&cur);
+        prev = block;
     }
+    Ok(cleartext)
+}
 
-    fn decrypt_aes128_ecb(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        if self.len() % BLOCK_SIZE != 0 {
-            bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
-        }
+fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut cleartext = decrypt_aes128_cbc_blocks(input, key, iv)?;
+    unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
+    Ok(cleartext)
+}
 
-        let mut cleartext = Vec::new();
-        for block in self.chunks(BLOCK_SIZE) {
-            cleartext.extend_from_slice(&block.decrypt_aes128_block(key)?);
-        }
-        unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
-        Ok(cleartext)
+fn aes128_ctr(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut ciphertext = Vec::new();
+    let mut keystream = vec![0; BLOCK_SIZE];
+    for b in input.chunks(BLOCK_SIZE) {
+        ciphertext.extend_from_slice(&b.xor(&encrypt_aes128_ecb(&keystream, key)?));
+        increment_counter(&mut keystream[BLOCK_SIZE / 2..]);
     }
-
-    fn encrypt_aes128_cbc(&self, key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-        let u = self.pad();
-        let mut ciphertext = Vec::new();
-        let mut cur = iv.to_vec();
-        for block in u.chunks(BLOCK_SIZE) {
-            cur = block.xor(&cur).encrypt_aes128_block(key)?;
-            ciphertext.extend_from_slice(&cur);
-        }
-        Ok(ciphertext)
-    }
-
-    fn decrypt_aes128_cbc_blocks(&self, key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-        if self.len() % BLOCK_SIZE != 0 {
-            bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
-        }
-
-        let mut cleartext = Vec::new();
-        let mut prev = iv;
-        for block in self.chunks(BLOCK_SIZE) {
-            let cur = block.decrypt_aes128_block(key)?.xor(prev);
-            cleartext.extend_from_slice(&cur);
-            prev = block;
-        }
-        Ok(cleartext)
-    }
-
-    fn decrypt_aes128_cbc(&self, key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-        let mut cleartext = self.decrypt_aes128_cbc_blocks(key, iv)?;
-        unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
-        Ok(cleartext)
-    }
-
-    fn aes128_ctr(&self, key: &[u8]) -> Result<Vec<u8>, Error> {
-        let mut ciphertext = Vec::new();
-        let mut keystream = vec![0; BLOCK_SIZE];
-        for b in self.chunks(BLOCK_SIZE) {
-            ciphertext.extend_from_slice(&b.xor(&keystream.encrypt_aes128_ecb(key)?));
-            increment_counter(&mut keystream[BLOCK_SIZE / 2..]);
-        }
-        Ok(ciphertext)
-    }
+    Ok(ciphertext)
 }
 
 fn increment_counter(v: &mut [u8]) {
