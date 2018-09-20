@@ -54,7 +54,6 @@ impl Default for Mitm {
             params: SRP::new_with_k(0),
         }
     }
-
 }
 impl Mitm {
     pub fn handle_client<T: Communicate>(&self, stream: &mut T) -> Result<PasswordOracle, Error> {

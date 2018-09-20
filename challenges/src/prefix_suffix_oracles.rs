@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::cell::Cell;
+use std::collections::HashMap;
 
 use rand;
 use rand::Rng;
@@ -68,7 +68,6 @@ impl Oracle for Oracle11 {
         self.common.encrypt(u)
     }
 }
-
 
 impl Oracle11 {
     pub fn new() -> Result<Self, Error> {

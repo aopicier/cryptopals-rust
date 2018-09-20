@@ -57,7 +57,10 @@ pub fn run() -> Result<(), Error> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
     let ciphertext = sender.get_ciphertext()?;
 
-    ensure!(ciphertext.len() >= 3*BLOCK_SIZE, "ciphertext does not have expected length");
+    ensure!(
+        ciphertext.len() >= 3 * BLOCK_SIZE,
+        "ciphertext does not have expected length"
+    );
 
     // Let C_1 be the first block of `ciphertext` and let P_1 be the first block of the
     // cleartext behind `ciphertext` (under CBC). Let K be the unknown key. We know that
@@ -78,8 +81,7 @@ pub fn run() -> Result<(), Error> {
     if let Err(err) = receiver.try_decrypt(&attack_ciphertext) {
         if let Ok(NonAscii(cleartext)) = err.downcast::<NonAscii>() {
             return receiver.verify_solution(
-                &cleartext[0..BLOCK_SIZE]
-                    .xor(&cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
+                &cleartext[0..BLOCK_SIZE].xor(&cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
             );
         }
     }
