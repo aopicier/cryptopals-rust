@@ -7,7 +7,7 @@ use prefix_suffix_oracles::{DeterministicOracle, Oracle};
 
 use super::challenge11::uses_ecb;
 
-fn block_size<T: Oracle>(oracle: &T) -> Result<usize, Error> {
+pub fn block_size<T: Oracle>(oracle: &T) -> Result<usize, Error> {
     let mut input = Vec::new();
     let initial_len = oracle.encrypt(&input)?.len();
     loop {
@@ -122,13 +122,6 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     // The resulting ciphertext is compared to oracle([input, u]). The u yielding a match is
     // equal to suffix[0].
 
-    ensure!(
-        block_size(oracle)? == BLOCK_SIZE,
-        "oracle does not use expected block size"
-    );
-
-    ensure!(uses_ecb(oracle, 0)?, "oracle does not use ECB");
-
     let (prefix_len, suffix_len) = prefix_and_suffix_length(oracle)?;
     let (prefix_chunks_count, prefix_fill_len) = chunks_count(prefix_len);
 
@@ -160,5 +153,12 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
 
 pub fn run() -> Result<(), Error> {
     let oracle = Oracle12::new()?;
+    ensure!(
+        block_size(&oracle)? == BLOCK_SIZE,
+        "oracle does not use expected block size"
+    );
+
+    ensure!(uses_ecb(&oracle, 0)?, "oracle does not use ECB");
+
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }
