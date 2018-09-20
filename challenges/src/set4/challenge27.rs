@@ -17,21 +17,8 @@ struct Receiver {
 }
 
 impl Sender {
-    pub fn encrypt(&self, input: &[u8]) -> Result<Vec<u8>, Error> {
-        // Exclude ';' and '='
-        if input
-            .iter()
-            .any(|&c| !c.is_ascii() || c == b';' || c == b'=')
-        {
-            bail!("invalid character in input");
-        }
-
-        let prefix = b"comment1=cooking%20MCs;userdata=";
-        let suffix = b";comment2=%20like%20a%20pound%20of%20bacon";
-        let mut cleartext = Vec::with_capacity(prefix.len() + input.len() + suffix.len());
-        cleartext.extend_from_slice(prefix);
-        cleartext.extend_from_slice(input);
-        cleartext.extend_from_slice(suffix);
+    pub fn get_ciphertext(&self) -> Result<Vec<u8>, Error> {
+        let cleartext = b"comment1=cooking%20MCs;userdata=foo@baz.com;comment2=%20like%20a%20pound%20of%20bacon";
         cleartext.encrypt(&self.key, Some(&self.key), MODE::CBC)
     }
 }
@@ -68,21 +55,31 @@ struct NonAscii(Vec<u8>);
 
 pub fn run() -> Result<(), Error> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
+    let ciphertext = sender.get_ciphertext()?;
 
-    let ciphertext = sender.encrypt(&[])?;
+    ensure!(ciphertext.len() >= 3*BLOCK_SIZE, "ciphertext does not have expected length");
+
+    // Let C_1 be the first block of `ciphertext` and let P_1 be the first block of the
+    // cleartext behind `ciphertext` (under CBC). Let K be the unknown key. We know that
+    // AES-ECB(C_1) = P_1 XOR K, as K was used as the IV.
+    // Our attack ciphertext is C_1 || 0 || C_1. With CBC and K as IV, this will decrypt to
+    // AES-ECB(C1) XOR K || * || AES-ECB(C1) XOR 0
+    // = P_1 || * || P_1 XOR K.
+    // We can therefore recover K by XORing the first and the third block of this cleartext.
 
     let mut attack_ciphertext = Vec::with_capacity(3 * BLOCK_SIZE);
     attack_ciphertext.extend_from_slice(&ciphertext[0..BLOCK_SIZE]);
     attack_ciphertext.extend_from_slice(&[0; BLOCK_SIZE]);
     attack_ciphertext.extend_from_slice(&ciphertext[0..BLOCK_SIZE]);
+
     //Push last two blocks to preserve valid padding at the end
     attack_ciphertext.extend_from_slice(&ciphertext[ciphertext.len() - 2 * BLOCK_SIZE..]);
 
     if let Err(err) = receiver.try_decrypt(&attack_ciphertext) {
-        if let Ok(NonAscii(attack_cleartext)) = err.downcast::<NonAscii>() {
+        if let Ok(NonAscii(cleartext)) = err.downcast::<NonAscii>() {
             return receiver.verify_solution(
-                &attack_cleartext[0..BLOCK_SIZE]
-                    .xor(&attack_cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
+                &cleartext[0..BLOCK_SIZE]
+                    .xor(&cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
             );
         }
     }
