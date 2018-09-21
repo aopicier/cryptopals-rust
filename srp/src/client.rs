@@ -122,7 +122,7 @@ impl FakeClientWithZeroKey {
         // Discard B
         stream.receive()?.ok_or_else(|| err_msg("B"))?;
 
-        // If A is zero, the S computed by the server is also 0.
+        // If A is zero, the S computed by the server is also zero.
         // The following hashed secret will therefore fool the server.
         let secret = hash_secret(&_0, &salt);
         stream.send(&secret)?;

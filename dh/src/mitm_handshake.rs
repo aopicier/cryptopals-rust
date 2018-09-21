@@ -105,7 +105,7 @@ fn handshake_with_fake_generator<T: Communicate>(
 }
 
 fn compute_fake_generator(mode: &FakeGeneratorMode, p: &[u8]) -> Vec<u8> {
-    let _1 = BigNum::from_u32(1);
+    let _1 = BigNum::one();
     serialize(&match mode {
         FakeGeneratorMode::One => _1,
         FakeGeneratorMode::P => deserialize(&p),
@@ -115,8 +115,8 @@ fn compute_fake_generator(mode: &FakeGeneratorMode, p: &[u8]) -> Vec<u8> {
 
 #[allow(non_snake_case)]
 fn compute_secret(mode: &FakeGeneratorMode, A: &[u8], B: &[u8]) -> Vec<u8> {
-    let _0 = serialize(&BigNum::from_u32(0));
-    let _1 = serialize(&BigNum::from_u32(1));
+    let _0 = serialize(&BigNum::zero());
+    let _1 = serialize(&BigNum::one());
     match mode {
         FakeGeneratorMode::One => _1,
         FakeGeneratorMode::P => _0,
@@ -126,7 +126,7 @@ fn compute_secret(mode: &FakeGeneratorMode, A: &[u8], B: &[u8]) -> Vec<u8> {
              * is either equal to 1 or to -1, depending on whether a is even or odd,
              * and analogously for B and b. The shared secret is equal to g ^ (a * b) % p.
              * By noting that the product a * b is even iff at least one of a or b is even
-             * we can compute the shared secret from the public keys as follows. */
+             * we can compute the shared secret from the public keys as follows: */
             if A == &_1[..] || B == &_1[..] {
                 _1
             } else {

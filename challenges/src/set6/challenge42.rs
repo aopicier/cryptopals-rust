@@ -150,7 +150,7 @@ fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
         v
     });
     let l = 8 * (len - 2 - hash.len()) as usize;
-    let _1 = BigNum::from_u32(1);
+    let _1 = BigNum::one();
     let r = (&(&x + &_1).lsh(l) - &_1).root(3).0;
     r.to_bytes_be()
 }
