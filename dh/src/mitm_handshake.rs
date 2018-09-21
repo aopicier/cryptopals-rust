@@ -37,7 +37,7 @@ impl<T: Communicate> MitmHandshake<T> for MitmHandshakeFakePublicKey {
         //Send fake public keys
         client_stream.send(&p)?;
         server_stream.send(&p)?;
-        let key = secret_to_key(&[0]);
+        let key = secret_to_key(&serialize(&BigNum::zero()));
         Ok(key)
     }
 }
