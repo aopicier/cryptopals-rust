@@ -1,13 +1,9 @@
-#[macro_use]
-extern crate failure;
-extern crate hyper;
-extern crate serialize;
-
-use failure::Error;
+use hyper;
 use hyper::client::Client;
 use hyper::header::ContentType;
 use std::time;
 
+use errors::*;
 use serialize::Serialize;
 
 fn mean(u: &[f32]) -> f32 {

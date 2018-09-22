@@ -1,22 +1,15 @@
-extern crate mac;
-extern crate serialize;
-
-extern crate failure;
-extern crate iron;
-extern crate params;
-
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
 
-use failure::Error;
-
+use iron;
 use iron::prelude::*;
 use iron::status;
 use params::{Params, Value};
 
+use errors::*;
 use mac::hmac_sha1;
 use serialize::from_hex;
 

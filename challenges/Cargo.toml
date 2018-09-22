@@ -18,6 +18,10 @@ num = "0.1"
 rand = "0.3"
 sha-1 = "0.7.0"
 
+hyper = "0.10"
+iron = "0.6"
+params = "0.8"
+
 [dependencies.aes]
 path = "../aes"
 
@@ -26,12 +30,6 @@ path = "../bignum"
 
 [dependencies.diffie_hellman]
 path = "../dh"
-
-[dependencies.hmac_client]
-path = "../hmac_client"
-
-[dependencies.hmac_server]
-path = "../hmac_server"
 
 [dependencies.mac]
 path = "../mac"

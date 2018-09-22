@@ -1,5 +1,5 @@
-use hmac_client;
-use hmac_server;
+use super::hmac_client;
+use super::hmac_server;
 
 use rand;
 use rand::Rng;

@@ -8,6 +8,9 @@ mod challenge29_30;
 mod challenge31;
 mod challenge32;
 
+mod hmac_client;
+mod hmac_server;
+
 pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
     challenges.push(challenge25::run);
     challenges.push(challenge26::run);

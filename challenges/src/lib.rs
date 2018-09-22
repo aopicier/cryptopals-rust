@@ -14,8 +14,6 @@ extern crate aes;
 extern crate bignum;
 extern crate diffie_hellman;
 extern crate dsa;
-extern crate hmac_client;
-extern crate hmac_server;
 extern crate mac;
 extern crate rsa;
 extern crate serialize;
@@ -28,6 +26,10 @@ extern crate md4;
 extern crate num;
 extern crate rand;
 extern crate sha1;
+
+extern crate hyper;
+extern crate iron;
+extern crate params;
 
 #[macro_use]
 extern crate failure;
