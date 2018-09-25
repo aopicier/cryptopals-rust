@@ -170,9 +170,7 @@ fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
-    if input.len() % BLOCK_SIZE != 0 {
-        bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
-    }
+    ensure!(input.len() % BLOCK_SIZE == 0, format!("input length not a multiple of {}", BLOCK_SIZE));
 
     let mut cleartext = Vec::new();
     for block in input.chunks(BLOCK_SIZE) {
@@ -183,33 +181,29 @@ fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
+    ensure!(iv.len() == BLOCK_SIZE, format!("iv length not equal to {}", BLOCK_SIZE));
+
     let u = input.pad();
     let mut ciphertext = Vec::new();
-    let mut cur = iv.to_vec();
+    let mut previous = iv.to_vec();
     for block in u.chunks(BLOCK_SIZE) {
-        cur = encrypt_aes128_block(&block.xor(&cur), key)?;
-        ciphertext.extend_from_slice(&cur);
+        let current = encrypt_aes128_block(&block.xor(&previous), key)?;
+        ciphertext.extend_from_slice(&current);
+        previous = current;
     }
     Ok(ciphertext)
 }
 
-fn decrypt_aes128_cbc_blocks(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    if input.len() % BLOCK_SIZE != 0 {
-        bail!(format!("input length not a multiple of {}", BLOCK_SIZE));
-    }
+fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
+    ensure!(input.len() % BLOCK_SIZE == 0, format!("input length not a multiple of {}", BLOCK_SIZE));
+    ensure!(iv.len() == BLOCK_SIZE, format!("iv length not equal to {}", BLOCK_SIZE));
 
     let mut cleartext = Vec::new();
-    let mut prev = iv;
+    let mut previous = iv;
     for block in input.chunks(BLOCK_SIZE) {
-        let cur = decrypt_aes128_block(block, key)?.xor(prev);
-        cleartext.extend_from_slice(&cur);
-        prev = block;
+        cleartext.extend_from_slice(&decrypt_aes128_block(block, key)?.xor(previous));
+        previous = block;
     }
-    Ok(cleartext)
-}
-
-fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    let mut cleartext = decrypt_aes128_cbc_blocks(input, key, iv)?;
     unpad_inplace(&mut cleartext, BLOCK_SIZE as u8)?;
     Ok(cleartext)
 }
