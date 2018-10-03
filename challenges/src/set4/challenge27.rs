@@ -6,7 +6,7 @@ use xor::XOR;
 
 use aes::random_block;
 
-use errors::*;
+use crate::errors::*;
 
 struct Sender {
     key: Vec<u8>,

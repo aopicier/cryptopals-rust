@@ -11,7 +11,7 @@ use srp::server::SimplifiedServer;
 
 use super::challenge36::{connect_and_execute, shutdown_server, start_server};
 
-use errors::*;
+use crate::errors::*;
 
 fn create_client_with_random_password(
     user_name: &[u8],

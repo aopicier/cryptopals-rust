@@ -1,6 +1,6 @@
-use algo::DH;
+use crate::algo::DH;
 use bignum::NumBigInt as BigNum;
-use communication::Communicate;
+use crate::communication::Communicate;
 use failure::{err_msg, Error};
 
 pub trait Handshake<T: Communicate> {

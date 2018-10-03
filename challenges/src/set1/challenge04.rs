@@ -1,5 +1,5 @@
 use super::challenge03::compute_score;
-use errors::*;
+use crate::errors::*;
 use serialize::from_hex_lines;
 use std::path::Path;
 use xor::XOR;

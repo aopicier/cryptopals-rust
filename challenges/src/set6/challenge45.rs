@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 
 use dsa::{gen_range, Dsa, DsaParams, Signature};
 

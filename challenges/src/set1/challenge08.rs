@@ -4,7 +4,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 
-use errors::*;
+use crate::errors::*;
 
 fn contains_duplicates<T>(i: T) -> bool
 where

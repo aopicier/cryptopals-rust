@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 use serialize::from_hex;
 use std;
 use std::collections::HashMap;

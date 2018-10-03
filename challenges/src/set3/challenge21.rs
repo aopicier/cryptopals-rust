@@ -1,5 +1,5 @@
-use errors::*;
-use mersenne::MersenneTwister;
+use crate::errors::*;
+use crate::mersenne::MersenneTwister;
 
 pub fn run() -> Result<(), Error> {
     let mt = MersenneTwister::initialize(1);

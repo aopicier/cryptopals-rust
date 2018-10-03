@@ -1,6 +1,6 @@
 pub trait XOR {
-    fn xor(&self, &Self) -> Vec<u8>;
-    fn xor_inplace(&mut self, &Self);
+    fn xor(&self, _: &Self) -> Vec<u8>;
+    fn xor_inplace(&mut self, _: &Self);
 }
 
 impl XOR for [u8] {

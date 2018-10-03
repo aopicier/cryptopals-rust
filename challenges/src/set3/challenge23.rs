@@ -1,10 +1,10 @@
 use rand;
 use rand::Rng;
 
-use mersenne;
-use mersenne::MersenneTwister;
+use crate::mersenne;
+use crate::mersenne::MersenneTwister;
 
-use errors::*;
+use crate::errors::*;
 
 fn get_mersenne_twister_with_random_seed() -> MersenneTwister {
     let mut rng = rand::thread_rng();

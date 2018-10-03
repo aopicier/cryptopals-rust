@@ -8,7 +8,7 @@ use serialize::from_base64_file;
 
 use aes::random_block;
 
-use errors::*;
+use crate::errors::*;
 
 struct Encrypter {
     cleartext: Vec<u8>,

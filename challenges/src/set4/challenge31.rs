@@ -2,7 +2,7 @@ use serialize::from_hex;
 
 use mac::hmac_sha1;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     // We only solve the exercise once, see challenge 32

@@ -1,9 +1,9 @@
-use mersenne::MersenneTwister;
+use crate::mersenne::MersenneTwister;
 use rand;
 use rand::Rng;
 use std;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn crack_seed_from_nth(u: u32, n: usize, candidates: impl Iterator<Item = u32>) -> Option<u32> {
     // Unfortunately we use brute force here. Is there an analytic attack?

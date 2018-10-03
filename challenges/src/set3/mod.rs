@@ -1,5 +1,5 @@
 use self::challenge19_20::Exercise;
-use errors::*;
+use crate::errors::*;
 
 mod challenge17;
 mod challenge18;

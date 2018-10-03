@@ -1,4 +1,4 @@
-use algo::{
+use crate::algo::{
     deserialize, serialize, DefaultUComputer, LoginResult, ServerHandshake, UComputer, SRP,
 };
 use std::collections::hash_map::Entry;
@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use rand;
 use rand::Rng;
 
-use communication::Communicate;
+use crate::communication::Communicate;
 
 use failure::{err_msg, Error};
 

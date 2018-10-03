@@ -1,6 +1,6 @@
 use serialize::from_hex;
 
-use errors::*;
+use crate::errors::*;
 use mac::mac_sha1;
 
 pub fn run() -> Result<(), Error> {

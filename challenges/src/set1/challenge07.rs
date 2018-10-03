@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn read_file_to_string(file_path: &str) -> Result<String, Error> {
     let path = Path::new(file_path);

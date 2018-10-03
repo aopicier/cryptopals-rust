@@ -4,7 +4,7 @@ use super::hmac_server;
 use rand;
 use rand::Rng;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     println!("Challenge 32: takes about three minutes, pleases wait ...");

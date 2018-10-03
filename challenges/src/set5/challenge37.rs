@@ -2,7 +2,7 @@ use srp::client::Client;
 use srp::client::FakeClientWithZeroKey;
 use srp::server::Server;
 
-use errors::*;
+use crate::errors::*;
 
 use super::challenge36::{connect_and_execute, shutdown_server, start_server};
 

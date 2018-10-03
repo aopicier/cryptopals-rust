@@ -1,10 +1,10 @@
 use xor::XOR;
 
-use set2::prefix_length;
+use crate::set2::prefix_length;
 
-use errors::*;
+use crate::errors::*;
 
-use prefix_suffix_oracles::{Oracle, Oracle26};
+use crate::prefix_suffix_oracles::{Oracle, Oracle26};
 
 pub fn run() -> Result<(), Error> {
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,

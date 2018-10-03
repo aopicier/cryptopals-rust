@@ -1,8 +1,8 @@
-use errors::*;
+use crate::errors::*;
 
 use aes::BLOCK_SIZE;
 
-use prefix_suffix_oracles::Oracle14;
+use crate::prefix_suffix_oracles::Oracle14;
 
 use super::challenge11::uses_ecb;
 use super::challenge12::{block_size, decrypt_suffix};

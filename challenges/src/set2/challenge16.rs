@@ -3,9 +3,9 @@ use aes::{chunks_count, BLOCK_SIZE};
 
 use xor::XOR;
 
-use errors::*;
+use crate::errors::*;
 
-use prefix_suffix_oracles::{Oracle, Oracle16};
+use crate::prefix_suffix_oracles::{Oracle, Oracle16};
 
 use super::challenge12::prefix_plus_suffix_length;
 

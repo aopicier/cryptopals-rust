@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 
 mod challenge25;
 mod challenge26;

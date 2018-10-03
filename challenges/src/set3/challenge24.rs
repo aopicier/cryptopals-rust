@@ -5,9 +5,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use rand;
 use rand::Rng;
 
-use mersenne::MersenneTwister;
+use crate::mersenne::MersenneTwister;
 
-use errors::*;
+use crate::errors::*;
 use xor::XOR;
 
 use super::challenge22::crack_seed_from_nth;

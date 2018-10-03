@@ -1,5 +1,5 @@
 use aes::pad_inplace;
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     let mut input = b"YELLOW SUBMARINE".to_vec();

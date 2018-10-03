@@ -5,9 +5,9 @@ use aes::{Aes128, MODE};
 
 use serialize::from_base64_file;
 
-use set1::read_file_to_string;
+use crate::set1::read_file_to_string;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     let key = b"YELLOW SUBMARINE";

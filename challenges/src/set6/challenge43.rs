@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 
 use aes::random_block;
 use dsa::{compute_sha1, Dsa, DsaParams, Signature};

@@ -1,10 +1,10 @@
 use aes::Aes128;
 use aes::{chunks_count, BLOCK_SIZE};
 
-use errors::*;
+use crate::errors::*;
 
-use prefix_suffix_oracles::Oracle;
-use prefix_suffix_oracles::Oracle13;
+use crate::prefix_suffix_oracles::Oracle;
+use crate::prefix_suffix_oracles::Oracle13;
 
 use super::challenge12::prefix_plus_suffix_length;
 use super::prefix_length;

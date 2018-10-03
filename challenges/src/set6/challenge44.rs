@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 
 use dsa::{compute_sha1, DsaParams, Signature};
 

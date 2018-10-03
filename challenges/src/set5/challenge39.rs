@@ -3,7 +3,7 @@ use bignum::OpensslBigNum as BigNum;
 
 use rsa::Rsa;
 
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     let rsa = Rsa::<BigNum>::generate(512);

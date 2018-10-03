@@ -1,6 +1,6 @@
-use algo;
-use algo::{deserialize, serialize, LoginResult, SRP};
-use communication::Communicate;
+use crate::algo;
+use crate::algo::{deserialize, serialize, LoginResult, SRP};
+use crate::communication::Communicate;
 
 use failure::{err_msg, Error};
 

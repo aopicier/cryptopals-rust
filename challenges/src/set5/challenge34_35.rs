@@ -12,7 +12,7 @@ use diffie_hellman::mitm_handshake::{
 use diffie_hellman::mitm_session::MitmSession;
 use diffie_hellman::session::Session;
 
-use errors::*;
+use crate::errors::*;
 
 fn handle_client<S: Handshake<TcpStream>>(stream: TcpStream) -> Result<(), Error> {
     let mut server = Session::new::<S>(stream)?;

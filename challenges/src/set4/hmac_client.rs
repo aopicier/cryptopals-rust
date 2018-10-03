@@ -3,7 +3,7 @@ use hyper::client::Client;
 use hyper::header::ContentType;
 use std::time;
 
-use errors::*;
+use crate::errors::*;
 use serialize::Serialize;
 
 fn mean(u: &[f32]) -> f32 {

@@ -1,12 +1,12 @@
-use algo::{deserialize, secret_to_key, serialize};
+use crate::algo::{deserialize, secret_to_key, serialize};
 
-use communication::Communicate;
+use crate::communication::Communicate;
 
 use bignum::BigNumTrait;
 use bignum::NumBigInt as BigNum;
 
 use failure::{err_msg, Error};
-use handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
+use crate::handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
 
 pub trait MitmHandshake<T: Communicate> {
     fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error>;

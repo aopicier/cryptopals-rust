@@ -1,7 +1,7 @@
-use communication::Communicate;
-use communication::CommunicateEncr;
+use crate::communication::Communicate;
+use crate::communication::CommunicateEncr;
 
-use handshake::Handshake;
+use crate::handshake::Handshake;
 
 use failure::Error;
 

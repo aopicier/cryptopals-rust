@@ -3,7 +3,7 @@ use mac::{mac_md4, mac_sha1};
 use rand;
 use rand::Rng;
 
-use errors::*;
+use crate::errors::*;
 
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use md4::{Digest, Md4};
@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 use std::mem;
 
 use block_buffer::BlockBuffer512;
-use simd::u32x4;
+use crate::simd::u32x4;
 
 // Below we want to create an instance of the Sha1 type from the
 // sha1 crate with a specific state. Unfortunately the sha1 crate

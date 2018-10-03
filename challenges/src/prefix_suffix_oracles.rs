@@ -9,7 +9,7 @@ use aes::{Aes128, MODE};
 
 use serialize::from_base64;
 
-use errors::*;
+use crate::errors::*;
 use failure::Error;
 
 use aes::random_block;
@@ -327,7 +327,7 @@ mod tests {
 
     use super::*;
     use aes::random_block;
-    use set2::prefix_and_suffix_length;
+    use crate::set2::prefix_and_suffix_length;
 
     struct TestOracle {
         common: Common,

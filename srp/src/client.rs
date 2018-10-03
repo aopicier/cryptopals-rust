@@ -1,8 +1,8 @@
-use algo::{
+use crate::algo::{
     deserialize, hash_secret, serialize, zero, BigNum, ClientHandshake, DefaultUComputer,
     LoginResult, UComputer, SRP,
 };
-use communication::Communicate;
+use crate::communication::Communicate;
 use failure::{err_msg, Error};
 use std::marker::PhantomData;
 

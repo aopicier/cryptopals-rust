@@ -6,7 +6,7 @@ use srp::client::Client;
 use srp::server::ClientHandler;
 use srp::server::Server;
 
-use errors::*;
+use crate::errors::*;
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
 pub fn start_server<T: ClientHandler>(

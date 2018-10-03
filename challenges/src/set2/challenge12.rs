@@ -1,9 +1,9 @@
 use aes::{chunks_count, BLOCK_SIZE};
-use errors::*;
+use crate::errors::*;
 use std;
 
-use prefix_suffix_oracles::Oracle12;
-use prefix_suffix_oracles::{DeterministicOracle, Oracle};
+use crate::prefix_suffix_oracles::Oracle12;
+use crate::prefix_suffix_oracles::{DeterministicOracle, Oracle};
 
 use super::challenge11::uses_ecb;
 

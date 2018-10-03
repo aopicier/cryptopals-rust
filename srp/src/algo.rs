@@ -1,7 +1,7 @@
 extern crate rand;
 extern crate serialize;
 
-use communication::Communicate;
+use crate::communication::Communicate;
 
 use bignum::BigNumTrait;
 pub use bignum::NumBigInt as BigNum;
@@ -160,7 +160,7 @@ impl<'a> ServerHandshake<'a> {
 }
 
 pub trait UComputer {
-    fn compute_u<T: Communicate>(&BigNum, &BigNum, &mut T) -> Result<BigNum, Error>;
+    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, _: &mut T) -> Result<BigNum, Error>;
 }
 
 pub struct DefaultUComputer;

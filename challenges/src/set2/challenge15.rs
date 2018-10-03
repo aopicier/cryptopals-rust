@@ -1,6 +1,6 @@
 use aes::{unpad_inplace, Aes128};
 
-use errors::*;
+use crate::errors::*;
 
 pub fn run() -> Result<(), Error> {
     {
