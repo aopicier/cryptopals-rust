@@ -1,7 +1,8 @@
 [package]
 name = "bignum"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Philipp Hartwig <ph@phhart.de>"]
+edition = "2018"
 
 [dependencies]
 failure = "0.1"
