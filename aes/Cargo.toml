@@ -5,7 +5,7 @@ authors = ["Philipp Hartwig <ph@phhart.de>"]
 
 [dependencies]
 failure = "0.1"
-openssl = "0.9"
+openssl = "0.10"
 rand = "0.3"
 
 [dependencies.xor]
