@@ -1,5 +1,5 @@
-use aes::{Aes128, MODE};
 use crate::errors::*;
+use aes::{Aes128, MODE};
 use serialize::from_base64;
 
 pub fn run() -> Result<(), Error> {

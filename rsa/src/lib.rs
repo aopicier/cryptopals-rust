@@ -1,7 +1,4 @@
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(clippy::many_single_char_names)
-)]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
 
 extern crate bignum;
 extern crate num_traits;

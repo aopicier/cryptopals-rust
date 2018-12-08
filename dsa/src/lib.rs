@@ -1,7 +1,4 @@
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(clippy::many_single_char_names)
-)]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
 
 extern crate bignum;
 extern crate digest;
@@ -139,7 +136,8 @@ impl<T: bignum::BigNumTrait> DsaParams<T> {
              0e025e2d7f7cf494aff1a0470f5b64c36b625a097f1651fe775323556fe00b\
              3608c887892878480e99041be601a62166ca6894bdd41a7054ec89f756ba9f\
              c95302291",
-        ).unwrap(); // unwrap is ok
+        )
+        .unwrap(); // unwrap is ok
 
         Self::new_with_g(g)
     }
@@ -151,7 +149,8 @@ impl<T: bignum::BigNumTrait> DsaParams<T> {
              30cc565f3bf6b50929139ebeac04f48c3c84afb796d61e5a4f9a8fda812ab5\
              9494232c7d2b4deb50aa18ee9e132bfa85ac4374d7f9091abc3d015efc871a\
              584471bb1",
-        ).unwrap(); // unwrap is ok
+        )
+        .unwrap(); // unwrap is ok
 
         let q = T::from_hex_str("f4f47f05794b256174bba6e9b396a7707e563c5b").unwrap(); // unwrap is ok
 

@@ -29,7 +29,8 @@ impl Server {
         let cleartext = from_base64(
             "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
              Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
-        )?.to_hex();
+        )?
+        .to_hex();
         let m = BigNum::from_hex_str(&cleartext)?;
         Ok(self.rsa.encrypt(&m))
     }

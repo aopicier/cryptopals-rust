@@ -1,8 +1,8 @@
 use crate::communication::decrypt;
 use crate::communication::Communicate;
 
-use failure::Error;
 use crate::mitm_handshake::MitmHandshake;
+use failure::Error;
 
 use result::ResultOptionExt;
 pub struct MitmSession<T: Communicate> {

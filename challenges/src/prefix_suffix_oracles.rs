@@ -183,7 +183,8 @@ impl Oracle13 {
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, None, MODE::ECB)?,
                 b'&',
-            ).remove(b"role".as_ref()),
+            )
+            .remove(b"role".as_ref()),
         )
     }
 }
@@ -271,7 +272,8 @@ impl Oracle16 {
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?,
                 b';',
-            ).remove(b"admin".as_ref()),
+            )
+            .remove(b"admin".as_ref()),
         )
     }
 }
@@ -315,7 +317,8 @@ impl Oracle26 {
             decode_profile(
                 &ciphertext.decrypt(&self.common.key, None, MODE::CTR)?,
                 b';',
-            ).remove(b"admin".as_ref()),
+            )
+            .remove(b"admin".as_ref()),
         )
     }
 }
@@ -326,8 +329,8 @@ mod tests {
     use failure::Error;
 
     use super::*;
-    use aes::random_block;
     use crate::set2::prefix_and_suffix_length;
+    use aes::random_block;
 
     struct TestOracle {
         common: Common,

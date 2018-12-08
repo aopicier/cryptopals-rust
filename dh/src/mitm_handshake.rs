@@ -5,8 +5,8 @@ use crate::communication::Communicate;
 use bignum::BigNumTrait;
 use bignum::NumBigInt as BigNum;
 
-use failure::{err_msg, Error};
 use crate::handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
+use failure::{err_msg, Error};
 
 pub trait MitmHandshake<T: Communicate> {
     fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error>;

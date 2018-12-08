@@ -54,7 +54,8 @@ fn candidate_keysizes(input: &[u8]) -> Vec<usize> {
                 keysize,
                 (100f32 * compute_normalized_hamming_distance(input, keysize)) as u32,
             )
-        }).collect();
+        })
+        .collect();
 
     distances.sort_by(|&(_, s), &(_, t)| s.cmp(&t));
     distances.iter().take(count).map(|x| x.0).collect()

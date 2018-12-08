@@ -45,7 +45,8 @@ fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32), Error> {
             let elapsed_micros = (elapsed_time.as_secs() as f32) * 1_000_000.0
                 + (elapsed_time.subsec_nanos() as f32) / 1_000.0;
             Ok(elapsed_micros)
-        }).collect::<Result<Vec<f32>, Error>>()?;
+        })
+        .collect::<Result<Vec<f32>, Error>>()?;
 
     let mu = mean(&measurements);
     let sd = squared_deviation(&measurements, mu);

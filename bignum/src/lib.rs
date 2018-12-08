@@ -68,12 +68,12 @@ impl Clone for BigNumWrapper<BigInt> {
 }
 
 /* Unfortunately the following generic impls tend to lead to
- * infinite recursions in the type system. We therefore use a
- * macro to spell out the impls for all the types we are
- * interested in.
+* infinite recursions in the type system. We therefore use a
+* macro to spell out the impls for all the types we are
+* interested in.
 
- * See also
- * https://users.rust-lang.org/t/arithmetic-operators-on-references-and-trait-constraints/13158 */
+* See also
+* https://users.rust-lang.org/t/arithmetic-operators-on-references-and-trait-constraints/13158 */
 
 /*
 impl<'a1, 'a2, T> std::ops::Add<&'a2 BigNumWrapper<T>> for &'a1 BigNumWrapper<T>
@@ -451,7 +451,8 @@ impl BigNumTrait for BigNum {
             exponent,
             modulus,
             &mut BigNumContext::new().unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
         result
     }
 
@@ -497,7 +498,8 @@ impl BigNumTrait for BigNum {
                 self,
                 &<Self as BigNumTrait>::from_u32(k as u32),
                 &mut BigNumContext::new().unwrap(),
-            ).unwrap();
+            )
+            .unwrap();
         result
     }
 

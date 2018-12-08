@@ -1,6 +1,6 @@
+use crate::errors::*;
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
-use crate::errors::*;
 use rsa::Rsa;
 
 const BITS: usize = 512;

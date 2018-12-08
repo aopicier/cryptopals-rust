@@ -156,7 +156,8 @@ fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
     decrypt(openssl::symm::Cipher::aes_128_ecb(), key, None, &u).map_err(|_| {
         AesError::DecryptionFailed {
             block: input.to_vec(),
-        }.into()
+        }
+        .into()
     })
 }
 
@@ -170,7 +171,10 @@ fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(input.len() % BLOCK_SIZE == 0, format!("input length not a multiple of {}", BLOCK_SIZE));
+    ensure!(
+        input.len() % BLOCK_SIZE == 0,
+        format!("input length not a multiple of {}", BLOCK_SIZE)
+    );
 
     let mut cleartext = Vec::new();
     for block in input.chunks(BLOCK_SIZE) {
@@ -181,7 +185,10 @@ fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(iv.len() == BLOCK_SIZE, format!("iv length not equal to {}", BLOCK_SIZE));
+    ensure!(
+        iv.len() == BLOCK_SIZE,
+        format!("iv length not equal to {}", BLOCK_SIZE)
+    );
 
     let u = input.pad();
     let mut ciphertext = Vec::new();
@@ -195,8 +202,14 @@ fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Er
 }
 
 fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(input.len() % BLOCK_SIZE == 0, format!("input length not a multiple of {}", BLOCK_SIZE));
-    ensure!(iv.len() == BLOCK_SIZE, format!("iv length not equal to {}", BLOCK_SIZE));
+    ensure!(
+        input.len() % BLOCK_SIZE == 0,
+        format!("input length not a multiple of {}", BLOCK_SIZE)
+    );
+    ensure!(
+        iv.len() == BLOCK_SIZE,
+        format!("iv length not equal to {}", BLOCK_SIZE)
+    );
 
     let mut cleartext = Vec::new();
     let mut previous = iv;
@@ -268,7 +281,8 @@ fn test_padding_valid() {
         padding_valid(
             "ICE ICE BABY\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C\x0C".as_bytes(),
             12
-        ).unwrap()
+        )
+        .unwrap()
             == true
     );
 }

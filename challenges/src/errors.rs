@@ -6,8 +6,7 @@ pub use failure::{err_msg, Error, ResultExt};
 pub enum ChallengeError {
     #[fail(
         display = "Comparison failed. Expected: {}, found: {}",
-        expected,
-        actual
+        expected, actual
     )]
     ComparisonFailed {
         // Can this be made generic?
@@ -25,10 +24,7 @@ pub enum ChallengeError {
     Skipped(&'static str),
 }
 
-#[cfg_attr(
-    feature = "cargo-clippy",
-    allow(clippy::needless_pass_by_value)
-)] // False positive
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))] // False positive
 pub fn compare_eq<T>(x: T, y: T) -> Result<(), Error>
 where
     T: Eq + std::fmt::Debug,
@@ -39,7 +35,8 @@ where
         Err(ChallengeError::ComparisonFailed {
             expected: format!("{:?}", x),
             actual: format!("{:?}", y),
-        }.into())
+        }
+        .into())
     }
 }
 

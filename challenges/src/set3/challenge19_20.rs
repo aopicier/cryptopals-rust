@@ -1,6 +1,6 @@
-use aes::random_block;
 use crate::errors::*;
 use crate::set1::break_multibyte_xor_for_keysize;
+use aes::random_block;
 use std::path::PathBuf;
 
 use aes::{Aes128, MODE};

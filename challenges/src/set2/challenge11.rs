@@ -1,7 +1,7 @@
-use aes::BLOCK_SIZE;
 use crate::errors::*;
 use crate::prefix_suffix_oracles::Oracle;
 use crate::prefix_suffix_oracles::Oracle11;
+use aes::BLOCK_SIZE;
 
 // We need an upper bound on the number of prefix chunks that the oracle prepends to our input.
 // I claim that it is impossible to detect ECB with just a single call to the oracle without this limit.

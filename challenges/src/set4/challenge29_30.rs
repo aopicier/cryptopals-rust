@@ -11,8 +11,8 @@ use sha1::Sha1;
 use std::marker::PhantomData;
 use std::mem;
 
-use block_buffer::BlockBuffer512;
 use crate::simd::u32x4;
+use block_buffer::BlockBuffer512;
 
 // Below we want to create an instance of the Sha1 type from the
 // sha1 crate with a specific state. Unfortunately the sha1 crate
