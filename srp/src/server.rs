@@ -1,7 +1,6 @@
 use crate::algo::{
     deserialize, serialize, DefaultUComputer, LoginResult, ServerHandshake, UComputer, SRP,
 };
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -43,12 +42,12 @@ impl<U: UComputer> ServerBase<U> {
     fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
         let user_name = stream.receive()?.ok_or_else(|| err_msg("user name"))?;
 
-        // TODO Rewrite once NLL has landed
-        match self.user_database.entry(user_name) {
-            Entry::Occupied(o) => Self::authenticate_client(&self.params, stream, o.get()),
-            Entry::Vacant(v) => {
+        match self.user_database.get(&user_name) {
+            Some(user_data) => Self::authenticate_client(&self.params, stream, user_data),
+            None => {
                 let password = stream.receive()?.ok_or_else(|| err_msg("password"))?;
-                v.insert(self.params.password_to_verifier(&password));
+                let user_data = self.params.password_to_verifier(&password);
+                self.user_database.insert(user_name, user_data);
                 Ok(())
             }
         }
