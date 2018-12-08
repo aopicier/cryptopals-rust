@@ -10,7 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 num-traits = "0.1"
-openssl = "0.9"
+openssl = "0.10"
 
 [dependencies.bignum]
 path = "../bignum"

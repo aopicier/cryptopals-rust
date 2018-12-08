@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 failure = "0.1"
-openssl = "0.9"
+openssl = "0.10"
 rand = "0.3"
 
 [dependencies.xor]

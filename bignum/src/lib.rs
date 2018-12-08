@@ -472,7 +472,7 @@ impl BigNumTrait for BigNum {
     fn gen_random(bits: usize) -> BigNum {
         let mut result = BigNum::new().unwrap();
         result
-            .pseudo_rand(bits as i32, openssl::bn::MSB_MAYBE_ZERO, false)
+            .pseudo_rand(bits as i32, openssl::bn::MsbOption::MAYBE_ZERO, false)
             .unwrap();
         result
     }

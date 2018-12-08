@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(clippy::many_single_char_names)
