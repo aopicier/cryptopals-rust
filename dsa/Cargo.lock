@@ -26,7 +26,7 @@ dependencies = [
 
 [[package]]
 name = "bignum"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "failure 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -74,13 +74,13 @@ dependencies = [
 
 [[package]]
 name = "dsa"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "bignum 0.1.0",
+ "bignum 0.2.0",
  "digest 0.7.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.10.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "rsa 0.1.0",
+ "rsa 0.2.0",
  "sha-1 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -295,9 +295,9 @@ dependencies = [
 
 [[package]]
 name = "rsa"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "bignum 0.1.0",
+ "bignum 0.2.0",
  "num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.10.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
