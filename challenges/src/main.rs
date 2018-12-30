@@ -1,6 +1,6 @@
 extern crate challenges;
 extern crate failure;
-use challenges::errors::run_exercise;
+use challenges::errors::ChallengeError;
 use failure::Error;
 use std::env;
 
@@ -14,12 +14,11 @@ fn main() {
     challenges::set6::add_challenges(&mut challenges);
 
     let challenges_count = challenges.len();
-    assert!(challenges_count <= std::u8::MAX as usize);
 
     match challenge_indices(challenges_count) {
         Ok(indices) => {
             for i in indices {
-                run_exercise(challenges[i - 1], i as u8);
+                run_challenge(challenges[i - 1], i);
             }
         }
         Err(arg) => {
@@ -29,6 +28,29 @@ fn main() {
             );
         }
     }
+}
+
+fn run_challenge<F>(exercise: F, challenge_number: usize)
+where
+    F: Fn() -> Result<(), Error>,
+{
+    match exercise() {
+        Ok(_) => println!("Challenge {:02}: Success", challenge_number),
+        Err(ref e) => {
+            if e.downcast_ref::<ChallengeError>().is_some() {
+                println!("Challenge {:02}: {}", challenge_number, e);
+            } else {
+                println!("Challenge {:02}: An error occured: {}", challenge_number, e);
+                for cause in e.iter_causes() {
+                    println!("{: <4}caused by: {}", "", cause);
+                }
+                let backtrace = e.backtrace().to_string();
+                if !backtrace.is_empty() {
+                    println!("{: <4}{}", "", e.backtrace());
+                }
+            }
+        }
+    };
 }
 
 fn challenge_indices(challenges_count: usize) -> Result<Vec<usize>, String> {

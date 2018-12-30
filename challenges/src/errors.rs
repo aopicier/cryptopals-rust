@@ -39,26 +39,3 @@ where
         .into())
     }
 }
-
-pub fn run_exercise<F>(exercise: F, challenge_number: u8)
-where
-    F: Fn() -> Result<(), Error>,
-{
-    match exercise() {
-        Ok(_) => println!("Challenge {:02}: Success", challenge_number),
-        Err(ref e) => {
-            if e.downcast_ref::<ChallengeError>().is_some() {
-                println!("Challenge {:02}: {}", challenge_number, e);
-            } else {
-                println!("Challenge {:02}: An error occured: {}", challenge_number, e);
-                for cause in e.iter_causes() {
-                    println!("{: <4}caused by: {}", "", cause);
-                }
-                let backtrace = e.backtrace().to_string();
-                if !backtrace.is_empty() {
-                    println!("{: <4}{}", "", e.backtrace());
-                }
-            }
-        }
-    };
-}
