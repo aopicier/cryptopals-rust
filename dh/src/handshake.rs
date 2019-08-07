@@ -25,7 +25,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshake {
         let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
-        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;;
+        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;
         Ok(dh.shared_key(&A))
     }
 }
@@ -67,7 +67,7 @@ impl<T: Communicate> Handshake<T> for ServerHandshakeAck {
         let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
-        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;;
+        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;
 
         Ok(dh.shared_key(&A))
     }
