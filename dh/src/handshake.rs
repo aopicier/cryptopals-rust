@@ -20,18 +20,12 @@ pub struct ServerHandshake;
 impl<T: Communicate> Handshake<T> for ServerHandshake {
     #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>> {
-        let p = stream
-            .receive()?
-            .ok_or_else(|| "did not receive p")?;
-        let g = stream
-            .receive()?
-            .ok_or_else(|| "did not receive g")?;
+        let p = stream.receive()?.ok_or_else(|| "did not receive p")?;
+        let g = stream.receive()?.ok_or_else(|| "did not receive g")?;
         let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
-        let A = stream
-            .receive()?
-            .ok_or_else(|| "did not receive A")?;;
+        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;;
         Ok(dh.shared_key(&A))
     }
 }
@@ -47,9 +41,7 @@ impl<T: Communicate> Handshake<T> for ClientHandshake {
         stream.send(&g)?;
         let A = dh.public_key();
         stream.send(&A)?;
-        let B = stream
-            .receive()?
-            .ok_or_else(|| "did not receive B")?;
+        let B = stream.receive()?.ok_or_else(|| "did not receive B")?;
         Ok(dh.shared_key(&B))
     }
 }
@@ -68,20 +60,14 @@ pub struct ServerHandshakeAck;
 impl<T: Communicate> Handshake<T> for ServerHandshakeAck {
     #[allow(non_snake_case)]
     fn handshake(stream: &mut T) -> Result<Vec<u8>> {
-        let p = stream
-            .receive()?
-            .ok_or_else(|| "did not receive p")?;
-        let g = stream
-            .receive()?
-            .ok_or_else(|| "did not receive g")?;
+        let p = stream.receive()?.ok_or_else(|| "did not receive p")?;
+        let g = stream.receive()?.ok_or_else(|| "did not receive g")?;
         stream.send(&p)?;
         stream.send(&g)?;
         let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let B = dh.public_key();
         stream.send(&B)?;
-        let A = stream
-            .receive()?
-            .ok_or_else(|| "did not receive A")?;;
+        let A = stream.receive()?.ok_or_else(|| "did not receive A")?;;
 
         Ok(dh.shared_key(&A))
     }
@@ -98,18 +84,12 @@ impl<T: Communicate> Handshake<T> for ClientHandshakeAck {
             stream.send(&p)?;
             stream.send(&g)?;
         }
-        let p = stream
-            .receive()?
-            .ok_or_else(|| "did not receive p")?;
-        let g = stream
-            .receive()?
-            .ok_or_else(|| "did not receive g")?;
+        let p = stream.receive()?.ok_or_else(|| "did not receive p")?;
+        let g = stream.receive()?.ok_or_else(|| "did not receive g")?;
         let dh = DH::<BigNum>::new_with_parameters(&p, &g);
         let A = dh.public_key();
         stream.send(&A)?;
-        let B = stream
-            .receive()?
-            .ok_or_else(|| "did not receive B")?;
+        let B = stream.receive()?.ok_or_else(|| "did not receive B")?;
 
         Ok(dh.shared_key(&B))
     }

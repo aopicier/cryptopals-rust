@@ -47,7 +47,9 @@ impl Oracle for Common {
             MODE::CBC => {
                 // We would normally also return iv, but our callers do not need it
                 let iv = random_block();
-                cleartext.encrypt(key, Some(&iv), mode).map_err(|err| err.into())
+                cleartext
+                    .encrypt(key, Some(&iv), mode)
+                    .map_err(|err| err.into())
             }
             _ => cleartext.encrypt(key, None, mode).map_err(|err| err.into()),
         }
@@ -345,12 +347,7 @@ mod tests {
     }
 
     impl TestOracle {
-        pub fn new(
-            key: Vec<u8>,
-            prefix: Vec<u8>,
-            suffix: Vec<u8>,
-            mode: MODE,
-        ) -> Result<Self> {
+        pub fn new(key: Vec<u8>, prefix: Vec<u8>, suffix: Vec<u8>, mode: MODE) -> Result<Self> {
             assert!(mode == MODE::ECB || mode == MODE::CTR);
             Ok(TestOracle {
                 common: Common {

@@ -29,10 +29,14 @@ impl error::Error for ChallengeError {
 impl fmt::Display for ChallengeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ChallengeError::ComparisonFailed { expected, actual } => write!(f, "Comparison failed. Expected: {}, found: {}", expected, actual),
-            ChallengeError::NotImplemented  => write!(f, "Not implemented."),
-            ChallengeError::ItemNotFound ( item )  => write!(f, "Item not found: {}", item),
-            ChallengeError::Skipped ( item )  => write!(f, "Skipping: {}", item),
+            ChallengeError::ComparisonFailed { expected, actual } => write!(
+                f,
+                "Comparison failed. Expected: {}, found: {}",
+                expected, actual
+            ),
+            ChallengeError::NotImplemented => write!(f, "Not implemented."),
+            ChallengeError::ItemNotFound(item) => write!(f, "Item not found: {}", item),
+            ChallengeError::Skipped(item) => write!(f, "Skipping: {}", item),
         }
     }
 }

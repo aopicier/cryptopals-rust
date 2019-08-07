@@ -101,10 +101,7 @@ pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>> {
     from_lines(path, from_hex)
 }
 
-fn from_lines(
-    path: &Path,
-    converter: fn(&str) -> Result<Vec<u8>>,
-) -> Result<Vec<Vec<u8>>> {
+fn from_lines(path: &Path, converter: fn(&str) -> Result<Vec<u8>>) -> Result<Vec<Vec<u8>>> {
     let mut content = Vec::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);

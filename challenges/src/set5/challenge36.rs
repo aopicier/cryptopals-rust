@@ -41,11 +41,9 @@ pub fn shutdown_server(port: u16, tx: &Sender<u8>) -> Result<()> {
     Ok(())
 }
 
-pub fn connect_and_execute(
-    port: u16,
-    action: impl Fn(&mut TcpStream) -> Result<()>,
-) -> Result<()> {
-    let mut stream = TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
+pub fn connect_and_execute(port: u16, action: impl Fn(&mut TcpStream) -> Result<()>) -> Result<()> {
+    let mut stream =
+        TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
 
     action(&mut stream)?;
     stream.shutdown(Shutdown::Both)?;

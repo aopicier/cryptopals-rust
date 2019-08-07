@@ -23,9 +23,7 @@ fn create_client_with_random_password(
     SimplifiedClient::new(user_name.to_vec(), password.to_vec())
 }
 
-fn start_mitm_server(
-    port: u16,
-) -> Result<thread::JoinHandle<Result<PasswordOracle>>> {
+fn start_mitm_server(port: u16) -> Result<thread::JoinHandle<Result<PasswordOracle>>> {
     let mitm = Mitm::default();
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {

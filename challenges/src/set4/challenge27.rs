@@ -1,12 +1,11 @@
+use aes::random_block;
 use aes::Aes128;
 use aes::BLOCK_SIZE;
 use aes::MODE;
-use aes::random_block;
 
 use std::{error, fmt};
 
 use xor::XOR;
-
 
 use crate::errors::*;
 
@@ -72,8 +71,8 @@ pub fn run() -> Result<()> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
     let ciphertext = sender.get_ciphertext()?;
 
-    if !( ciphertext.len() >= 3 * BLOCK_SIZE){
-        return Err( "ciphertext does not have expected length".into());
+    if !(ciphertext.len() >= 3 * BLOCK_SIZE) {
+        return Err("ciphertext does not have expected length".into());
     }
 
     // Let C_1 be the first block of `ciphertext` and let P_1 be the first block of the

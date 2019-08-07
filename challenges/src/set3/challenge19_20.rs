@@ -34,7 +34,10 @@ impl Encrypter {
         let cleartexts = from_base64_lines(input_file_path.as_path())?;
         cleartexts
             .iter()
-            .map(|c| c.encrypt(&self.key, None, MODE::CTR).map_err(|err| err.into()))
+            .map(|c| {
+                c.encrypt(&self.key, None, MODE::CTR)
+                    .map_err(|err| err.into())
+            })
             .collect::<Result<Vec<Vec<u8>>>>()
     }
 

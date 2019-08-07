@@ -62,9 +62,7 @@ fn mitm_handle_client<M: MitmHandshake<TcpStream>>(
     })
 }
 
-fn start_server<S: Handshake<TcpStream>>(
-    port: u16,
-) -> Result<thread::JoinHandle<Result<()>>> {
+fn start_server<S: Handshake<TcpStream>>(port: u16) -> Result<thread::JoinHandle<Result<()>>> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((stream, _)) => handle_client::<S>(stream),

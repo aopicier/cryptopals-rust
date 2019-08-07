@@ -43,13 +43,19 @@ impl fmt::Display for AesError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AesError::InvalidPadding => write!(f, "invalid padding"),
-            AesError::EncryptionFailed { block } => write!(f, "failed to encrypt block {:?}", block),
-            AesError::DecryptionFailed { block } => write!(f, "failed to decrypt block {:?}", block),
+            AesError::EncryptionFailed { block } => {
+                write!(f, "failed to encrypt block {:?}", block)
+            }
+            AesError::DecryptionFailed { block } => {
+                write!(f, "failed to decrypt block {:?}", block)
+            }
             AesError::InvalidParameter => write!(f, "invalid parameter"),
             AesError::IvNotAllowed => write!(f, "iv not supported in requested mode"),
             AesError::IvRequired => write!(f, "iv required in requested mode"),
             AesError::InputNotBlockSize => write!(f, "input length not equal to {}", BLOCK_SIZE),
-            AesError::InputNotMultipleOfBlockSize => write!(f, "input length not a multiple of {}", BLOCK_SIZE),
+            AesError::InputNotMultipleOfBlockSize => {
+                write!(f, "input length not a multiple of {}", BLOCK_SIZE)
+            }
             AesError::IvNotBlockSize => write!(f, "iv length not equal to {}", BLOCK_SIZE),
         }
     }
@@ -117,21 +123,21 @@ impl Aes128 for [u8] {
     fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError> {
         match mode {
             MODE::ECB => {
-                if !(iv.is_none()){
+                if !(iv.is_none()) {
                     return Err(AesError::IvNotAllowed);
                 }
                 encrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
-                if !(iv.is_some()){
+                if !(iv.is_some()) {
                     return Err(AesError::IvRequired);
                 }
                 encrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
-                if !(iv.is_none()){
+                if !(iv.is_none()) {
                     return Err(AesError::IvNotAllowed);
                 }
                 aes128_ctr(&self, key)
@@ -142,21 +148,21 @@ impl Aes128 for [u8] {
     fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError> {
         match mode {
             MODE::ECB => {
-                if !(iv.is_none()){
+                if !(iv.is_none()) {
                     return Err(AesError::IvNotAllowed);
                 }
                 decrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
-                if !(iv.is_some()){
+                if !(iv.is_some()) {
                     return Err(AesError::IvRequired);
                 }
                 decrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
-                if !(iv.is_none()){
+                if !(iv.is_none()) {
                     return Err(AesError::IvNotAllowed);
                 }
                 aes128_ctr(&self, key)
@@ -166,7 +172,7 @@ impl Aes128 for [u8] {
 }
 
 fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
-    if !( input.len() == BLOCK_SIZE){
+    if !(input.len() == BLOCK_SIZE) {
         return Err(AesError::InputNotBlockSize);
     }
 
@@ -183,7 +189,7 @@ fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
 }
 
 fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
-    if !( input.len() == BLOCK_SIZE){
+    if !(input.len() == BLOCK_SIZE) {
         return Err(AesError::InputNotBlockSize);
     }
 
@@ -209,7 +215,7 @@ fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
 }
 
 fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
-    if !( input.len() % BLOCK_SIZE == 0){
+    if !(input.len() % BLOCK_SIZE == 0) {
         return Err(AesError::InputNotMultipleOfBlockSize);
     }
 
@@ -222,7 +228,7 @@ fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
 }
 
 fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, AesError> {
-    if !( iv.len() == BLOCK_SIZE){
+    if !(iv.len() == BLOCK_SIZE) {
         return Err(AesError::IvNotBlockSize);
     }
 
@@ -238,10 +244,10 @@ fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Ae
 }
 
 fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, AesError> {
-    if !( input.len() % BLOCK_SIZE == 0){
+    if !(input.len() % BLOCK_SIZE == 0) {
         return Err(AesError::InputNotMultipleOfBlockSize);
     }
-    if !( iv.len() == BLOCK_SIZE){
+    if !(iv.len() == BLOCK_SIZE) {
         return Err(AesError::IvNotBlockSize);
     }
 

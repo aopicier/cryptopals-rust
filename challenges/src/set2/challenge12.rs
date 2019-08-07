@@ -42,7 +42,8 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     } else {
         return Err(
             "length of oracle output did not change, something is wrong with the provided oracle"
-        .into());
+                .into(),
+        );
     }
 }
 
@@ -61,7 +62,9 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize>
     {
         Ok(result)
     } else {
-        return Err("no differing blocks found, something is wrong with the provided oracle".into());
+        return Err(
+            "no differing blocks found, something is wrong with the provided oracle".into(),
+        );
     }
 }
 
@@ -102,9 +105,7 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     Ok(offset + std::cmp::min(helper(0)?, helper(1)?))
 }
 
-pub fn prefix_and_suffix_length<T: DeterministicOracle>(
-    oracle: &T,
-) -> Result<(usize, usize)> {
+pub fn prefix_and_suffix_length<T: DeterministicOracle>(oracle: &T) -> Result<(usize, usize)> {
     let prefix_len = prefix_length(oracle)?;
     let suffix_len = prefix_plus_suffix_length(oracle)? - prefix_len;
     Ok((prefix_len, suffix_len))
@@ -153,12 +154,12 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
 
 pub fn run() -> Result<()> {
     let oracle = Oracle12::new()?;
-    if !( block_size(&oracle)? == BLOCK_SIZE){
-        return Err( "oracle does not use expected block size".into());
+    if !(block_size(&oracle)? == BLOCK_SIZE) {
+        return Err("oracle does not use expected block size".into());
     }
 
-    if !(uses_ecb(&oracle, 0)?){
-        return Err( "oracle does not use ECB".into());
+    if !(uses_ecb(&oracle, 0)?) {
+        return Err("oracle does not use ECB".into());
     }
 
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)

@@ -36,7 +36,7 @@ impl Encrypter {
         let mut cleartext = self.cleartext.clone();
         let end = offset + newtext.len();
         if end > cleartext.len() {
-            return Err("input out of bounds".into())
+            return Err("input out of bounds".into());
         }
         cleartext[offset..end].copy_from_slice(newtext);
         Ok(cleartext.encrypt(&self.key, None, MODE::CTR)?)
