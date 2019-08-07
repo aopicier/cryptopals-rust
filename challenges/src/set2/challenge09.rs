@@ -1,7 +1,7 @@
 use crate::errors::*;
 use aes::pad_inplace;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let mut input = b"YELLOW SUBMARINE".to_vec();
     pad_inplace(&mut input, 20)?;
     compare_eq(

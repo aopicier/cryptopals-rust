@@ -6,7 +6,7 @@ use crate::errors::*;
 
 use crate::prefix_suffix_oracles::{Oracle, Oracle26};
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     // This exercise is trivial: In CTR mode, if we know the underlying plaintext at some location,
     // we can inject any plaintext at the same location by xor'ing the ciphertext with
     // known_plaintext ^ target_plaintext.

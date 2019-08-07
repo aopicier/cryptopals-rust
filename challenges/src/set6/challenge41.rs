@@ -45,12 +45,12 @@ impl Server {
         Some(self.rsa.decrypt(ciphertext))
     }
 
-    fn verify_solution(&self, candidate: &BigNum) -> Result<(), Error> {
+    fn verify_solution(&self, candidate: &BigNum) -> Result<()> {
         compare_eq(&self.cleartext, candidate)
     }
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let server = Server::new();
     let ciphertext = server.get_ciphertext();
 
@@ -61,7 +61,7 @@ pub fn run() -> Result<(), Error> {
     let altered_ciphertext = &(ciphertext * &server.encrypt(s)) % n;
     let altered_cleartext = server
         .decrypt(&altered_ciphertext)
-        .ok_or_else(|| err_msg("wrong input to oracle"))?;
+        .ok_or_else(|| "wrong input to oracle")?;
 
     let cleartext = &(&altered_cleartext * t) % n;
     server.verify_solution(&cleartext)

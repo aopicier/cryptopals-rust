@@ -9,7 +9,7 @@ use crate::prefix_suffix_oracles::{Oracle, Oracle16};
 
 use super::challenge12::prefix_plus_suffix_length;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let oracle = Oracle16::new()?;
 
     // The following input is chosen in such a way that the last block of the cleartext

@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate failure;
 extern crate openssl;
 extern crate rand;
 extern crate xor;
@@ -8,9 +6,10 @@ use openssl::symm::{decrypt, encrypt};
 use rand::Rng;
 use xor::XOR;
 
-pub const BLOCK_SIZE: usize = 16;
+use std::error;
+use std::fmt;
 
-use failure::Error;
+pub const BLOCK_SIZE: usize = 16;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum MODE {
@@ -19,20 +18,47 @@ pub enum MODE {
     CTR,
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Clone)]
 pub enum AesError {
-    #[fail(display = "invalid padding")]
     InvalidPadding,
-
-    #[fail(display = "failed to encrypt block {:?}", block)]
+    InvalidParameter,
     EncryptionFailed { block: Vec<u8> },
-
-    #[fail(display = "failed to decrypt block {:?}", block)]
     DecryptionFailed { block: Vec<u8> },
+    IvNotAllowed,
+    IvRequired,
+    InputNotBlockSize,
+    InputNotMultipleOfBlockSize,
+    IvNotBlockSize,
 }
 
-pub fn pad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
-    ensure!(k >= 2, "invalid parameter");
+// This is important for other errors to wrap this one.
+impl error::Error for AesError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        None
+    }
+}
+
+impl fmt::Display for AesError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AesError::InvalidPadding => write!(f, "invalid padding"),
+            AesError::EncryptionFailed { block } => write!(f, "failed to encrypt block {:?}", block),
+            AesError::DecryptionFailed { block } => write!(f, "failed to decrypt block {:?}", block),
+            AesError::InvalidParameter => write!(f, "invalid parameter"),
+            AesError::IvNotAllowed => write!(f, "iv not supported in requested mode"),
+            AesError::IvRequired => write!(f, "iv required in requested mode"),
+            AesError::InputNotBlockSize => write!(f, "input length not equal to {}", BLOCK_SIZE),
+            AesError::InputNotMultipleOfBlockSize => write!(f, "input length not a multiple of {}", BLOCK_SIZE),
+            AesError::IvNotBlockSize => write!(f, "iv length not equal to {}", BLOCK_SIZE),
+        }
+    }
+}
+
+pub fn pad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), AesError> {
+    if !(k >= 2) {
+        return Err(AesError::InvalidParameter);
+    }
 
     let p = k - (u.len() % k as usize) as u8;
     for _ in 0..p {
@@ -41,7 +67,7 @@ pub fn pad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn unpad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
+pub fn unpad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), AesError> {
     if !padding_valid(u, k)? {
         return Err(AesError::InvalidPadding.into());
     }
@@ -51,8 +77,10 @@ pub fn unpad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), Error> {
     Ok(())
 }
 
-fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
-    ensure!(k >= 2, "invalid parameter");
+fn padding_valid(u: &[u8], k: u8) -> Result<bool, AesError> {
+    if !(k >= 2) {
+        return Err(AesError::InvalidParameter);
+    }
 
     if u.is_empty() || u.len() % k as usize != 0 {
         return Ok(false);
@@ -71,8 +99,8 @@ fn padding_valid(u: &[u8], k: u8) -> Result<bool, Error> {
 pub trait Aes128 {
     fn pad(&self) -> Vec<u8>;
     fn padding_valid(&self) -> bool;
-    fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error>;
-    fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error>;
+    fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError>;
+    fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError>;
 }
 
 impl Aes128 for [u8] {
@@ -86,50 +114,61 @@ impl Aes128 for [u8] {
         padding_valid(self, BLOCK_SIZE as u8).unwrap()
     }
 
-    fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error> {
+    fn encrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError> {
         match mode {
             MODE::ECB => {
-                ensure!(iv.is_none(), "iv not supported for ECB mode");
+                if !(iv.is_none()){
+                    return Err(AesError::IvNotAllowed);
+                }
                 encrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
-                ensure!(iv.is_some(), "iv required for CBC mode");
+                if !(iv.is_some()){
+                    return Err(AesError::IvRequired);
+                }
                 encrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
-                ensure!(iv.is_none(), "iv not supported for CTR mode");
+                if !(iv.is_none()){
+                    return Err(AesError::IvNotAllowed);
+                }
                 aes128_ctr(&self, key)
             }
         }
     }
 
-    fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, Error> {
+    fn decrypt(&self, key: &Self, iv: Option<&Self>, mode: MODE) -> Result<Vec<u8>, AesError> {
         match mode {
             MODE::ECB => {
-                ensure!(iv.is_none(), "iv not supported for ECB mode");
+                if !(iv.is_none()){
+                    return Err(AesError::IvNotAllowed);
+                }
                 decrypt_aes128_ecb(&self, key)
             }
 
             MODE::CBC => {
-                ensure!(iv.is_some(), "iv required for CBC mode");
+                if !(iv.is_some()){
+                    return Err(AesError::IvRequired);
+                }
                 decrypt_aes128_cbc(&self, key, iv.unwrap())
             }
 
             MODE::CTR => {
-                ensure!(iv.is_none(), "iv not supported for CTR mode");
+                if !(iv.is_none()){
+                    return Err(AesError::IvNotAllowed);
+                }
                 aes128_ctr(&self, key)
             }
         }
     }
 }
 
-fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(
-        input.len() == BLOCK_SIZE,
-        format!("input does not consist of {} bytes", BLOCK_SIZE)
-    );
+fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
+    if !( input.len() == BLOCK_SIZE){
+        return Err(AesError::InputNotBlockSize);
+    }
 
     // The OpenSSL call pads the cleartext before encrypting.
     let mut ciphertext =
@@ -143,11 +182,10 @@ fn encrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
     Ok(ciphertext)
 }
 
-fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(
-        input.len() == BLOCK_SIZE,
-        format!("input does not consist of {} bytes", BLOCK_SIZE)
-    );
+fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
+    if !( input.len() == BLOCK_SIZE){
+        return Err(AesError::InputNotBlockSize);
+    }
 
     // The OpenSSL call expects a padded cleartext.
     let padding = encrypt_aes128_block(&[BLOCK_SIZE as u8; BLOCK_SIZE], key)?;
@@ -161,7 +199,7 @@ fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
     })
 }
 
-fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
     let u = input.pad();
     let mut ciphertext = Vec::new();
     for block in u.chunks(BLOCK_SIZE) {
@@ -170,11 +208,10 @@ fn encrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
     Ok(ciphertext)
 }
 
-fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(
-        input.len() % BLOCK_SIZE == 0,
-        format!("input length not a multiple of {}", BLOCK_SIZE)
-    );
+fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
+    if !( input.len() % BLOCK_SIZE == 0){
+        return Err(AesError::InputNotMultipleOfBlockSize);
+    }
 
     let mut cleartext = Vec::new();
     for block in input.chunks(BLOCK_SIZE) {
@@ -184,11 +221,10 @@ fn decrypt_aes128_ecb(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
     Ok(cleartext)
 }
 
-fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(
-        iv.len() == BLOCK_SIZE,
-        format!("iv length not equal to {}", BLOCK_SIZE)
-    );
+fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, AesError> {
+    if !( iv.len() == BLOCK_SIZE){
+        return Err(AesError::IvNotBlockSize);
+    }
 
     let u = input.pad();
     let mut ciphertext = Vec::new();
@@ -201,15 +237,13 @@ fn encrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Er
     Ok(ciphertext)
 }
 
-fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Error> {
-    ensure!(
-        input.len() % BLOCK_SIZE == 0,
-        format!("input length not a multiple of {}", BLOCK_SIZE)
-    );
-    ensure!(
-        iv.len() == BLOCK_SIZE,
-        format!("iv length not equal to {}", BLOCK_SIZE)
-    );
+fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, AesError> {
+    if !( input.len() % BLOCK_SIZE == 0){
+        return Err(AesError::InputNotMultipleOfBlockSize);
+    }
+    if !( iv.len() == BLOCK_SIZE){
+        return Err(AesError::IvNotBlockSize);
+    }
 
     let mut cleartext = Vec::new();
     let mut previous = iv;
@@ -221,7 +255,7 @@ fn decrypt_aes128_cbc(input: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Er
     Ok(cleartext)
 }
 
-fn aes128_ctr(input: &[u8], key: &[u8]) -> Result<Vec<u8>, Error> {
+fn aes128_ctr(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
     let mut ciphertext = Vec::new();
     let mut keystream = vec![0; BLOCK_SIZE];
     for b in input.chunks(BLOCK_SIZE) {

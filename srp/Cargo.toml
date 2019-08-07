@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 byteorder = "0.5"
-failure = "0.1"
 num = "0.1"
 rand = "0.3" 
 sha2 = "0.6"

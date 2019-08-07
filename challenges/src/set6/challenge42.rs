@@ -155,7 +155,7 @@ fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
     r.to_bytes_be()
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let server = Server::new();
     {
         // Make sure that our server accepts valid signatures

@@ -9,7 +9,7 @@ use crate::set1::read_file_to_string;
 
 use crate::errors::*;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let key = b"YELLOW SUBMARINE";
     let input = from_base64_file(Path::new("data/10.txt"))?;
     let cleartext = input.decrypt(key, Some(&[0; BLOCK_SIZE]), MODE::CBC)?;

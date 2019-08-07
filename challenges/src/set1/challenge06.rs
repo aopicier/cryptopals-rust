@@ -5,9 +5,9 @@ use xor::XOR;
 use super::challenge03::{break_single_byte_xor, compute_score};
 use crate::errors::*;
 
-fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32, Error> {
+fn hamming_distance(u: &[u8], v: &[u8]) -> Result<u32> {
     if u.len() != v.len() {
-        bail!("inputs need to have the same length");
+        return Err("inputs need to have the same length".into());
     }
 
     Ok(u.xor(v)
@@ -88,7 +88,7 @@ fn break_multibyte_xor(input: &[u8]) -> Vec<u8> {
         .unwrap()
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let input = from_base64_file(Path::new("data/6.txt"))?;
     let key = break_multibyte_xor(&input);
     compare_eq(b"Terminator X: Bring the noise".as_ref(), &key)

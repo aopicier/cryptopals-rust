@@ -18,7 +18,7 @@ impl Server {
         }
     }
 
-    fn get_session_token(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
+    fn get_session_token(&self) -> Result<(Vec<u8>, Vec<u8>)> {
         let inputs = [
             "MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=",
             "MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=",
@@ -39,19 +39,18 @@ impl Server {
         Ok((iv, ciphertext))
     }
 
-    fn is_padding_valid(&self, iv: &[u8], ciphertext: &[u8]) -> Result<bool, Error> {
+    fn is_padding_valid(&self, iv: &[u8], ciphertext: &[u8]) -> Result<bool> {
         if let Err(error) = ciphertext.decrypt(&self.key, Some(iv), MODE::CBC) {
-            if let Some(&AesError::InvalidPadding) = error.downcast_ref::<AesError>() {
-                Ok(false)
-            } else {
-                Err(error)
+            match error {
+                AesError::InvalidPadding => Ok(false),
+                _ => Err(error.into()),
             }
         } else {
             Ok(true)
         }
     }
 
-    fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<(), Error> {
+    fn verify_solution(&self, cleartext: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<()> {
         compare_eq(
             &ciphertext.decrypt(&self.key, Some(iv), MODE::CBC)?[..],
             cleartext,
@@ -59,7 +58,7 @@ impl Server {
     }
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let server = Server::new();
     let (iv, ciphertext) = server.get_session_token()?;
     let mut cleartext = vec![0; ciphertext.len()];

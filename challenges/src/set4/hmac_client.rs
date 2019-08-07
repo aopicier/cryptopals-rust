@@ -21,7 +21,7 @@ fn t_statistic(n: f32, (mu_u, sd_u): (f32, f32), (mu_v, sd_v): (f32, f32)) -> f3
     (n * m / (n + m)).sqrt() * (mu_u - mu_v) / var.sqrt()
 }
 
-fn try_signature(mac: &[u8]) -> Result<bool, Error> {
+fn try_signature(mac: &[u8]) -> Result<bool> {
     let client = Client::new();
     let mime = "application/json".parse().unwrap();
     let body = format!("{{\"file\":\"4.txt\", \"signature\":\"{}\"}}", mac.to_hex());
@@ -36,7 +36,7 @@ fn try_signature(mac: &[u8]) -> Result<bool, Error> {
     Ok(response.status == hyper::status::StatusCode::Ok)
 }
 
-fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32), Error> {
+fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32)> {
     let measurements = (0..n)
         .map(|_| {
             let now = time::Instant::now();
@@ -46,14 +46,14 @@ fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32), Error> {
                 + (elapsed_time.subsec_nanos() as f32) / 1_000.0;
             Ok(elapsed_micros)
         })
-        .collect::<Result<Vec<f32>, Error>>()?;
+        .collect::<Result<Vec<f32>>>()?;
 
     let mu = mean(&measurements);
     let sd = squared_deviation(&measurements, mu);
     Ok((mu, sd))
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let mut mac = vec![0; 20];
 
     // Number of measurements to perform per signature
@@ -78,7 +78,7 @@ pub fn run() -> Result<(), Error> {
     }
 
     if !try_signature(&mac)? {
-        bail!("Failed to determine mac");
+        return Err("Failed to determine mac".into());
     }
 
     Ok(())

@@ -9,14 +9,14 @@ use rand::Rng;
 
 use crate::communication::Communicate;
 
-use failure::{err_msg, Error};
-
 use bignum::NumBigInt as BigNum;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 struct SimplifiedUComputer;
 
 impl UComputer for SimplifiedUComputer {
-    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, stream: &mut T) -> Result<BigNum, Error> {
+    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, stream: &mut T) -> Result<BigNum> {
         let mut rng = rand::thread_rng();
         let u: Vec<u8> = rng.gen_iter::<u8>().take(128).collect();
         stream.send(&u)?;
@@ -39,13 +39,13 @@ impl<U: UComputer> ServerBase<U> {
         }
     }
 
-    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
-        let user_name = stream.receive()?.ok_or_else(|| err_msg("user name"))?;
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<()> {
+        let user_name = stream.receive()?.ok_or_else(|| "user name")?;
 
         match self.user_database.get(&user_name) {
             Some(user_data) => Self::authenticate_client(&self.params, stream, user_data),
             None => {
-                let password = stream.receive()?.ok_or_else(|| err_msg("password"))?;
+                let password = stream.receive()?.ok_or_else(|| "password")?;
                 let user_data = self.params.password_to_verifier(&password);
                 self.user_database.insert(user_name, user_data);
                 Ok(())
@@ -57,15 +57,15 @@ impl<U: UComputer> ServerBase<U> {
         params: &SRP,
         stream: &mut T,
         &(ref salt, ref v): &(Vec<u8>, BigNum),
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let state = ServerHandshake::new(params, salt, v);
-        let A = deserialize(&stream.receive()?.ok_or_else(|| err_msg("A"))?);
+        let A = deserialize(&stream.receive()?.ok_or_else(|| "A")?);
         let B = state.B();
         stream.send(salt)?;
         stream.send(&serialize(B))?;
         let u = U::compute_u::<T>(&A, &B, stream)?;
         let server_secret = state.compute_hashed_secret(&A, &u);
-        let client_secret = stream.receive()?.ok_or_else(|| err_msg("client secret"))?;
+        let client_secret = stream.receive()?.ok_or_else(|| "client secret")?;
 
         let login_result = if server_secret == client_secret {
             LoginResult::Success
@@ -78,7 +78,7 @@ impl<U: UComputer> ServerBase<U> {
 }
 
 pub trait ClientHandler: Send + 'static {
-    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error>;
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<()>;
 }
 
 pub struct Server {
@@ -94,7 +94,7 @@ impl Default for Server {
 }
 
 impl ClientHandler for Server {
-    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<()> {
         self.base.handle_client(stream)
     }
 }
@@ -112,7 +112,7 @@ impl Default for SimplifiedServer {
 }
 
 impl ClientHandler for SimplifiedServer {
-    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<(), Error> {
+    fn handle_client<T: Communicate>(&mut self, stream: &mut T) -> Result<()> {
         self.base.handle_client(stream)
     }
 }

@@ -1,13 +1,10 @@
-#[macro_use]
-extern crate failure;
-
 use std::char;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 
-use failure::{Error, ResultExt};
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub trait Serialize {
     fn to_base64(&self) -> String;
@@ -45,9 +42,9 @@ impl Serialize for [u8] {
     }
 }
 
-pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
+pub fn from_base64(s: &str) -> Result<Vec<u8>> {
     if s.len() % 4 != 0 {
-        bail!("input length needs to be multiple of 4");
+        return Err("input length needs to be multiple of 4".into());
     }
 
     let mut n = s.len();
@@ -60,7 +57,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
 
     let mut digits = Vec::with_capacity(n);
     for c in s.chars().take(n) {
-        digits.push(u8_from_base64(c).context(format!("not a valid base64 string: {}", s))?);
+        digits.push(u8_from_base64(c)/*.context(format!("not a valid base64 string: {}", s))*/?);
     }
 
     let mut u = Vec::with_capacity(3 * s.len() / 4);
@@ -68,7 +65,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
         u.push((b[0] << 2) + (b[1] >> 4));
         if b.len() == 2 {
             if b[1] << 4 != 0 {
-                bail!("input not padded with zero");
+                return Err("input not padded with zero".into());
             }
             break;
         }
@@ -76,7 +73,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
         u.push((b[1] << 4) + (b[2] >> 2));
         if b.len() == 3 {
             if b[2] << 6 != 0 {
-                bail!("input not padded with zero");
+                return Err("input not padded with zero".into());
             }
             break;
         }
@@ -86,7 +83,7 @@ pub fn from_base64(s: &str) -> Result<Vec<u8>, Error> {
     Ok(u)
 }
 
-pub fn from_base64_file(path: &Path) -> Result<Vec<u8>, Error> {
+pub fn from_base64_file(path: &Path) -> Result<Vec<u8>> {
     let mut content = String::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -96,18 +93,18 @@ pub fn from_base64_file(path: &Path) -> Result<Vec<u8>, Error> {
     from_base64(&content)
 }
 
-pub fn from_base64_lines(path: &Path) -> Result<Vec<Vec<u8>>, Error> {
+pub fn from_base64_lines(path: &Path) -> Result<Vec<Vec<u8>>> {
     from_lines(path, from_base64)
 }
 
-pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>, Error> {
+pub fn from_hex_lines(path: &Path) -> Result<Vec<Vec<u8>>> {
     from_lines(path, from_hex)
 }
 
 fn from_lines(
     path: &Path,
-    converter: fn(&str) -> Result<Vec<u8>, Error>,
-) -> Result<Vec<Vec<u8>>, Error> {
+    converter: fn(&str) -> Result<Vec<u8>>,
+) -> Result<Vec<Vec<u8>>> {
     let mut content = Vec::new();
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -117,14 +114,14 @@ fn from_lines(
     Ok(content)
 }
 
-pub fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
+pub fn from_hex(s: &str) -> Result<Vec<u8>> {
     if s.len() % 2 != 0 {
-        bail!("input length needs to be multiple of 2");
+        return Err("input length needs to be multiple of 2".into());
     }
 
     let mut digits = Vec::with_capacity(s.len());
     for c in s.chars() {
-        digits.push(u8_from_hex(c).context(format!("not a valid hex string: {}", s))?);
+        digits.push(u8_from_hex(c)/*.context(format!("not a valid hex string: {}", s))*/?);
     }
     Ok(digits
         .chunks(2)
@@ -132,10 +129,10 @@ pub fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
         .collect::<Vec<u8>>())
 }
 
-fn u8_from_hex(c: char) -> Result<u8, Error> {
+fn u8_from_hex(c: char) -> Result<u8> {
     match c.to_digit(16) {
         Some(i) => Ok(i as u8),
-        _ => bail!("invalid character {}", c),
+        _ => return Err(format!("invalid character {}", c).into()),
     }
 }
 
@@ -163,13 +160,13 @@ fn u8_to_base64(u: u8) -> char {
     }
 }
 
-fn u8_from_base64(c: char) -> Result<u8, Error> {
+fn u8_from_base64(c: char) -> Result<u8> {
     match c {
         'A'...'Z' => Ok(c as u8 - b'A'),
         'a'...'z' => Ok(26 + (c as u8 - b'a')),
         '0'...'9' => Ok(52 + (c as u8 - b'0')),
         '+' => Ok(62),
         '/' => Ok(63),
-        _ => bail!(format!("invalid character {}", c)),
+        _ => return Err(format!("invalid character {}", c).into()),
     }
 }

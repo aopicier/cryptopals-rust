@@ -14,7 +14,7 @@ pub fn fake_signature(params: &DsaParams<BigNum>, y: &BigNum) -> Signature<BigNu
     Signature { r, s }
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     // It is not possible to fake a signature for g = 0 with our verification routine because r
     // would have to be 0. We therefore skip this part of the exercise.
     let params = DsaParams::new_with_g(BigNum::one());

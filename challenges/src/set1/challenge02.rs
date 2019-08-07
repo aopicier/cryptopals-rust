@@ -3,7 +3,7 @@ use serialize::from_hex;
 use serialize::Serialize;
 use xor::XOR;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let input1 = "1c0111001f010100061a024b53535009181c";
     let input2 = "686974207468652062756c6c277320657965";
     compare_eq(

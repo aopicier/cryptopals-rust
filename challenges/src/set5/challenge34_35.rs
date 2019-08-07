@@ -14,7 +14,7 @@ use diffie_hellman::session::Session;
 
 use crate::errors::*;
 
-fn handle_client<S: Handshake<TcpStream>>(stream: TcpStream) -> Result<(), Error> {
+fn handle_client<S: Handshake<TcpStream>>(stream: TcpStream) -> Result<()> {
     let mut server = Session::new::<S>(stream)?;
     while let Some(message) = server.receive()? {
         server.send(&message)?;
@@ -30,7 +30,7 @@ struct InterceptedMessages {
 fn mitm_handle_client<M: MitmHandshake<TcpStream>>(
     client_stream: TcpStream,
     server_stream: TcpStream,
-) -> Result<InterceptedMessages, Error> {
+) -> Result<InterceptedMessages> {
     let mut mitm = MitmSession::new::<M>(client_stream, server_stream)?;
     let mut decrypted_client_messages = Vec::new();
     let mut decrypted_server_messages = Vec::new();
@@ -64,29 +64,29 @@ fn mitm_handle_client<M: MitmHandshake<TcpStream>>(
 
 fn start_server<S: Handshake<TcpStream>>(
     port: u16,
-) -> Result<thread::JoinHandle<Result<(), Error>>, Error> {
+) -> Result<thread::JoinHandle<Result<()>>> {
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((stream, _)) => handle_client::<S>(stream),
-        Err(_) => bail!("connection failed"),
+        Err(_) => Err(ConnectionFailed.into()),
     }))
 }
 
 fn start_mitm<M: MitmHandshake<TcpStream>>(
     client_port: u16,
     server_port: u16,
-) -> Result<thread::JoinHandle<Result<InterceptedMessages, Error>>, Error> {
+) -> Result<thread::JoinHandle<Result<InterceptedMessages>>> {
     let listener = TcpListener::bind(("localhost", client_port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((client_stream, _)) => {
             let server_stream = TcpStream::connect(("localhost", server_port))?;
             mitm_handle_client::<M>(client_stream, server_stream)
         }
-        Err(_) => bail!("connection failed"),
+        Err(_) => Err(ConnectionFailed.into()),
     }))
 }
 
-fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
+fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<()> {
     let server_port: u16 = 8080;
     let client_port: u16 = 8080;
     let message = b"This is a test";
@@ -94,7 +94,7 @@ fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
     let join_handle = start_server::<P::Server>(server_port)?;
 
     let stream =
-        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+        TcpStream::connect(("localhost", client_port))/*.context("client failed to connect")*/?;
 
     let mut client = Session::new::<P::Client>(stream)?;
 
@@ -103,12 +103,12 @@ fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<(), Error> {
 
     client.stream().shutdown(Shutdown::Both)?;
     match join_handle.join() {
-        Ok(result) => result,
-        _ => bail!("tcp listener thread panicked"),
+        Ok(result) => result.map_err(|err| err.into()),
+        _ => return Err("tcp listener thread panicked".into()),
     }
 }
 
-fn run_mitm<T: MitmForClientServer<TcpStream>>() -> Result<(), Error>
+fn run_mitm<T: MitmForClientServer<TcpStream>>() -> Result<()>
 where
     T::Mitm: 'static + Send,
 {
@@ -121,17 +121,17 @@ where
     let jh_mitm = start_mitm::<T::Mitm>(client_port, server_port)?;
 
     let stream =
-        TcpStream::connect(("localhost", client_port)).context("client failed to connect")?;
+        TcpStream::connect(("localhost", client_port))/*.context("client failed to connect")*/?;
 
     let mut client = Session::new::<<T::CS as ClientServerPair<TcpStream>>::Client>(stream)?;
     client.send(&message)?;
-    compare_eq(Some(&message), client.receive()?.as_ref()).context("message received by client")?;
+    compare_eq(Some(&message), client.receive()?.as_ref())/*.context("message received by client")*/?;
 
     client.stream().shutdown(Shutdown::Both)?;
 
     match jh_server.join() {
-        Ok(result) => result.context("server error")?,
-        _ => bail!("tcp listener thread panicked"),
+        Ok(result) => result/*.context("server error")*/?,
+        _ => return Err("tcp listener thread panicked".into()),
     };
 
     match jh_mitm.join() {
@@ -140,25 +140,25 @@ where
                 decrypted_client_messages,
                 decrypted_server_messages,
             } = result?;
-            compare_eq(1, decrypted_client_messages.len()).context("number of client messages")?;
-            compare_eq(1, decrypted_server_messages.len()).context("number of server messages")?;
+            compare_eq(1, decrypted_client_messages.len())/*.context("number of client messages")*/?;
+            compare_eq(1, decrypted_server_messages.len())/*.context("number of server messages")*/?;
             compare_eq(&message, &decrypted_client_messages[0])
-                .context("decrypted client message")?;
+                /*.context("decrypted client message")*/?;
             compare_eq(&message, &decrypted_server_messages[0])
-                .context("decrypted server message")?;
+                /*.context("decrypted server message")*/?;
             Ok(())
         }
-        _ => bail!("tcp listener thread panicked"),
+        _ => return Err("tcp listener thread panicked".into()),
     }
 }
 
-pub fn run34() -> Result<(), Error> {
+pub fn run34() -> Result<()> {
     run_echo::<ClientDeterminesParameters>()?;
     run_mitm::<MitmFakePublicKey>()?;
     Ok(())
 }
 
-pub fn run35() -> Result<(), Error> {
+pub fn run35() -> Result<()> {
     run_echo::<ServerCanOverrideParameters>()?;
     run_mitm::<MitmFakeGeneratorOne>()?;
     run_mitm::<MitmFakeGeneratorP>()?;

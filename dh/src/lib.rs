@@ -4,7 +4,6 @@ extern crate aes;
 extern crate bignum;
 extern crate byteorder;
 extern crate digest;
-extern crate failure;
 extern crate num;
 extern crate rand;
 extern crate result;

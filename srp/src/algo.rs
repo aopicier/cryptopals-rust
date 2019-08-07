@@ -5,11 +5,12 @@ use crate::communication::Communicate;
 
 use bignum::BigNumTrait;
 pub use bignum::NumBigInt as BigNum;
-use failure::Error;
 use mac::hmac_sha256;
 use sha2::{Digest, Sha256};
 
 use rand::Rng;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub enum LoginResult {
     Success,
@@ -160,13 +161,13 @@ impl<'a> ServerHandshake<'a> {
 }
 
 pub trait UComputer {
-    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, _: &mut T) -> Result<BigNum, Error>;
+    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, _: &mut T) -> Result<BigNum>;
 }
 
 pub struct DefaultUComputer;
 
 impl UComputer for DefaultUComputer {
-    fn compute_u<T: Communicate>(A: &BigNum, B: &BigNum, _: &mut T) -> Result<BigNum, Error> {
+    fn compute_u<T: Communicate>(A: &BigNum, B: &BigNum, _: &mut T) -> Result<BigNum> {
         let mut buffer = Vec::new();
         buffer.extend_from_slice(&serialize(A));
         buffer.extend_from_slice(&serialize(B));

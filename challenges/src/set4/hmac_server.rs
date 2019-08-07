@@ -71,7 +71,7 @@ fn handle_request(req: &mut Request, key: &[u8]) -> IronResult<Response> {
     Ok(Response::with(status::InternalServerError))
 }
 
-pub fn start(key: Vec<u8>) -> Result<iron::Listening, Error> {
+pub fn start(key: Vec<u8>) -> Result<iron::Listening> {
     Iron::new(move |req: &mut Request| handle_request(req, &key))
         .http("localhost:3000")
         .map_err(|err| err.into())

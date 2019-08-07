@@ -33,7 +33,7 @@ fn get_ciphertext(seed: u32) -> Vec<u8> {
     ciphertext
 }
 
-fn seed_from_ciphertext() -> Result<(), Error> {
+fn seed_from_ciphertext() -> Result<()> {
     let mut rng = rand::thread_rng();
 
     // The secret seed unknown to the attacker
@@ -78,16 +78,16 @@ fn get_token_from_seed(seed: u32) -> [u8; TOKEN_SIZE] {
 }
 
 // We use seconds since the epoch to represent time as an u32
-fn get_current_time_as_u32() -> Result<u32, Error> {
+fn get_current_time_as_u32() -> Result<u32> {
     let seconds_since_epoch = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     if seconds_since_epoch > u64::from(std::u32::MAX) {
-        bail!("Hello dear people of the year 2038.");
+        return Err("Hello dear people of the year 2038.".into());
     }
 
     Ok(seconds_since_epoch as u32)
 }
 
-fn is_product_of_mersenne_seeded_with_time(token: [u8; TOKEN_SIZE]) -> Result<bool, Error> {
+fn is_product_of_mersenne_seeded_with_time(token: [u8; TOKEN_SIZE]) -> Result<bool> {
     let now = get_current_time_as_u32()?;
 
     // The function crack_seed_from_nth also uses brute force, so we can as well just
@@ -100,7 +100,7 @@ fn is_product_of_mersenne_seeded_with_time(token: [u8; TOKEN_SIZE]) -> Result<bo
     Ok(false)
 }
 
-fn password_reset_token() -> Result<(), Error> {
+fn password_reset_token() -> Result<()> {
     let now = get_current_time_as_u32()?;
 
     let token = get_token_from_seed(now);
@@ -113,7 +113,7 @@ fn password_reset_token() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     seed_from_ciphertext()?;
     password_reset_token()?;
     Ok(())

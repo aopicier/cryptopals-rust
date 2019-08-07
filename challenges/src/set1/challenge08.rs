@@ -18,7 +18,7 @@ where
     len != v.len()
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let path = Path::new("data/8.txt");
     let file = File::open(&path)?;
     let reader = BufReader::new(file);

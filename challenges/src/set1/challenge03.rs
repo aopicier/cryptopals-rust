@@ -91,7 +91,7 @@ pub fn break_single_byte_xor(input: &[u8]) -> u8 {
         .unwrap() // unwrap is ok
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let input = from_hex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")?;
     let key = break_single_byte_xor(&input);
     compare_eq(

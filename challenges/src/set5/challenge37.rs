@@ -6,7 +6,7 @@ use crate::errors::*;
 
 use super::challenge36::{connect_and_execute, shutdown_server, start_server};
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let port: u16 = 8080;
     let (tx, join_handle) = start_server(Server::default(), port)?;
 
@@ -23,7 +23,7 @@ pub fn run() -> Result<(), Error> {
     shutdown_server(port, &tx)?;
 
     match join_handle.join() {
-        Ok(result) => result,
-        _ => bail!("tcp listener thread panicked"),
+        Ok(result) => result.map_err(|err| err.into()),
+        _ => return Err("tcp listener thread panicked".into()),
     }
 }

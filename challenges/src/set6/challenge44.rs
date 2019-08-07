@@ -19,7 +19,7 @@ pub struct SignedHash {
     signature: Signature<BigNum>,
 }
 
-fn read_hashes_and_signatures_from_file() -> Result<Vec<SignedHash>, Error> {
+fn read_hashes_and_signatures_from_file() -> Result<Vec<SignedHash>> {
     let path = Path::new("data/44.txt");
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -67,15 +67,15 @@ pub fn compute_private_key_from_reused_k(
         m: ref m2,
         signature: ref s2,
     }: &SignedHash,
-) -> Result<BigNum, Error> {
+) -> Result<BigNum> {
     if s1.r != s2.r {
-        bail!("Provided signatures do not have the same r.");
+        return Err("Provided signatures do not have the same r.".into());
     }
 
     let q = &params.q;
     let s_diff = &(&s1.s - &s2.s).remainder(q);
     if s_diff == &BigNum::zero() {
-        bail!("Provided signatures are not different.");
+        return Err("Provided signatures are not different.".into());
     }
 
     let k = &(m1 - m2).remainder(q) * &s_diff.invmod(q).unwrap(); // unwrap is ok
@@ -83,7 +83,7 @@ pub fn compute_private_key_from_reused_k(
     Ok(compute_private_key_from_k(params, m1, s1, &k))
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let params = DsaParams::default();
     let signed_hashes = read_hashes_and_signatures_from_file()?;
 

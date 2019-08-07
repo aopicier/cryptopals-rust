@@ -54,7 +54,7 @@ impl Server {
 
 // We use the variable names from the paper
 #[allow(non_snake_case)]
-pub fn run(rsa_bits: usize) -> Result<(), Error> {
+pub fn run(rsa_bits: usize) -> Result<()> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);

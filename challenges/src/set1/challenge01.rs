@@ -2,7 +2,7 @@ use crate::errors::*;
 use serialize::from_hex;
 use serialize::Serialize;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let input_string = "49276d206b696c6c696e6720796f757220627261\
                         696e206c696b65206120706f69736f6e6f7573206\
                         d757368726f6f6d";

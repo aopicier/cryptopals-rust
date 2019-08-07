@@ -4,7 +4,7 @@ use serialize::from_hex_lines;
 use std::path::Path;
 use xor::XOR;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let path = Path::new("data/4.txt");
     let lines = from_hex_lines(path)?;
     let result = lines

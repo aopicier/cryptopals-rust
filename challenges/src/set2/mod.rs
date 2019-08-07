@@ -11,7 +11,7 @@ mod challenge16;
 
 pub use self::challenge12::{prefix_and_suffix_length, prefix_length};
 
-pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<()>>) {
     challenges.push(challenge09::run);
     challenges.push(challenge10::run);
     challenges.push(challenge11::run);

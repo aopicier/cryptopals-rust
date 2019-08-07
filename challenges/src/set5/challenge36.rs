@@ -12,7 +12,7 @@ use crate::errors::*;
 pub fn start_server<T: ClientHandler>(
     mut server: T,
     port: u16,
-) -> Result<(Sender<u8>, thread::JoinHandle<Result<(), Error>>), Error> {
+) -> Result<(Sender<u8>, thread::JoinHandle<Result<()>>)> {
     let listener = TcpListener::bind(("localhost", port))?;
     let (tx, rx) = channel();
     let join_handle = thread::spawn(move || loop {
@@ -25,17 +25,17 @@ pub fn start_server<T: ClientHandler>(
 
                 server.handle_client(&mut stream)?;
             }
-            Err(_) => bail!("connection failed"),
+            Err(_) => return Err(ConnectionFailed.into()),
         };
     });
     Ok((tx, join_handle))
 }
 
-pub fn shutdown_server(port: u16, tx: &Sender<u8>) -> Result<(), Error> {
+pub fn shutdown_server(port: u16, tx: &Sender<u8>) -> Result<()> {
     // Ugly hack for shutting down the server
     tx.send(1)?;
 
-    let stream = TcpStream::connect(("localhost", port)).context("client failed to connect")?;
+    let stream = TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
 
     stream.shutdown(Shutdown::Both)?;
     Ok(())
@@ -43,16 +43,16 @@ pub fn shutdown_server(port: u16, tx: &Sender<u8>) -> Result<(), Error> {
 
 pub fn connect_and_execute(
     port: u16,
-    action: impl Fn(&mut TcpStream) -> Result<(), Error>,
-) -> Result<(), Error> {
-    let mut stream = TcpStream::connect(("localhost", port)).context("client failed to connect")?;
+    action: impl Fn(&mut TcpStream) -> Result<()>,
+) -> Result<()> {
+    let mut stream = TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
 
     action(&mut stream)?;
     stream.shutdown(Shutdown::Both)?;
     Ok(())
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let port: u16 = 8080;
     let (tx, join_handle) = start_server(Server::default(), port)?;
 
@@ -66,7 +66,7 @@ pub fn run() -> Result<(), Error> {
     shutdown_server(port, &tx)?;
 
     match join_handle.join() {
-        Ok(result) => result,
-        _ => bail!("tcp listener thread panicked"),
+        Ok(result) => result.map_err(|err| err.into()),
+        _ => return Err("tcp listener thread panicked".into()),
     }
 }

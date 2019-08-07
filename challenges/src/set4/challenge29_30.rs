@@ -150,7 +150,7 @@ impl MacHelper for Md4Helper {
     }
 }
 
-fn run_29_30<T: MacHelper>() -> Result<(), Error> {
+fn run_29_30<T: MacHelper>() -> Result<()> {
     let server = MacServer::<T>::new();
     let (original_message, mac) = server.get_message_with_mac();
     let new_message = b";admin=true";
@@ -174,10 +174,10 @@ fn run_29_30<T: MacHelper>() -> Result<(), Error> {
             return Ok(());
         }
     }
-    bail!("No matching message found.");
+    return Err("No matching message found.".into());
 }
 
-pub fn run29() -> Result<(), Error> {
+pub fn run29() -> Result<()> {
     run_29_30::<Sha1Helper>()
 }
 
@@ -204,6 +204,6 @@ impl Md4_0_7_0 {
     }
 }
 
-pub fn run30() -> Result<(), Error> {
+pub fn run30() -> Result<()> {
     run_29_30::<Md4Helper>()
 }

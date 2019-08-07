@@ -15,7 +15,7 @@ pub fn crack_seed_from_nth(u: u32, n: usize, candidates: impl Iterator<Item = u3
     None
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let mut rng = rand::thread_rng();
 
     // The secret seed unknown to the attacker

@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::mersenne::MersenneTwister;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let mt = MersenneTwister::initialize(1);
     compare_eq(
         vec![

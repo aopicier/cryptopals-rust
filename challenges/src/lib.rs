@@ -24,9 +24,6 @@ extern crate hyper;
 extern crate iron;
 extern crate params;
 
-#[macro_use]
-extern crate failure;
-
 pub mod errors;
 
 pub mod set1;

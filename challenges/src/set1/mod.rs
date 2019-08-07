@@ -12,7 +12,7 @@ mod challenge08;
 pub use self::challenge06::break_multibyte_xor_for_keysize;
 pub use self::challenge07::read_file_to_string;
 
-pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<()>>) {
     challenges.push(challenge01::run);
     challenges.push(challenge02::run);
     challenges.push(challenge03::run);

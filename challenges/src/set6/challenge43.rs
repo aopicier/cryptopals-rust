@@ -19,7 +19,7 @@ pub fn compute_private_key_from_k(
     x.remainder(q)
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     // First check that our key recovery function actually works.
     {
         let message = random_block();
@@ -62,7 +62,7 @@ So be friendly, a matter of life and death, just like a etch-a-sketch
         .map(BigNumTrait::from_u32)
         .map(|k| compute_private_key_from_k(&params, &m, &signature, &k))
         .find(|x| Dsa::compute_public_key(&params, x) == y)
-        .ok_or_else(|| err_msg("failed to determine private key"))?;
+        .ok_or_else(|| "failed to determine private key")?;
 
     let private_key_hex = private_key.to_hex_str();
 

@@ -3,7 +3,7 @@ use crate::communication::CommunicateEncr;
 
 use crate::handshake::Handshake;
 
-use failure::Error;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct Session<T: Communicate> {
     stream: T,
@@ -11,7 +11,7 @@ pub struct Session<T: Communicate> {
 }
 
 impl<T: Communicate> Session<T> {
-    pub fn new<U: Handshake<T>>(mut stream: T) -> Result<Session<T>, Error> {
+    pub fn new<U: Handshake<T>>(mut stream: T) -> Result<Session<T>> {
         U::handshake(&mut stream).map(|key| Session { stream, key })
     }
 
@@ -21,11 +21,11 @@ impl<T: Communicate> Session<T> {
 }
 
 impl<T: Communicate> Communicate for Session<T> {
-    fn send(&mut self, message: &[u8]) -> Result<(), Error> {
+    fn send(&mut self, message: &[u8]) -> Result<()> {
         self.stream.send_encr(message, &self.key)
     }
 
-    fn receive(&mut self) -> Result<Option<Vec<u8>>, Error> {
+    fn receive(&mut self) -> Result<Option<Vec<u8>>> {
         self.stream.receive_encr(&self.key)
     }
 }

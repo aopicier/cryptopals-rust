@@ -5,7 +5,6 @@ authors = ["Philipp Hartwig <ph@phhart.de>"]
 edition = "2018"
 
 [dependencies]
-failure = "0.1"
 openssl = "0.10"
 rand = "0.3"
 

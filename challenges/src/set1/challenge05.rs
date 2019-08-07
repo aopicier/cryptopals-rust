@@ -2,7 +2,7 @@ use crate::errors::*;
 use serialize::Serialize;
 use xor::XOR;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let input = b"Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
 
     let passphrase = b"ICE";

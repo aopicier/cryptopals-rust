@@ -8,7 +8,7 @@ use std::path::Path;
 
 use crate::errors::*;
 
-pub fn read_file_to_string(file_path: &str) -> Result<String, Error> {
+pub fn read_file_to_string(file_path: &str) -> Result<String> {
     let path = Path::new(file_path);
     let mut file = File::open(&path)?;
     let mut content = String::new();
@@ -16,7 +16,7 @@ pub fn read_file_to_string(file_path: &str) -> Result<String, Error> {
     Ok(content)
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let key = b"YELLOW SUBMARINE";
     let ciphertext = from_base64_file(Path::new("data/7.txt"))?;
     let cleartext = ciphertext.decrypt(key, None, MODE::ECB)?;

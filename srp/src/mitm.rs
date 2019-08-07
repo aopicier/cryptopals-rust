@@ -2,10 +2,10 @@ use crate::algo;
 use crate::algo::{deserialize, serialize, LoginResult, SRP};
 use crate::communication::Communicate;
 
-use failure::{err_msg, Error};
-
 use bignum::BigNumTrait;
 use bignum::NumBigInt as BigNum;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct PasswordOracle {
     g: BigNum,
@@ -56,9 +56,9 @@ impl Default for Mitm {
     }
 }
 impl Mitm {
-    pub fn handle_client<T: Communicate>(&self, stream: &mut T) -> Result<PasswordOracle, Error> {
-        let _ = stream.receive()?.ok_or_else(|| err_msg("user name"))?;
-        let A: BigNum = deserialize(&stream.receive()?.ok_or_else(|| err_msg("A"))?);
+    pub fn handle_client<T: Communicate>(&self, stream: &mut T) -> Result<PasswordOracle> {
+        let _ = stream.receive()?.ok_or_else(|| "user name")?;
+        let A: BigNum = deserialize(&stream.receive()?.ok_or_else(|| "A")?);
         let g = self.params.g();
         let salt = &[];
         let B = g;
@@ -68,7 +68,7 @@ impl Mitm {
         stream.send(&serialize(B))?;
         stream.send(&serialize(u))?;
 
-        let client_secret = stream.receive()?.ok_or_else(|| err_msg("client secret"))?;
+        let client_secret = stream.receive()?.ok_or_else(|| "client secret")?;
 
         stream.send(&[LoginResult::Success as u8])?;
         Ok(PasswordOracle {

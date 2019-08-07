@@ -25,7 +25,7 @@ impl Server {
         self.rsa.encrypt(&_2)
     }
 
-    fn get_ciphertext(&self) -> Result<BigNum, Error> {
+    fn get_ciphertext(&self) -> Result<BigNum> {
         let cleartext = from_base64(
             "VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IG\
              Fyb3VuZCB3aXRoIHRoZSBGdW5reSBDb2xkIE1lZGluYQ==",
@@ -41,7 +41,7 @@ impl Server {
         &self.rsa.decrypt(ciphertext) % &_2 == _0
     }
 
-    fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<(), Error> {
+    fn verify_solution(&self, cleartext: &BigNum, ciphertext: &BigNum) -> Result<()> {
         compare_eq(&self.rsa.decrypt(ciphertext), cleartext)
     }
 }
@@ -63,7 +63,7 @@ impl Server {
 // This allows us to pass from k to k+1 in (**) and iteratively we obtain more and more precise
 // bounds for m. For k = `number of bits in n` we obtain equality.
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let _1 = BigNum::one();
     let _2 = BigNum::from_u32(2);
 

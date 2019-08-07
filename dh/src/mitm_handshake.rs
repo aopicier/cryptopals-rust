@@ -6,10 +6,11 @@ use bignum::BigNumTrait;
 use bignum::NumBigInt as BigNum;
 
 use crate::handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
-use failure::{err_msg, Error};
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub trait MitmHandshake<T: Communicate> {
-    fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error>;
+    fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>>;
 }
 
 pub trait MitmForClientServer<T: Communicate> {
@@ -22,13 +23,13 @@ pub trait MitmForClientServer<T: Communicate> {
 pub struct MitmHandshakeFakePublicKey;
 
 impl<T: Communicate> MitmHandshake<T> for MitmHandshakeFakePublicKey {
-    fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error> {
+    fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>> {
         let p = client_stream
             .receive()?
-            .ok_or_else(|| err_msg("did not receive p"))?;
+            .ok_or_else(|| "did not receive p")?;
         let g = client_stream
             .receive()?
-            .ok_or_else(|| err_msg("did not receive g"))?;
+            .ok_or_else(|| "did not receive g")?;
         server_stream.send(&p)?;
         server_stream.send(&g)?;
         //Discard actual public keys
@@ -62,14 +63,14 @@ fn handshake_with_fake_generator<T: Communicate>(
     client_stream: &mut T,
     server_stream: &mut T,
     mode: &FakeGeneratorMode,
-) -> Result<Vec<u8>, Error> {
+) -> Result<Vec<u8>> {
     let p = client_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive p"))?;
+        .ok_or_else(|| "did not receive p")?;
     // Discard g
     client_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive g"))?;
+        .ok_or_else(|| "did not receive g")?;
 
     server_stream.send(&p)?;
 
@@ -80,10 +81,10 @@ fn handshake_with_fake_generator<T: Communicate>(
 
     server_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive p"))?;
+        .ok_or_else(|| "did not receive p")?;
     server_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive g"))?;
+        .ok_or_else(|| "did not receive g")?;
 
     client_stream.send(&p)?;
 
@@ -92,10 +93,10 @@ fn handshake_with_fake_generator<T: Communicate>(
 
     let A = client_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive A"))?;
+        .ok_or_else(|| "did not receive A")?;
     let B = server_stream
         .receive()?
-        .ok_or_else(|| err_msg("did not receive B"))?;
+        .ok_or_else(|| "did not receive B")?;
     client_stream.send(&B)?;
     server_stream.send(&A)?;
 
@@ -141,7 +142,7 @@ macro_rules! generator {
     ($handshake:ident, $mitm:ident, $mode:expr) => {
         pub struct $handshake;
         impl<T: Communicate> MitmHandshake<T> for $handshake {
-            fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>, Error> {
+            fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>> {
                 handshake_with_fake_generator(client_stream, server_stream, &$mode)
             }
         }

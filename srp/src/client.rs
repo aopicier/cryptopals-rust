@@ -2,13 +2,31 @@ use crate::algo::{
     deserialize, hash_secret, serialize, zero, BigNum, ClientHandshake, DefaultUComputer,
     LoginResult, UComputer, SRP,
 };
+
+use std::error;
+use std::fmt;
+
 use crate::communication::Communicate;
-use failure::{err_msg, Error};
 use std::marker::PhantomData;
 
-#[derive(Debug, Fail)]
-#[fail(display = "server rejected login")]
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+#[derive(Debug, Clone)]
 struct LoginFailed();
+
+// This is important for other errors to wrap this one.
+impl error::Error for LoginFailed {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        None
+    }
+}
+
+impl fmt::Display for LoginFailed {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "server rejected login")
+    }
+}
 
 struct ClientBase<U: UComputer> {
     params: SRP,
@@ -27,23 +45,23 @@ impl<U: UComputer> ClientBase<U> {
         }
     }
 
-    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         stream.send(&self.user_name)?;
         stream.send(&self.password)?;
         Ok(())
     }
 
-    fn login<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    fn login<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         stream.send(&self.user_name)?;
         let state = ClientHandshake::new(&self.params);
         let A = state.A();
         stream.send(&serialize(A))?;
-        let salt: Vec<u8> = stream.receive()?.ok_or_else(|| err_msg("salt"))?;
-        let B = deserialize(&stream.receive()?.ok_or_else(|| err_msg("B"))?);
+        let salt: Vec<u8> = stream.receive()?.ok_or_else(|| "salt")?;
+        let B = deserialize(&stream.receive()?.ok_or_else(|| "B")?);
         let u = U::compute_u(&A, &B, stream)?;
         let secret = state.compute_hashed_secret(&B, &u, &salt, &self.password);
         stream.send(&secret)?;
-        let login_result = stream.receive()?.ok_or_else(|| err_msg("login result"))?;
+        let login_result = stream.receive()?.ok_or_else(|| "login result")?;
         if login_result == [LoginResult::Success as u8] {
             Ok(())
         } else {
@@ -55,8 +73,8 @@ impl<U: UComputer> ClientBase<U> {
 struct SimplifiedUComputer;
 
 impl UComputer for SimplifiedUComputer {
-    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, stream: &mut T) -> Result<BigNum, Error> {
-        let u_raw = stream.receive()?.ok_or_else(|| err_msg("u"))?;
+    fn compute_u<T: Communicate>(_: &BigNum, _: &BigNum, stream: &mut T) -> Result<BigNum> {
+        let u_raw = stream.receive()?.ok_or_else(|| "u")?;
         Ok(deserialize(&u_raw))
     }
 }
@@ -72,11 +90,11 @@ impl Client {
         }
     }
 
-    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         self.base.register(stream)
     }
 
-    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         self.base.login(stream)
     }
 }
@@ -92,11 +110,11 @@ impl SimplifiedClient {
         }
     }
 
-    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn register<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         self.base.register(stream)
     }
 
-    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         self.base.login(stream)
     }
 }
@@ -110,24 +128,24 @@ impl FakeClientWithZeroKey {
         FakeClientWithZeroKey { user_name }
     }
 
-    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<(), Error> {
+    pub fn login<T: Communicate>(&self, stream: &mut T) -> Result<()> {
         stream.send(&self.user_name)?;
         let _0 = zero();
 
         // Send zero for A
         stream.send(&serialize(&_0))?;
 
-        let salt: Vec<u8> = stream.receive()?.ok_or_else(|| err_msg("salt"))?;
+        let salt: Vec<u8> = stream.receive()?.ok_or_else(|| "salt")?;
 
         // Discard B
-        stream.receive()?.ok_or_else(|| err_msg("B"))?;
+        stream.receive()?.ok_or_else(|| "B")?;
 
         // If A is zero, the S computed by the server is also zero.
         // The following hashed secret will therefore fool the server.
         let secret = hash_secret(&_0, &salt);
         stream.send(&secret)?;
 
-        let login_result = stream.receive()?.ok_or_else(|| err_msg("login result"))?;
+        let login_result = stream.receive()?.ok_or_else(|| "login result")?;
 
         if login_result == [LoginResult::Success as u8] {
             Ok(())

@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 byteorder = "0.5"
 digest = "0.7"
-failure = "0.1"
 num = "0.1"
 rand = "0.3" 
 result = "1.0.0"

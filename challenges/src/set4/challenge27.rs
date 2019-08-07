@@ -1,10 +1,12 @@
 use aes::Aes128;
 use aes::BLOCK_SIZE;
 use aes::MODE;
+use aes::random_block;
+
+use std::{error, fmt};
 
 use xor::XOR;
 
-use aes::random_block;
 
 use crate::errors::*;
 
@@ -17,14 +19,14 @@ struct Receiver {
 }
 
 impl Sender {
-    pub fn get_ciphertext(&self) -> Result<Vec<u8>, Error> {
+    pub fn get_ciphertext(&self) -> Result<Vec<u8>> {
         let cleartext = b"comment1=cooking%20MCs;userdata=foo@baz.com;comment2=%20like%20a%20pound%20of%20bacon";
-        cleartext.encrypt(&self.key, Some(&self.key), MODE::CBC)
+        Ok(cleartext.encrypt(&self.key, Some(&self.key), MODE::CBC)?)
     }
 }
 
 impl Receiver {
-    pub fn try_decrypt(&self, ciphertext: &[u8]) -> Result<(), Error> {
+    pub fn try_decrypt(&self, ciphertext: &[u8]) -> Result<()> {
         let cleartext = ciphertext.decrypt(&self.key, Some(&self.key), MODE::CBC)?;
         if !cleartext.is_ascii() {
             Err(NonAscii(cleartext).into())
@@ -33,7 +35,7 @@ impl Receiver {
         }
     }
 
-    pub fn verify_solution(&self, candidate_key: &[u8]) -> Result<(), Error> {
+    pub fn verify_solution(&self, candidate_key: &[u8]) -> Result<()> {
         compare_eq(&self.key[..], candidate_key)
     }
 }
@@ -49,18 +51,30 @@ fn get_sender_and_receiver_with_shared_key() -> (Sender, Receiver) {
     (sender, receiver)
 }
 
-#[derive(Debug, Fail)]
-#[fail(display = "invalid input: {:?}", _0)]
+#[derive(Debug, Clone)]
 struct NonAscii(Vec<u8>);
 
-pub fn run() -> Result<(), Error> {
+// This is important for other errors to wrap this one.
+impl error::Error for NonAscii {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        None
+    }
+}
+
+impl fmt::Display for NonAscii {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "invalid input: {:?}", self)
+    }
+}
+
+pub fn run() -> Result<()> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
     let ciphertext = sender.get_ciphertext()?;
 
-    ensure!(
-        ciphertext.len() >= 3 * BLOCK_SIZE,
-        "ciphertext does not have expected length"
-    );
+    if !( ciphertext.len() >= 3 * BLOCK_SIZE){
+        return Err( "ciphertext does not have expected length".into());
+    }
 
     // Let C_1 be the first block of `ciphertext` and let P_1 be the first block of the
     // cleartext behind `ciphertext` (under CBC). Let K be the unknown key. We know that
@@ -79,12 +93,12 @@ pub fn run() -> Result<(), Error> {
     attack_ciphertext.extend_from_slice(&ciphertext[ciphertext.len() - 2 * BLOCK_SIZE..]);
 
     if let Err(err) = receiver.try_decrypt(&attack_ciphertext) {
-        if let Ok(NonAscii(cleartext)) = err.downcast::<NonAscii>() {
+        if let Some(&NonAscii(ref cleartext)) = err.downcast_ref::<NonAscii>() {
             return receiver.verify_solution(
                 &cleartext[0..BLOCK_SIZE].xor(&cleartext[2 * BLOCK_SIZE..3 * BLOCK_SIZE]),
             );
         }
     }
 
-    bail!("attack ciphertext did not deceive the receiver");
+    return Err("attack ciphertext did not deceive the receiver".into());
 }

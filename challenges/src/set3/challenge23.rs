@@ -12,7 +12,7 @@ fn get_mersenne_twister_with_random_seed() -> MersenneTwister {
     MersenneTwister::initialize(seed)
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let mut mt = get_mersenne_twister_with_random_seed();
     let mut state = [0; mersenne::STATE_SIZE];
     for entry in state.iter_mut() {

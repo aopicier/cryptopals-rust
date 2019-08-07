@@ -9,7 +9,7 @@ mod challenge22;
 mod challenge23;
 mod challenge24;
 
-pub fn add_challenges(challenges: &mut Vec<fn() -> Result<(), Error>>) {
+pub fn add_challenges(challenges: &mut Vec<fn() -> Result<()>>) {
     challenges.push(challenge17::run);
     challenges.push(challenge18::run);
     challenges.push(|| challenge19_20::run(Exercise::_19));

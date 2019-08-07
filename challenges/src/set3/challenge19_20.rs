@@ -24,7 +24,7 @@ impl Encrypter {
         }
     }
 
-    pub fn get_ciphertexts(&self) -> Result<Vec<Vec<u8>>, Error> {
+    pub fn get_ciphertexts(&self) -> Result<Vec<Vec<u8>>> {
         let mut input_file_path = PathBuf::from("data");
         let input_file_name = match self.exercise {
             Exercise::_19 => "19.txt",
@@ -34,11 +34,11 @@ impl Encrypter {
         let cleartexts = from_base64_lines(input_file_path.as_path())?;
         cleartexts
             .iter()
-            .map(|c| c.encrypt(&self.key, None, MODE::CTR))
-            .collect::<Result<Vec<Vec<u8>>, Error>>()
+            .map(|c| c.encrypt(&self.key, None, MODE::CTR).map_err(|err| err.into()))
+            .collect::<Result<Vec<Vec<u8>>>>()
     }
 
-    pub fn verify_solution(&self, candidate_key: &[u8], size: usize) -> Result<(), Error> {
+    pub fn verify_solution(&self, candidate_key: &[u8], size: usize) -> Result<()> {
         // TODO: The first entry of the recovered key is wrong because the distribution of first letters
         // of sentences is very different from the overall distribution of letters in a text.
         compare_eq(
@@ -48,7 +48,7 @@ impl Encrypter {
     }
 }
 
-pub fn run(exercise: Exercise) -> Result<(), Error> {
+pub fn run(exercise: Exercise) -> Result<()> {
     let encrypter = Encrypter::new(exercise);
     let ciphertexts = encrypter.get_ciphertexts()?;
     let size = ciphertexts.iter().map(|c| c.len()).min().unwrap(); // unwrap is ok

@@ -7,7 +7,7 @@ use crate::prefix_suffix_oracles::{DeterministicOracle, Oracle};
 
 use super::challenge11::uses_ecb;
 
-pub fn block_size<T: Oracle>(oracle: &T) -> Result<usize, Error> {
+pub fn block_size<T: Oracle>(oracle: &T) -> Result<usize> {
     let mut input = Vec::new();
     let initial_len = oracle.encrypt(&input)?.len();
     loop {
@@ -19,11 +19,11 @@ pub fn block_size<T: Oracle>(oracle: &T) -> Result<usize, Error> {
     }
 }
 
-fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool, Error> {
+fn uses_padding<T: Oracle>(oracle: &T) -> Result<bool> {
     Ok((oracle.encrypt(&[0])?.len() - oracle.encrypt(&[])?.len()) % BLOCK_SIZE == 0)
 }
 
-pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> {
+pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     let initial = oracle.encrypt(&[])?.len();
     if !uses_padding(oracle)? {
         return Ok(initial);
@@ -40,9 +40,9 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> 
     }) {
         Ok(initial - index)
     } else {
-        bail!(
+        return Err(
             "length of oracle output did not change, something is wrong with the provided oracle"
-        );
+        .into());
     }
 }
 
@@ -52,7 +52,7 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize, Error> 
 // To determine this number, we pass two different cleartexts to the oracle and count the number
 // of identical blocks at the start of the corresponding ciphertexts.
 
-fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
+fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     if let Some(result) = oracle
         .encrypt(&[0])?
         .chunks(BLOCK_SIZE)
@@ -61,7 +61,7 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize,
     {
         Ok(result)
     } else {
-        bail!("no differing blocks found, something is wrong with the provided oracle");
+        return Err("no differing blocks found, something is wrong with the provided oracle".into());
     }
 }
 
@@ -85,9 +85,9 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize,
 // We need to do this with two different constants because suffix[0] might accidentally
 // coincide with the constant we have chosen.
 
-pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error> {
+pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize> {
     let offset = full_prefix_blocks_count(oracle)? * BLOCK_SIZE;
-    let helper = |k: u8| -> Result<usize, Error> {
+    let helper = |k: u8| -> Result<usize> {
         let constant_block = vec![k; BLOCK_SIZE];
         let initial = &oracle.encrypt(&constant_block)?[offset..(offset + BLOCK_SIZE)];
         for i in 0..BLOCK_SIZE {
@@ -104,13 +104,13 @@ pub fn prefix_length<T: DeterministicOracle>(oracle: &T) -> Result<usize, Error>
 
 pub fn prefix_and_suffix_length<T: DeterministicOracle>(
     oracle: &T,
-) -> Result<(usize, usize), Error> {
+) -> Result<(usize, usize)> {
     let prefix_len = prefix_length(oracle)?;
     let suffix_len = prefix_plus_suffix_length(oracle)? - prefix_len;
     Ok((prefix_len, suffix_len))
 }
 
-pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Error> {
+pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
     // The following input is chosen in such a way that the cleartext in oracle looks as follows:
     //
     //            input start      input end
@@ -130,7 +130,7 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     let mut input = vec![0; prefix_fill_len + BLOCK_SIZE - 1];
     let reference_ciphertexts = (0..BLOCK_SIZE)
         .map(|left_shift| oracle.encrypt(&input[left_shift..]))
-        .collect::<Result<Vec<Vec<u8>>, Error>>()?;
+        .collect::<Result<Vec<Vec<u8>>>>()?;
 
     for i in 0..suffix_len {
         let block_index = prefix_chunks_count + i / BLOCK_SIZE;
@@ -151,14 +151,15 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>, Err
     Ok(suffix)
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let oracle = Oracle12::new()?;
-    ensure!(
-        block_size(&oracle)? == BLOCK_SIZE,
-        "oracle does not use expected block size"
-    );
+    if !( block_size(&oracle)? == BLOCK_SIZE){
+        return Err( "oracle does not use expected block size".into());
+    }
 
-    ensure!(uses_ecb(&oracle, 0)?, "oracle does not use ECB");
+    if !(uses_ecb(&oracle, 0)?){
+        return Err( "oracle does not use ECB".into());
+    }
 
     oracle.verify_suffix(&decrypt_suffix(&oracle)?)
 }

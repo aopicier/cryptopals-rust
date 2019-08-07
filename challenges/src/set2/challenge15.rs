@@ -2,7 +2,7 @@ use aes::{unpad_inplace, Aes128};
 
 use crate::errors::*;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     {
         let mut message = b"ICE ICE BABY\x04\x04\x04\x04".to_vec();
         unpad_inplace(&mut message, 16)?;

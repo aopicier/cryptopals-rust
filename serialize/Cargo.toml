@@ -3,6 +3,3 @@ name = "serialize"
 version = "0.2.0"
 authors = ["ph"]
 edition = "2018"
-
-[dependencies]
-failure = "0.1"

@@ -25,16 +25,16 @@ fn create_client_with_random_password(
 
 fn start_mitm_server(
     port: u16,
-) -> Result<thread::JoinHandle<Result<PasswordOracle, Error>>, Error> {
+) -> Result<thread::JoinHandle<Result<PasswordOracle>>> {
     let mitm = Mitm::default();
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((mut stream, _)) => Ok(mitm.handle_client(&mut stream)?),
-        Err(_) => bail!("connection failed"),
+        Err(_) => return Err(ConnectionFailed.into()),
     }))
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     // Dictionary of the 25 most popular passwords
     // Source: https://en.wikipedia.org/wiki/List_of_the_most_common_passwords
     let dictionary = &[
@@ -83,22 +83,22 @@ pub fn run() -> Result<(), Error> {
 
     let password_oracle = jh_mitm
         .join()
-        .map_err(|_| err_msg("tcp listener thread panicked"))??;
+        .map_err(|_| "tcp listener thread panicked")??;
 
     // Dictionary attack against the password
     let password = dictionary
         .iter()
         .find(|pw| password_oracle.is_password(pw))
-        .ok_or_else(|| err_msg("could not determine password"))?;
+        .ok_or_else(|| "could not determine password")?;
 
     let impostor = SimplifiedClient::new(user_name.to_vec(), password.to_vec());
     connect_and_execute(port, |stream| impostor.login(stream))
-        .context("impostor did not succeed")?;
+        /*.context("impostor did not succeed")*/?;
 
     shutdown_server(port, &tx)?;
 
     match jh_server.join() {
-        Ok(result) => result,
-        _ => bail!("tcp listener thread panicked"),
+        Ok(result) => result.map_err(|err| err.into()),
+        _ => return Err("tcp listener thread panicked".into()),
     }
 }

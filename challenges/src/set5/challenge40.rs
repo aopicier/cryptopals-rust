@@ -40,12 +40,12 @@ impl Server {
         }
     }
 
-    fn verify_solution(&self, candidate: &BigNum) -> Result<(), Error> {
+    fn verify_solution(&self, candidate: &BigNum) -> Result<()> {
         compare_eq(&self.secret, candidate)
     }
 }
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let server = Server::new();
     let ((ref c1, ref n1), (ref c2, ref n2), (ref c3, ref n3)) = server.get_ciphertexts();
 

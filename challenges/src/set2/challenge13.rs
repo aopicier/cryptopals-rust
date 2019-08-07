@@ -12,7 +12,7 @@ use super::prefix_length;
 // The following function works under the single assumption that the target value "user" (to be
 // replaced by "admin") is stored at the very end of the profile.
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     let oracle = Oracle13::new()?;
 
     let prefix_len = prefix_length(&oracle)?;
