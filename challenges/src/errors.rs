@@ -58,6 +58,26 @@ impl fmt::Display for ConnectionFailed {
     }
 }
 
+#[derive(Debug)]
+pub struct AnnotatedError {
+    pub message: String,
+    pub error: Box<dyn std::error::Error + Send + Sync + 'static>,
+}
+
+// This is important for other errors to wrap this one.
+impl error::Error for AnnotatedError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        Some(&*self.error)
+    }
+}
+
+impl fmt::Display for AnnotatedError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_pass_by_value))] // False positive
 pub fn compare_eq<T>(x: T, y: T) -> Result<()>
 where

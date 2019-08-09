@@ -92,7 +92,8 @@ fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<()> {
     let join_handle = start_server::<P::Server>(server_port)?;
 
     let stream =
-        TcpStream::connect(("localhost", client_port))/*.context("client failed to connect")*/?;
+        TcpStream::connect(("localhost", client_port))
+        .map_err(|err| AnnotatedError {message: "client failed to connect".to_string(), error: err.into()})?;
 
     let mut client = Session::new::<P::Client>(stream)?;
 
