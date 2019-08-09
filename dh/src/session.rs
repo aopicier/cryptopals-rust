@@ -3,7 +3,7 @@ use crate::communication::CommunicateEncr;
 
 use crate::handshake::Handshake;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub struct Session<T: Communicate> {
     stream: T,

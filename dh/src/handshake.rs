@@ -2,7 +2,7 @@ use crate::algo::DH;
 use crate::communication::Communicate;
 use bignum::NumBigInt as BigNum;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub trait Handshake<T: Communicate> {
     fn handshake(stream: &mut T) -> Result<Vec<u8>>;

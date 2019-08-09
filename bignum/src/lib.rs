@@ -10,7 +10,7 @@ use num_traits::Num;
 use num_traits::NumOps;
 use std::cmp::Ordering;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 use openssl::bn::{BigNum, BigNumContext, BigNumRef};
 pub use openssl::error;

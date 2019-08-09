@@ -7,7 +7,7 @@ use bignum::NumBigInt as BigNum;
 
 use crate::handshake::{ClientDeterminesParameters, ClientServerPair, ServerCanOverrideParameters};
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub trait MitmHandshake<T: Communicate> {
     fn handshake(client_stream: &mut T, server_stream: &mut T) -> Result<Vec<u8>>;

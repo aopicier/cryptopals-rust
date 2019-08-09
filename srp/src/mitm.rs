@@ -5,7 +5,7 @@ use crate::communication::Communicate;
 use bignum::BigNumTrait;
 use bignum::NumBigInt as BigNum;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub struct PasswordOracle {
     g: BigNum,

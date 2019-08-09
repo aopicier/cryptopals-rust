@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 
 use rand::Rng;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub enum LoginResult {
     Success,

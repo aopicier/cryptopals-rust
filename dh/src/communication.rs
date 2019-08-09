@@ -7,7 +7,7 @@ use aes::{Aes128, MODE};
 use byteorder::{ByteOrder, LittleEndian};
 use result::ResultOptionExt;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 use std::io::{Read, Write};
 

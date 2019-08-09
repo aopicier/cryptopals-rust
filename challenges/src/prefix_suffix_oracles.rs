@@ -11,7 +11,7 @@ use serialize::from_base64;
 
 use crate::errors::*;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 use aes::random_block;
 

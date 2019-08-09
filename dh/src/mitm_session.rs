@@ -3,7 +3,7 @@ use crate::communication::Communicate;
 
 use crate::mitm_handshake::MitmHandshake;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 use result::ResultOptionExt;
 pub struct MitmSession<T: Communicate> {

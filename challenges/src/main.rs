@@ -2,7 +2,7 @@ extern crate challenges;
 use challenges::errors::ChallengeError;
 use std::env;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 fn main() {
     let mut challenges = Vec::<fn() -> Result<()>>::new();

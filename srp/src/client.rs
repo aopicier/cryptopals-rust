@@ -9,7 +9,7 @@ use std::fmt;
 use crate::communication::Communicate;
 use std::marker::PhantomData;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 #[derive(Debug, Clone)]
 struct LoginFailed();

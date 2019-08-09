@@ -2,7 +2,7 @@ use byteorder::{ByteOrder, LittleEndian};
 
 use std::io::{Read, Write};
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 // Share with DH?
 
 pub trait Communicate {
