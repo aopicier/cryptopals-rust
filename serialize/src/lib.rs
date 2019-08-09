@@ -129,7 +129,7 @@ pub fn from_hex(s: &str) -> Result<Vec<u8>> {
 fn u8_from_hex(c: char) -> Result<u8> {
     match c.to_digit(16) {
         Some(i) => Ok(i as u8),
-        _ => return Err(format!("invalid character {}", c).into()),
+        _ => Err(format!("invalid character {}", c).into()),
     }
 }
 
@@ -164,6 +164,6 @@ fn u8_from_base64(c: char) -> Result<u8> {
         '0'...'9' => Ok(52 + (c as u8 - b'0')),
         '+' => Ok(62),
         '/' => Ok(63),
-        _ => return Err(format!("invalid character {}", c).into()),
+        _ => Err(format!("invalid character {}", c).into()),
     }
 }

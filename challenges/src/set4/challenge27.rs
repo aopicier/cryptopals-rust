@@ -71,7 +71,7 @@ pub fn run() -> Result<()> {
     let (sender, receiver) = get_sender_and_receiver_with_shared_key();
     let ciphertext = sender.get_ciphertext()?;
 
-    if !(ciphertext.len() >= 3 * BLOCK_SIZE) {
+    if ciphertext.len() < 3 * BLOCK_SIZE {
         return Err("ciphertext does not have expected length".into());
     }
 
@@ -99,5 +99,5 @@ pub fn run() -> Result<()> {
         }
     }
 
-    return Err("attack ciphertext did not deceive the receiver".into());
+    Err("attack ciphertext did not deceive the receiver".into())
 }

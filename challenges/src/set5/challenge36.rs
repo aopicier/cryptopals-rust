@@ -64,7 +64,7 @@ pub fn run() -> Result<()> {
     shutdown_server(port, &tx)?;
 
     match join_handle.join() {
-        Ok(result) => result.map_err(|err| err.into()),
-        _ => return Err("tcp listener thread panicked".into()),
+        Ok(result) => result,
+        _ => Err("tcp listener thread panicked".into()),
     }
 }

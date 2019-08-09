@@ -28,7 +28,7 @@ fn start_mitm_server(port: u16) -> Result<thread::JoinHandle<Result<PasswordOrac
     let listener = TcpListener::bind(("localhost", port))?;
     Ok(thread::spawn(move || match listener.accept() {
         Ok((mut stream, _)) => Ok(mitm.handle_client(&mut stream)?),
-        Err(_) => return Err(ConnectionFailed.into()),
+        Err(_) => Err(ConnectionFailed.into()),
     }))
 }
 
@@ -96,7 +96,7 @@ pub fn run() -> Result<()> {
     shutdown_server(port, &tx)?;
 
     match jh_server.join() {
-        Ok(result) => result.map_err(|err| err.into()),
-        _ => return Err("tcp listener thread panicked".into()),
+        Ok(result) => result,
+        _ => Err("tcp listener thread panicked".into()),
     }
 }

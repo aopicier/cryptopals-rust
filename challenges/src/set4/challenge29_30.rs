@@ -174,7 +174,7 @@ fn run_29_30<T: MacHelper>() -> Result<()> {
             return Ok(());
         }
     }
-    return Err("No matching message found.".into());
+    Err("No matching message found.".into())
 }
 
 pub fn run29() -> Result<()> {

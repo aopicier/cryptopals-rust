@@ -154,7 +154,7 @@ pub fn decrypt_suffix<T: DeterministicOracle>(oracle: &T) -> Result<Vec<u8>> {
 
 pub fn run() -> Result<()> {
     let oracle = Oracle12::new()?;
-    if !(block_size(&oracle)? == BLOCK_SIZE) {
+    if block_size(&oracle)? != BLOCK_SIZE {
         return Err("oracle does not use expected block size".into());
     }
 

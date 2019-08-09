@@ -9,7 +9,7 @@ use super::challenge12::{block_size, decrypt_suffix};
 
 pub fn run() -> Result<()> {
     let oracle = Oracle14::new()?;
-    if !(block_size(&oracle)? == BLOCK_SIZE) {
+    if block_size(&oracle)? != BLOCK_SIZE {
         return Err("oracle does not use expected block size".into());
     }
 

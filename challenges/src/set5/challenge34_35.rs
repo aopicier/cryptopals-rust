@@ -101,8 +101,8 @@ fn run_echo<P: ClientServerPair<TcpStream>>() -> Result<()> {
 
     client.stream().shutdown(Shutdown::Both)?;
     match join_handle.join() {
-        Ok(result) => result.map_err(|err| err.into()),
-        _ => return Err("tcp listener thread panicked".into()),
+        Ok(result) => result,
+        _ => Err("tcp listener thread panicked".into()),
     }
 }
 
@@ -146,7 +146,7 @@ where
                 /*.context("decrypted server message")*/?;
             Ok(())
         }
-        _ => return Err("tcp listener thread panicked".into()),
+        _ => Err("tcp listener thread panicked".into()),
     }
 }
 

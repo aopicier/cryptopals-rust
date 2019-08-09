@@ -75,7 +75,7 @@ pub fn pad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), AesError> {
 
 pub fn unpad_inplace(u: &mut Vec<u8>, k: u8) -> Result<(), AesError> {
     if !padding_valid(u, k)? {
-        return Err(AesError::InvalidPadding.into());
+        return Err(AesError::InvalidPadding);
     }
 
     let len_new = u.len() - u[u.len() - 1] as usize;
@@ -201,7 +201,6 @@ fn decrypt_aes128_block(input: &[u8], key: &[u8]) -> Result<Vec<u8>, AesError> {
         AesError::DecryptionFailed {
             block: input.to_vec(),
         }
-        .into()
     })
 }
 
