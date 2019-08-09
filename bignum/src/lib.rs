@@ -300,14 +300,12 @@ impl BigNumTrait for BigInt {
 
     fn from_hex_str(bytes: &str) -> Result<Self> {
         BigInt::from_str_radix(bytes, 16)
-            //.context("invalid hex string")
-            .map_err(|err| err.into())
+            .map_err(|_| "invalid hex string".into())
     }
 
     fn from_dec_str(bytes: &str) -> Result<Self> {
         BigInt::from_str_radix(bytes, 10)
-            //.context("invalid dec string")
-            .map_err(|err| err.into())
+            .map_err(|_| "invalid dec string".into())
     }
 
     fn to_hex_str(&self) -> String {
@@ -420,14 +418,12 @@ impl BigNumTrait for BigNum {
 
     fn from_hex_str(bytes: &str) -> Result<Self> {
         BigNum::from_hex_str(bytes)
-            //.context("invalid hex string")
-            .map_err(|err| err.into())
+            .map_err(|_| "invalid hex string".into())
     }
 
     fn from_dec_str(bytes: &str) -> Result<Self> {
         BigNum::from_dec_str(bytes)
-            //.context("invalid dec string")
-            .map_err(|err| err.into())
+            .map_err(|_| "invalid dec string".into())
     }
 
     fn to_hex_str(&self) -> String {
