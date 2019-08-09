@@ -41,9 +41,10 @@ where
                 println!("Challenge {:02}: {}", challenge_number, e);
             } else {
                 println!("Challenge {:02}: An error occured: {}", challenge_number, e);
-                // TODO Does this work?
-                while let Some(e) = e.source() {
+                let mut source = e.source();
+                while let Some(e) = source {
                     println!("{: <4}caused by: {}", "", e);
+                    source = e.source();
                 }
                 // TODO
                 //let backtrace = e.backtrace().to_string();
