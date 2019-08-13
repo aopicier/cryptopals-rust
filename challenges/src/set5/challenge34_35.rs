@@ -120,17 +120,25 @@ where
 
     let jh_mitm = start_mitm::<T::Mitm>(client_port, server_port)?;
 
-    let stream =
-        TcpStream::connect(("localhost", client_port))/*.context("client failed to connect")*/?;
+    let stream = TcpStream::connect(("localhost", client_port)).map_err(|err| AnnotatedError {
+        message: "client failed to connect".to_string(),
+        error: err.into(),
+    })?;
 
     let mut client = Session::new::<<T::CS as ClientServerPair<TcpStream>>::Client>(stream)?;
     client.send(&message)?;
-    compare_eq(Some(&message), client.receive()?.as_ref())/*.context("message received by client")*/?;
+    compare_eq(Some(&message), client.receive()?.as_ref()).map_err(|err| AnnotatedError {
+        message: "message received by client".to_string(),
+        error: err,
+    })?;
 
     client.stream().shutdown(Shutdown::Both)?;
 
     match jh_server.join() {
-        Ok(result) => result/*.context("server error")*/?,
+        Ok(result) => result.map_err(|err| AnnotatedError {
+            message: "server error".to_string(),
+            error: err,
+        })?,
         _ => return Err("tcp listener thread panicked".into()),
     };
 
@@ -140,12 +148,22 @@ where
                 decrypted_client_messages,
                 decrypted_server_messages,
             } = result?;
-            compare_eq(1, decrypted_client_messages.len())/*.context("number of client messages")*/?;
-            compare_eq(1, decrypted_server_messages.len())/*.context("number of server messages")*/?;
-            compare_eq(&message, &decrypted_client_messages[0])
-                /*.context("decrypted client message")*/?;
-            compare_eq(&message, &decrypted_server_messages[0])
-                /*.context("decrypted server message")*/?;
+            compare_eq(1, decrypted_client_messages.len()).map_err(|err| AnnotatedError {
+                message: "number of client messages".to_string(),
+                error: err,
+            })?;
+            compare_eq(1, decrypted_server_messages.len()).map_err(|err| AnnotatedError {
+                message: "number of server messages".to_string(),
+                error: err,
+            })?;
+            compare_eq(&message, &decrypted_client_messages[0]).map_err(|err| AnnotatedError {
+                message: "decrypted client message".to_string(),
+                error: err,
+            })?;
+            compare_eq(&message, &decrypted_server_messages[0]).map_err(|err| AnnotatedError {
+                message: "decrypted server message".to_string(),
+                error: err,
+            })?;
             Ok(())
         }
         _ => Err("tcp listener thread panicked".into()),

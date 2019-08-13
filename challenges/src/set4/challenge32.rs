@@ -13,7 +13,10 @@ pub fn run() -> Result<()> {
 
     let mut server = hmac_server::start(key)?;
     let result = hmac_client::run();
-    server.close()/*.context("failed to close connection")*/?;
+    server.close().map_err(|err| AnnotatedError {
+        message: "failed to close connection".to_string(),
+        error: err.into(),
+    })?;
 
     result
 }

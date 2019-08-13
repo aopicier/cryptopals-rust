@@ -90,8 +90,10 @@ pub fn run() -> Result<()> {
         .ok_or_else(|| "could not determine password")?;
 
     let impostor = SimplifiedClient::new(user_name.to_vec(), password.to_vec());
-    connect_and_execute(port, |stream| impostor.login(stream))
-        /*.context("impostor did not succeed")*/?;
+    connect_and_execute(port, |stream| impostor.login(stream)).map_err(|err| AnnotatedError {
+        message: "impostor did not succeed".to_string(),
+        error: err,
+    })?;
 
     shutdown_server(port, &tx)?;
 

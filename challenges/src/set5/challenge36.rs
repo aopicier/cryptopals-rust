@@ -35,15 +35,20 @@ pub fn shutdown_server(port: u16, tx: &Sender<u8>) -> Result<()> {
     // Ugly hack for shutting down the server
     tx.send(1)?;
 
-    let stream = TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
+    let stream = TcpStream::connect(("localhost", port)).map_err(|err| AnnotatedError {
+        message: "client failed to connect".to_string(),
+        error: err.into(),
+    })?;
 
     stream.shutdown(Shutdown::Both)?;
     Ok(())
 }
 
 pub fn connect_and_execute(port: u16, action: impl Fn(&mut TcpStream) -> Result<()>) -> Result<()> {
-    let mut stream =
-        TcpStream::connect(("localhost", port))/*.context("client failed to connect")*/?;
+    let mut stream = TcpStream::connect(("localhost", port)).map_err(|err| AnnotatedError {
+        message: "client failed to connect".to_string(),
+        error: err.into(),
+    })?;
 
     action(&mut stream)?;
     stream.shutdown(Shutdown::Both)?;
