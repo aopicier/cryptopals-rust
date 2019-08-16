@@ -62,9 +62,7 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize>
     {
         Ok(result)
     } else {
-        Err(
-            "no differing blocks found, something is wrong with the provided oracle".into(),
-        )
+        Err("no differing blocks found, something is wrong with the provided oracle".into())
     }
 }
 
