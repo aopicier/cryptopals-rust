@@ -40,10 +40,10 @@ pub fn prefix_plus_suffix_length<T: Oracle>(oracle: &T) -> Result<usize> {
     }) {
         Ok(initial - index)
     } else {
-        return Err(
+        Err(
             "length of oracle output did not change, something is wrong with the provided oracle"
                 .into(),
-        );
+        )
     }
 }
 
@@ -62,9 +62,9 @@ fn full_prefix_blocks_count<T: DeterministicOracle>(oracle: &T) -> Result<usize>
     {
         Ok(result)
     } else {
-        return Err(
+        Err(
             "no differing blocks found, something is wrong with the provided oracle".into(),
-        );
+        )
     }
 }
 

@@ -5,7 +5,7 @@ use aes::BLOCK_SIZE;
 
 // We need an upper bound on the number of prefix chunks that the oracle prepends to our input.
 // I claim that it is impossible to detect ECB with just a single call to the oracle without this limit.
-pub fn uses_ecb(oracle: &Oracle, prefix_chunks_count_limit: usize) -> Result<bool> {
+pub fn uses_ecb(oracle: &dyn Oracle, prefix_chunks_count_limit: usize) -> Result<bool> {
     let input = vec![0; (prefix_chunks_count_limit + 2) * BLOCK_SIZE];
     let ciphertext = oracle.encrypt(&input)?;
     let blocks: Vec<&[u8]> = ciphertext

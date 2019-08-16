@@ -148,9 +148,9 @@ fn block_to_base64(block: &[u8], base64: &mut String) {
 
 fn u8_to_base64(u: u8) -> char {
     match u {
-        0...25 => (b'A' + u) as char,
-        26...51 => (b'a' + (u - 26)) as char,
-        52...61 => (b'0' + (u - 52)) as char,
+        0..=25 => (b'A' + u) as char,
+        26..=51 => (b'a' + (u - 26)) as char,
+        52..=61 => (b'0' + (u - 52)) as char,
         62 => '+',
         63 => '/',
         _ => panic!("input exceeded range"),
@@ -159,9 +159,9 @@ fn u8_to_base64(u: u8) -> char {
 
 fn u8_from_base64(c: char) -> Result<u8> {
     match c {
-        'A'...'Z' => Ok(c as u8 - b'A'),
-        'a'...'z' => Ok(26 + (c as u8 - b'a')),
-        '0'...'9' => Ok(52 + (c as u8 - b'0')),
+        'A'..='Z' => Ok(c as u8 - b'A'),
+        'a'..='z' => Ok(26 + (c as u8 - b'a')),
+        '0'..='9' => Ok(52 + (c as u8 - b'0')),
         '+' => Ok(62),
         '/' => Ok(63),
         _ => Err(format!("invalid character {}", c).into()),
