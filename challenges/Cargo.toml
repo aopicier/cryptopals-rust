@@ -17,9 +17,9 @@ num = "0.1"
 rand = "0.3"
 sha-1 = "0.7.0"
 
-hyper = "0.10"
 iron = "0.6"
 params = "0.8"
+reqwest = "0.9"
 
 [dependencies.aes]
 path = "../aes"

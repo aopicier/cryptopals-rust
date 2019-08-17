@@ -1,6 +1,6 @@
-use hyper;
-use hyper::client::Client;
-use hyper::header::ContentType;
+use reqwest;
+use reqwest::{Client, StatusCode};
+use std::collections::HashMap;
 use std::time;
 
 use crate::errors::*;
@@ -21,26 +21,23 @@ fn t_statistic(n: f32, (mu_u, sd_u): (f32, f32), (mu_v, sd_v): (f32, f32)) -> f3
     (n * m / (n + m)).sqrt() * (mu_u - mu_v) / var.sqrt()
 }
 
-fn try_signature(mac: &[u8]) -> Result<bool> {
-    let client = Client::new();
-    let mime = "application/json".parse().unwrap();
-    let body = format!("{{\"file\":\"4.txt\", \"signature\":\"{}\"}}", mac.to_hex());
+fn try_signature(client: &Client, body: &HashMap<&str, String>) -> Result<bool> {
+    let request = client.post("http://localhost:3000").json(&body);
 
-    let request = client
-        .post("http://localhost:3000")
-        .header(ContentType(mime))
-        .body(&body);
+    let response = request.json(&body).send()?;
 
-    let response = request.send()?;
-
-    Ok(response.status == hyper::status::StatusCode::Ok)
+    Ok(response.status() == StatusCode::OK)
 }
 
-fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32)> {
+fn perform_measurement(
+    client: &Client,
+    body: &HashMap<&str, String>,
+    n: u32,
+) -> Result<(f32, f32)> {
     let measurements = (0..n)
         .map(|_| {
             let now = time::Instant::now();
-            try_signature(mac)?;
+            try_signature(client, body)?;
             let elapsed_time = now.elapsed();
             let elapsed_micros = (elapsed_time.as_secs() as f32) * 1_000_000.0
                 + (elapsed_time.subsec_nanos() as f32) / 1_000.0;
@@ -54,6 +51,10 @@ fn perform_measurement(mac: &[u8], n: u32) -> Result<(f32, f32)> {
 }
 
 pub fn run() -> Result<()> {
+    let client = Client::new();
+    let mut body = HashMap::new();
+    body.insert("file", "4.txt".to_string());
+
     let mut mac = vec![0; 20];
 
     // Number of measurements to perform per signature
@@ -64,7 +65,9 @@ pub fn run() -> Result<()> {
         let mut stat_max = (0f32, 0f32);
         for u in 0..=255 {
             mac[i] = u;
-            let stat = perform_measurement(&mac, n)?;
+
+            body.insert("signature", mac.to_hex());
+            let stat = perform_measurement(&client, &body, n)?;
 
             // Two-sample t-test to test whether the mean in stat is bigger than the mean in
             // stat_max.
@@ -77,8 +80,9 @@ pub fn run() -> Result<()> {
         mac[i] = u_max;
     }
 
-    if !try_signature(&mac)? {
-        return Err("Failed to determine mac".into());
+    body.insert("signature", mac.to_hex());
+    if !try_signature(&client, &body)? {
+        return Err("Failed to determine mac.".into());
     }
 
     Ok(())

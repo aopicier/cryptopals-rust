@@ -20,9 +20,9 @@ extern crate num;
 extern crate rand;
 extern crate sha1;
 
-extern crate hyper;
 extern crate iron;
 extern crate params;
+extern crate reqwest;
 
 pub mod errors;
 
