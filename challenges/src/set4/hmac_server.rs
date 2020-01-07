@@ -37,7 +37,7 @@ fn compute_hmac(key: &[u8], file: &str) -> Option<Vec<u8>> {
     Some(hmac_sha1(key, &content))
 }
 
-fn parse_body<'a>(req: &'a mut Request) -> Option<((&'a str, &'a str))> {
+fn parse_body<'a>(req: &'a mut Request) -> Option<(&'a str, &'a str)> {
     let params = req.get_ref::<Params>().ok()?;
 
     let file = match params.find(&["file"]) {
