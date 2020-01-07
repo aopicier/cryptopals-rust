@@ -44,9 +44,7 @@ fn get_sender_and_receiver_with_shared_key() -> (Sender, Receiver) {
     let sender = Sender {
         key: secret_key.clone(),
     };
-    let receiver = Receiver {
-        key: secret_key,
-    };
+    let receiver = Receiver { key: secret_key };
     (sender, receiver)
 }
 
