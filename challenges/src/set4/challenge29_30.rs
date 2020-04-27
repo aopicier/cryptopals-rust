@@ -1,6 +1,5 @@
 use mac::{mac_md4, mac_sha1};
 
-use rand;
 use rand::Rng;
 
 use crate::errors::*;

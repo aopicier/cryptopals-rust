@@ -1,7 +1,5 @@
-use rand;
 use rand::Rng;
 
-use aes;
 use aes::{Aes128, MODE};
 
 use byteorder::{ByteOrder, LittleEndian};

@@ -1,7 +1,6 @@
 use std::cell::Cell;
 use std::collections::HashMap;
 
-use rand;
 use rand::Rng;
 
 use aes::BLOCK_SIZE;

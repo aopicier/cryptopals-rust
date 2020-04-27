@@ -5,7 +5,6 @@ use rsa::Rsa;
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 
-use rand;
 use rand::Rng;
 
 use std::cmp;

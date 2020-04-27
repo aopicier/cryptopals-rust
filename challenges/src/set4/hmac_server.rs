@@ -4,7 +4,6 @@ use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
 
-use iron;
 use iron::prelude::*;
 use iron::status;
 use params::{Params, Value};

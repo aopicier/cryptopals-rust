@@ -1,4 +1,3 @@
-use rand;
 use rand::Rng;
 
 use std::net::TcpListener;

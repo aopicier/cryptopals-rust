@@ -4,7 +4,6 @@ use crate::algo::{
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use rand;
 use rand::Rng;
 
 use crate::communication::Communicate;

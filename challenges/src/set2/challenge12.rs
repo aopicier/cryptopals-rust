@@ -1,6 +1,5 @@
 use crate::errors::*;
 use aes::{chunks_count, BLOCK_SIZE};
-use std;
 
 use crate::prefix_suffix_oracles::Oracle12;
 use crate::prefix_suffix_oracles::{DeterministicOracle, Oracle};

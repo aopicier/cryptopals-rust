@@ -1,6 +1,5 @@
 use crate::errors::*;
 use serialize::from_hex;
-use std;
 use std::collections::HashMap;
 use xor::XOR;
 

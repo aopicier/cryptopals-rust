@@ -1,7 +1,6 @@
 use super::hmac_client;
 use super::hmac_server;
 
-use rand;
 use rand::Rng;
 
 use crate::errors::*;

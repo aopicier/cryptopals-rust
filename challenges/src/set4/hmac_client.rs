@@ -1,4 +1,3 @@
-use reqwest;
 use reqwest::{Client, StatusCode};
 use std::collections::HashMap;
 use std::time;

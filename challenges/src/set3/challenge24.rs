@@ -1,8 +1,6 @@
 use byteorder::{ByteOrder, LittleEndian};
-use std;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rand;
 use rand::Rng;
 
 use crate::mersenne::MersenneTwister;

@@ -1,6 +1,5 @@
 use crate::errors::*;
 use aes::{unpad_inplace, Aes128, AesError, BLOCK_SIZE, MODE};
-use rand;
 use rand::Rng;
 use serialize::from_base64;
 use xor::XOR;

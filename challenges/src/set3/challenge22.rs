@@ -1,7 +1,5 @@
 use crate::mersenne::MersenneTwister;
-use rand;
 use rand::Rng;
-use std;
 
 use crate::errors::*;
 
