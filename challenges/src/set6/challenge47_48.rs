@@ -53,6 +53,8 @@ impl Server {
 
 // We use the variable names from the paper
 #[allow(non_snake_case)]
+#[allow(clippy::just_underscores_and_digits)]
+#[allow(clippy::many_single_char_names)]
 pub fn run(rsa_bits: usize) -> Result<()> {
     let _0 = BigNum::zero();
     let _1 = BigNum::one();

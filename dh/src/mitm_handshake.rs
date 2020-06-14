@@ -1,3 +1,5 @@
+#![allow(clippy::just_underscores_and_digits)]
+
 use crate::algo::{deserialize, secret_to_key, serialize};
 
 use crate::communication::Communicate;

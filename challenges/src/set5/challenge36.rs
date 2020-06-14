@@ -8,7 +8,7 @@ use srp::server::Server;
 
 use crate::errors::*;
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
+#[allow(clippy::type_complexity)]
 pub fn start_server<T: ClientHandler>(
     mut server: T,
     port: u16,

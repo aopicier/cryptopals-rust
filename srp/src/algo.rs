@@ -111,6 +111,7 @@ impl<'a> ClientHandshake<'a> {
         &self.state.power
     }
 
+    #[allow(clippy::many_single_char_names)]
     pub fn compute_hashed_secret(
         &self,
         B: &BigNum,

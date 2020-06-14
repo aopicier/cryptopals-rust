@@ -5,6 +5,7 @@ use dsa::{gen_range, Dsa, DsaParams, Signature};
 use bignum::OpensslBigNum as BigNum;
 use bignum::{BigNumExt, BigNumTrait};
 
+#[allow(clippy::many_single_char_names)]
 pub fn fake_signature(params: &DsaParams<BigNum>, y: &BigNum) -> Signature<BigNum> {
     let p = &params.p;
     let q = &params.q;

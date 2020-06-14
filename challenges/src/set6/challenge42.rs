@@ -121,6 +121,7 @@ impl Server {
 // Summarizing: If x and l are positive natural numbers and x <= 2^y for some natural number y < (l - 9)/2,
 // then there is a natural number r with x2^l <= r^3 <= (x + 1)2^l - 1.
 
+#[allow(clippy::just_underscores_and_digits)]
 fn forge_signature(len: usize, message: &[u8]) -> Vec<u8> {
     let hash = &compute_hash(message);
 

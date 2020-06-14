@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
-
 extern crate bignum;
 extern crate num_traits;
 use num_traits::NumOps;
@@ -14,6 +12,7 @@ impl<T: bignum::BigNumTrait> Rsa<T>
 where
     for<'a1, 'a2> &'a1 T: NumOps<&'a2 T, T>,
 {
+    #[allow(clippy::many_single_char_names)]
     pub fn generate(mut bits: usize) -> Self {
         // Make sure that p and q are bigger than 7.
         if bits <= 3 {

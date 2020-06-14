@@ -1,3 +1,4 @@
+#![allow(clippy::just_underscores_and_digits)]
 use crate::errors::*;
 
 use rsa::Rsa;

@@ -1,5 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::just_underscores_and_digits))]
-
 extern crate aes;
 extern crate bignum;
 extern crate byteorder;
